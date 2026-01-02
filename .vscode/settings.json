@@ -1,0 +1,52 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.turbo": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.cache": true,
+    "pnpm-lock.yaml": true,
+    "pnpm-workspace.yaml": true,
+    "turbo.json": true,
+    ".npmrc": true,
+    ".gitignore": true,
+    "**/packages": true,
+    "package.json": true,
+    // --- BACKEND (Nest) ,: masquer configs ---
+    "apps/backend/.gitignore": true,
+    "apps/backend/.prettierrc": true,
+    "apps/backend/eslint.config.mjs": true,
+    "apps/backend/nest-cli.json": true,
+    "apps/backend/package.json": true,
+    "apps/backend/tsconfig.json": true,
+    "apps/backend/tsconfig.build.json": true,
+    "apps/backend/README.md": true,
+
+    // --- FRONTEND (Next) : masquer configs ---
+    "apps/frontend/.gitignore": true,
+    "apps/frontend/eslint.config.js": true,
+    "apps/frontend/next-env.d.ts": true,
+    "apps/frontend/next.config.js": true,
+    "apps/frontend/package.json": true,
+    "apps/frontend/tsconfig.json": true,
+    "apps/frontend/README.md": true
+
+    // Optionnel (si tu veux “que du code”)
+    // "apps/frontend/public": true,
+    // "apps/backend/test": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.turbo": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true
+  },
+  "explorer.compactFolders": true,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "pnpm-lock.yaml, package-lock.json, yarn.lock, .npmrc, turbo.json, pnpm-workspace.yaml",
+    "README.md": "README.txt, README.md.txt, README.md.backup, README.txt.backup, README.md.old, README.old"
+  }
+}
