@@ -9,8 +9,11 @@ export function RevenusTab() {
   return (
     <div>
       <h2 className="text-xl font-semibold">Revenus</h2>
-      <p className="mt-1 text-sm text-neutral-400">
-        (Pour l’instant, on garde ton exemple existant ici.)
+      <p
+        className="mt-1 text-sm"
+        style={{ color: "var(--theme-textSecondary)" }}
+      >
+        (Pour l'instant, on garde ton exemple existant ici.)
       </p>
 
       <div className="mt-6">

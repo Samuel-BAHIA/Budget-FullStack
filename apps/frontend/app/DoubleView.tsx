@@ -18,7 +18,7 @@ export function DoubleView({
   loading,
 }: Props) {
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-50">
+    <div style={{ backgroundColor: "var(--theme-bg)", color: "var(--theme-text)" }}>
       <div className="mx-auto max-w-md p-6">
         <h1 className="text-3xl font-semibold tracking-tight">Multiplier par 2</h1>
 
@@ -27,13 +27,38 @@ export function DoubleView({
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
             placeholder="Entre un nombre (ex: 12)"
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 outline-none focus:ring-2 focus:ring-neutral-500"
+            className="w-full rounded-md border px-3 py-2 outline-none focus:ring-2"
+            style={{
+              borderColor: "var(--theme-border)",
+              backgroundColor: "var(--theme-bgCard)",
+              color: "var(--theme-text)",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--theme-borderLight)";
+              e.currentTarget.style.boxShadow = "0 0 0 2px var(--theme-borderLight)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--theme-border)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           />
 
           <button
             onClick={onSubmit}
             disabled={loading}
-            className="w-full rounded-md bg-neutral-200 px-3 py-2 font-medium text-neutral-900 disabled:opacity-60"
+            className="w-full rounded-md px-3 py-2 font-medium disabled:opacity-60 transition"
+            style={{
+              backgroundColor: "var(--theme-tabActiveBg)",
+              color: "var(--theme-tabActiveText)",
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.opacity = "0.9";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = loading ? "0.6" : "1";
+            }}
           >
             {loading ? "Calcul..." : "Envoyer"}
           </button>
@@ -51,6 +76,6 @@ export function DoubleView({
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

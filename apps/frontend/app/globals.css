@@ -5,6 +5,20 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Variables de thème par défaut (seront remplacées dynamiquement) */
+  --theme-bg: #0a0a0a;
+  --theme-bgCard: rgba(23, 23, 23, 0.4);
+  --theme-bgHover: rgba(38, 38, 38, 0.6);
+  --theme-text: #fafafa;
+  --theme-textSecondary: #a3a3a3;
+  --theme-textMuted: #737373;
+  --theme-border: #262626;
+  --theme-borderLight: #404040;
+  --theme-tabActiveBg: #e5e5e5;
+  --theme-tabActiveText: #171717;
+  --theme-tabInactiveText: #d4d4d4;
+  --theme-tabHoverBg: rgba(38, 38, 38, 0.6);
 }
 
 @media (prefers-color-scheme: dark) {
