@@ -7,6 +7,7 @@ import { DepensesVariablesTab } from "./tabs/DepensesVariablesTab";
 import { BilanTab } from "./tabs/BilanTab";
 import { AppartementsTab } from "./tabs/AppartementsTab";
 import { ThemeSelector } from "./components/ThemeSelector";
+import { useBudget } from "./contexts/BudgetContext";
 
 type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements";
 
@@ -18,8 +19,14 @@ const tabs: { id: TabId; label: string }[] = [
   { id: "bilan", label: "Bilan" },
 ];
 
+// Fonction pour formater le montant
+const formatMontant = (value: number) => {
+  return `${value.toLocaleString("fr-FR")} €`;
+};
+
 export function MainTabs() {
   const [active, setActive] = useState<TabId>("revenus");
+  const { totals } = useBudget();
 
   return (
     <main
@@ -66,6 +73,25 @@ export function MainTabs() {
             >
               {tabs.map((t) => {
                 const isActive = active === t.id;
+                
+                // Déterminer le total et la couleur selon l'onglet
+                let total = 0;
+                let totalColor = "";
+                
+                if (t.id === "revenus") {
+                  total = totals.revenus;
+                  totalColor = "#22c55e"; // Vert
+                } else if (t.id === "fixes") {
+                  total = totals.depensesFixes;
+                  totalColor = "#ef4444"; // Rouge
+                } else if (t.id === "variables") {
+                  total = totals.depensesVariables;
+                  totalColor = "#ef4444"; // Rouge
+                } else if (t.id === "appartements") {
+                  total = totals.appartements;
+                  totalColor = "#ef4444"; // Rouge
+                }
+                
                 return (
                   <button
                     key={t.id}
@@ -103,6 +129,14 @@ export function MainTabs() {
                     }}
                   >
                     {t.label}
+                    {(t.id === "revenus" || t.id === "fixes" || t.id === "variables" || t.id === "appartements") && (
+                      <span
+                        className="ml-2"
+                        style={{ color: totalColor }}
+                      >
+                        ({formatMontant(total)})
+                      </span>
+                    )}
                   </button>
                 );
               })}
