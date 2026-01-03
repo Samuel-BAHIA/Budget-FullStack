@@ -5,14 +5,16 @@ import { RevenusTab } from "./tabs/RevenusTab";
 import { DepensesFixesTab } from "./tabs/DepensesFixesTab";
 import { DepensesVariablesTab } from "./tabs/DepensesVariablesTab";
 import { BilanTab } from "./tabs/BilanTab";
+import { AppartementsTab } from "./tabs/AppartementsTab";
 import { ThemeSelector } from "./components/ThemeSelector";
 
-type TabId = "revenus" | "fixes" | "variables" | "bilan";
+type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements";
 
 const tabs: { id: TabId; label: string }[] = [
   { id: "revenus", label: "Revenus" },
   { id: "fixes", label: "Dépenses fixes" },
   { id: "variables", label: "Dépenses variables" },
+  { id: "appartements", label: "Appartements" },
   { id: "bilan", label: "Bilan" },
 ];
 
@@ -112,6 +114,7 @@ export function MainTabs() {
             {active === "revenus" && <RevenusTab />}
             {active === "fixes" && <DepensesFixesTab />}
             {active === "variables" && <DepensesVariablesTab />}
+            {active === "appartements" && <AppartementsTab />}
             {active === "bilan" && <BilanTab />}
           </div>
         </div>
