@@ -99,6 +99,20 @@ export function AppartementsTab() {
     };
   };
 
+  // Fonction pour supprimer un appartement
+  const handleDeleteAppartement = (id: number) => {
+    return () => {
+      if (
+        confirm(
+          "Êtes-vous sûr de vouloir supprimer cet appartement ? Cette action est irréversible."
+        )
+      ) {
+        setAppartements(appartements.filter((apt) => apt.id !== id));
+        console.log(`Appartement ${id} supprimé`);
+      }
+    };
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -140,6 +154,7 @@ export function AppartementsTab() {
             initialData={apt.data}
             onDataChange={handleAppartementDataChange(apt.id)}
             onNameChange={handleAppartementNameChange(apt.id)}
+            onDelete={handleDeleteAppartement(apt.id)}
           />
         ))}
       </div>
