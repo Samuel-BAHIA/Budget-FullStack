@@ -65,17 +65,21 @@ type AppartementBlockProps = {
   name?: string;
   initialData?: {
     loyer?: number;
-    eau?: number;
-    internet?: number;
+    credit?: number;
+    assuranceCredit?: number;
     assurance?: number;
+    internet?: number;
+    eau?: number;
     electricite?: number;
     gaz?: number;
   };
   onDataChange?: (data: {
     loyer: number;
-    eau: number;
-    internet: number;
+    credit: number;
+    assuranceCredit: number;
     assurance: number;
+    internet: number;
+    eau: number;
     electricite: number;
     gaz: number;
   }) => void;
@@ -95,76 +99,82 @@ export function AppartementBlock({
   const [appartementName, setAppartementName] = useState(
     name || `Appartement ${appartementNumber}`
   );
+
   const [loyer, setLoyer] = useState(initialData.loyer || 0);
-  const [eau, setEau] = useState(initialData.eau || 0);
-  const [internet, setInternet] = useState(initialData.internet || 0);
+  const [credit, setCredit] = useState(initialData.credit || 0);
+  const [assuranceCredit, setAssuranceCredit] = useState(
+    initialData.assuranceCredit || 0
+  );
+
   const [assurance, setAssurance] = useState(initialData.assurance || 0);
+  const [internet, setInternet] = useState(initialData.internet || 0);
+  const [eau, setEau] = useState(initialData.eau || 0);
   const [electricite, setElectricite] = useState(initialData.electricite || 0);
   const [gaz, setGaz] = useState(initialData.gaz || 0);
 
-  // Fonction pour mettre à jour toutes les données
-  const updateAllData = () => {
-    if (onDataChange) {
-      onDataChange({
-        loyer,
-        eau,
-        internet,
-        assurance,
-        electricite,
-        gaz,
-      });
-    }
+  // Style "un peu plus clair" pour les EditableValueEuro (wrapper)
+  const editableWrapperStyle: React.CSSProperties = {
+    backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 82%, white)",
+    border: "1px solid color-mix(in srgb, var(--theme-border) 75%, white)",
   };
 
-  // Fonction générique pour mettre à jour une valeur et déclencher la mise à jour globale
-  const handleSave = (
-    newValue: string,
-    setter: (value: number) => void
-  ) => {
-    return async () => {
+  // Fonction pour mettre à jour toutes les données
+  const updateAllData = () => {
+    if (!onDataChange) return;
+    onDataChange({
+      loyer,
+      credit,
+      assuranceCredit,
+      assurance,
+      internet,
+      eau,
+      electricite,
+      gaz,
+    });
+  };
+
+  // ✅ Corrigé : onSave attend généralement (newValue) => Promise<void>
+  const handleSave =
+    (setter: (value: number) => void) => async (newValue: string) => {
       const numValue = Number(newValue);
-      setter(numValue);
+      setter(Number.isFinite(numValue) ? numValue : 0);
+
       // Simuler une mise à jour asynchrone (remplacez par votre appel API)
       await new Promise((resolve) => setTimeout(resolve, 300));
       updateAllData();
     };
-  };
 
   // Fonction pour le texte indicatif du loyer
   const getLoyerHint = (value: string | number) => {
     const numValue = Number(value);
-    if (numValue === 0) {
-      return "Aucun loyer défini";
-    } else if (numValue < 500) {
-      return "Loyer très bas";
-    } else if (numValue < 1000) {
-      return "Loyer modéré";
-    } else {
-      return "Loyer élevé";
-    }
+    if (numValue === 0) return "Aucun loyer défini";
+    if (numValue < 500) return "Loyer très bas";
+    if (numValue < 1000) return "Loyer modéré";
+    return "Loyer élevé";
   };
 
   // Fonction générique pour les autres dépenses
   const getDepenseHint = (value: string | number) => {
     const numValue = Number(value);
-    if (numValue === 0) {
-      return "Aucune dépense définie";
-    } else if (numValue < 50) {
-      return "Dépense faible";
-    } else if (numValue < 100) {
-      return "Dépense modérée";
-    } else {
-      return "Dépense élevée";
-    }
+    if (numValue === 0) return "Aucune dépense définie";
+    if (numValue < 50) return "Dépense faible";
+    if (numValue < 100) return "Dépense modérée";
+    return "Dépense élevée";
   };
 
   // Calcul du total des dépenses
-  const totalDepenses = loyer + eau + electricite + gaz + assurance + internet;
+  const totalDepenses =
+    loyer +
+    credit +
+    assuranceCredit +
+    assurance +
+    internet +
+    eau +
+    electricite +
+    gaz;
 
   // Fonction de formatage pour le total
-  const formatTotal = (value: number) => {
-    return `${value.toLocaleString("fr-FR")} €`;
-  };
+  const formatTotal = (value: number) => `${value.toLocaleString("fr-FR")} €`;
 
   return (
     <div
@@ -192,25 +202,22 @@ export function AppartementBlock({
             onChange={(e) => {
               const newName = e.target.value;
               setAppartementName(newName);
-              if (onNameChange) {
-                onNameChange(newName);
-              }
+              onNameChange?.(newName);
             }}
             className="bg-transparent text-lg font-semibold outline-none"
             style={{ color: "var(--theme-text)" }}
             placeholder={`Appartement ${appartementNumber}`}
           />
         </div>
+
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p
-              className="text-sm"
-              style={{ color: "var(--theme-textSecondary)" }}
-            >
+            <p className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
               Total
             </p>
             <p className="text-xl font-semibold">{formatTotal(totalDepenses)}</p>
           </div>
+
           {onDelete && (
             <button
               onClick={onDelete}
@@ -218,12 +225,10 @@ export function AppartementBlock({
               style={{ color: "var(--theme-textSecondary)" }}
               title="Supprimer"
               aria-label="Supprimer"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "#ef4444";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "var(--theme-textSecondary)";
-              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color = "var(--theme-textSecondary)")
+              }
             >
               <TrashIcon />
             </button>
@@ -234,56 +239,85 @@ export function AppartementBlock({
       {/* Contenu déroulable : sous-dépenses */}
       {isExpanded && (
         <div className="space-y-4">
-          {/* Ligne horizontale : Loyer, Assurance, Internet */}
-          <div className="grid grid-cols-3 gap-4">
-            <EditableValueEuro
-              label="Loyer"
-              value={loyer}
-              onSave={handleSave(setLoyer)}
-              hintText={getLoyerHint}
-            />
+          {/* ✅ Ligne 1 : Loyer, Crédit, Assurance crédit, Assurance */}
+          <div className="grid grid-cols-4 gap-4">
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Loyer"
+                value={loyer}
+                onSave={handleSave(setLoyer)}
+                hintText={getLoyerHint}
+              />
+            </div>
 
-            <EditableValueEuro
-              label="Assurance"
-              value={assurance}
-              onSave={handleSave(setAssurance)}
-              hintText={getDepenseHint}
-            />
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Crédit"
+                value={credit}
+                onSave={handleSave(setCredit)}
+                hintText={getDepenseHint}
+              />
+            </div>
 
-            <EditableValueEuro
-              label="Internet"
-              value={internet}
-              onSave={handleSave(setInternet)}
-              hintText={getDepenseHint}
-            />
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Assurance crédit"
+                value={assuranceCredit}
+                onSave={handleSave(setAssuranceCredit)}
+                hintText={getDepenseHint}
+              />
+            </div>
+
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Assurance"
+                value={assurance}
+                onSave={handleSave(setAssurance)}
+                hintText={getDepenseHint}
+              />
+            </div>
           </div>
 
-          {/* Ligne horizontale : Eau, Électricité, Gaz */}
-          <div className="grid grid-cols-3 gap-4">
-            <EditableValueEuro
-              label="Eau"
-              value={eau}
-              onSave={handleSave(setEau)}
-              hintText={getDepenseHint}
-            />
+          {/* ✅ Ligne 2 : Internet, Eau, Électricité, Gaz */}
+          <div className="grid grid-cols-4 gap-4">
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Internet"
+                value={internet}
+                onSave={handleSave(setInternet)}
+                hintText={getDepenseHint}
+              />
+            </div>
 
-            <EditableValueEuro
-              label="Électricité"
-              value={electricite}
-              onSave={handleSave(setElectricite)}
-              hintText={getDepenseHint}
-            />
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Eau"
+                value={eau}
+                onSave={handleSave(setEau)}
+                hintText={getDepenseHint}
+              />
+            </div>
 
-            <EditableValueEuro
-              label="Gaz"
-              value={gaz}
-              onSave={handleSave(setGaz)}
-              hintText={getDepenseHint}
-            />
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Électricité"
+                value={electricite}
+                onSave={handleSave(setElectricite)}
+                hintText={getDepenseHint}
+              />
+            </div>
+
+            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <EditableValueEuro
+                label="Gaz"
+                value={gaz}
+                onSave={handleSave(setGaz)}
+                hintText={getDepenseHint}
+              />
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
-
