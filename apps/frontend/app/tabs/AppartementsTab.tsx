@@ -4,13 +4,18 @@ import { useEffect, useState } from "react";
 import { AppartementBlock } from "../components/AppartementBlock";
 import { useBudget } from "../contexts/BudgetContext";
 
-type AppartementData = {
+export type AppartementType = "loue" | "achete";
+
+export type AppartementData = {
   id: number;
   name: string;
+  type: AppartementType;
   data: {
     loyer: number;
     credit: number;
     assuranceCredit: number;
+    taxeFonciere: number;
+    impotsRevenu: number;
     assurance: number;
     internet: number;
     eau: number;
@@ -19,8 +24,7 @@ type AppartementData = {
   };
 };
 
-
-// Icône plus
+// Icone plus
 const PlusIcon = () => (
   <svg
     width="20"
@@ -43,10 +47,13 @@ export function AppartementsTab() {
     {
       id: 1,
       name: "Appartement 1",
+      type: "loue",
       data: {
         loyer: 800,
         credit: 100,
         assuranceCredit: 20,
+        taxeFonciere: 0,
+        impotsRevenu: 0,
         assurance: 40,
         internet: 30,
         eau: 50,
@@ -64,10 +71,13 @@ export function AppartementsTab() {
     const newAppartement: AppartementData = {
       id: newId,
       name: `Appartement ${newId}`,
+      type: "loue",
       data: {
         loyer: 0,
         credit: 0,
         assuranceCredit: 0,
+        taxeFonciere: 0,
+        impotsRevenu: 0,
         eau: 0,
         internet: 0,
         assurance: 0,
@@ -78,34 +88,23 @@ export function AppartementsTab() {
     setAppartements((prev) => [...prev, newAppartement]);
   };
 
-  // Fonction appelée quand les données d'un appartement changent
+  // Fonction appellee quand les donnees ou le type d'un appartement changent
   const handleAppartementDataChange = (id: number) => {
-    return (data: {
-      loyer: number;
-      credit: number;
-      assuranceCredit: number;
-      eau: number;
-      internet: number;
-      assurance: number;
-      electricite: number;
-      gaz: number;
-    }) => {
+    return (data: AppartementData["data"], type: AppartementType) => {
       setAppartements((prev) =>
-        prev.map((apt) => (apt.id === id ? { ...apt, data } : apt))
+        prev.map((apt) => (apt.id === id ? { ...apt, data, type } : apt))
       );
-      console.log(`Appartement ${id} mis à jour:`, data);
-      // TODO: Appeler votre fonction de mise à jour globale ici
-      // updateAllData({ appartement: id, ...data });
+      console.log(`Appartement ${id} mis a jour:`, data, type);
     };
   };
 
-  // Fonction appelée quand le nom d'un appartement change
+  // Fonction appellee quand le nom d'un appartement change
   const handleAppartementNameChange = (id: number) => {
     return (name: string) => {
       setAppartements((prev) =>
         prev.map((apt) => (apt.id === id ? { ...apt, name } : apt))
       );
-      console.log(`Nom de l'appartement ${id} mis à jour:`, name);
+      console.log(`Nom de l'appartement ${id} mis a jour:`, name);
     };
   };
 
@@ -114,11 +113,11 @@ export function AppartementsTab() {
     return () => {
       if (
         confirm(
-          "Êtes-vous sûr de vouloir supprimer cet appartement ? Cette action est irréversible."
+          "Etes-vous sur de vouloir supprimer cet appartement ? Cette action est irreversible."
         )
       ) {
         setAppartements((prev) => prev.filter((apt) => apt.id !== id));
-        console.log(`Appartement ${id} supprimé`);
+        console.log(`Appartement ${id} supprime`);
       }
     };
   };
@@ -131,6 +130,8 @@ export function AppartementsTab() {
         d.loyer +
         d.credit +
         d.assuranceCredit +
+        d.taxeFonciere +
+        d.impotsRevenu +
         d.assurance +
         d.internet +
         d.eau +
@@ -151,7 +152,7 @@ export function AppartementsTab() {
             className="mt-2"
             style={{ color: "var(--theme-textSecondary)" }}
           >
-            Gérez vos appartements et leurs informations.
+            Gere tes appartements achetes ou loues, et leurs informations.
           </p>
         </div>
         <button
@@ -180,6 +181,7 @@ export function AppartementsTab() {
             key={apt.id}
             appartementNumber={apt.id}
             name={apt.name}
+            type={apt.type}
             initialData={apt.data}
             onDataChange={handleAppartementDataChange(apt.id)}
             onNameChange={handleAppartementNameChange(apt.id)}
@@ -190,4 +192,3 @@ export function AppartementsTab() {
     </div>
   );
 }
-
