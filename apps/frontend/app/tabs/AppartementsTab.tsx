@@ -1,20 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppartementBlock } from "../components/AppartementBlock";
+import { useBudget } from "../contexts/BudgetContext";
 
 type AppartementData = {
   id: number;
   name: string;
   data: {
     loyer: number;
-    eau: number;
-    internet: number;
+    credit: number;
+    assuranceCredit: number;
     assurance: number;
+    internet: number;
+    eau: number;
     electricite: number;
     gaz: number;
   };
 };
+
 
 // Icône plus
 const PlusIcon = () => (
@@ -41,14 +45,18 @@ export function AppartementsTab() {
       name: "Appartement 1",
       data: {
         loyer: 800,
-        eau: 50,
-        internet: 30,
+        credit: 100,
+        assuranceCredit: 20,
         assurance: 40,
+        internet: 30,
+        eau: 50,
         electricite: 60,
         gaz: 45,
       },
     },
   ]);
+
+  const { updateTotal } = useBudget();
 
   // Fonction pour ajouter un nouvel appartement
   const handleAddAppartement = () => {
@@ -58,6 +66,8 @@ export function AppartementsTab() {
       name: `Appartement ${newId}`,
       data: {
         loyer: 0,
+        credit: 0,
+        assuranceCredit: 0,
         eau: 0,
         internet: 0,
         assurance: 0,
@@ -65,23 +75,23 @@ export function AppartementsTab() {
         gaz: 0,
       },
     };
-    setAppartements([...appartements, newAppartement]);
+    setAppartements((prev) => [...prev, newAppartement]);
   };
 
   // Fonction appelée quand les données d'un appartement changent
   const handleAppartementDataChange = (id: number) => {
     return (data: {
       loyer: number;
+      credit: number;
+      assuranceCredit: number;
       eau: number;
       internet: number;
       assurance: number;
       electricite: number;
       gaz: number;
     }) => {
-      setAppartements(
-        appartements.map((apt) =>
-          apt.id === id ? { ...apt, data } : apt
-        )
+      setAppartements((prev) =>
+        prev.map((apt) => (apt.id === id ? { ...apt, data } : apt))
       );
       console.log(`Appartement ${id} mis à jour:`, data);
       // TODO: Appeler votre fonction de mise à jour globale ici
@@ -92,8 +102,8 @@ export function AppartementsTab() {
   // Fonction appelée quand le nom d'un appartement change
   const handleAppartementNameChange = (id: number) => {
     return (name: string) => {
-      setAppartements(
-        appartements.map((apt) => (apt.id === id ? { ...apt, name } : apt))
+      setAppartements((prev) =>
+        prev.map((apt) => (apt.id === id ? { ...apt, name } : apt))
       );
       console.log(`Nom de l'appartement ${id} mis à jour:`, name);
     };
@@ -107,11 +117,30 @@ export function AppartementsTab() {
           "Êtes-vous sûr de vouloir supprimer cet appartement ? Cette action est irréversible."
         )
       ) {
-        setAppartements(appartements.filter((apt) => apt.id !== id));
+        setAppartements((prev) => prev.filter((apt) => apt.id !== id));
         console.log(`Appartement ${id} supprimé`);
       }
     };
   };
+
+  useEffect(() => {
+    const totalAppartements = appartements.reduce((sum, apt) => {
+      const d = apt.data;
+      return (
+        sum +
+        d.loyer +
+        d.credit +
+        d.assuranceCredit +
+        d.assurance +
+        d.internet +
+        d.eau +
+        d.electricite +
+        d.gaz
+      );
+    }, 0);
+
+    updateTotal("appartements", totalAppartements);
+  }, [appartements, updateTotal]);
 
   return (
     <div className="space-y-6">

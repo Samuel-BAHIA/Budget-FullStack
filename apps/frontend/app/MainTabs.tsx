@@ -6,16 +6,18 @@ import { DepensesFixesTab } from "./tabs/DepensesFixesTab";
 import { DepensesVariablesTab } from "./tabs/DepensesVariablesTab";
 import { BilanTab } from "./tabs/BilanTab";
 import { AppartementsTab } from "./tabs/AppartementsTab";
+import { TestTab } from "./tabs/TestTab";
 import { ThemeSelector } from "./components/ThemeSelector";
 import { useBudget } from "./contexts/BudgetContext";
 
-type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements";
+type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements" | "test";
 
 const tabs: { id: TabId; label: string }[] = [
   { id: "revenus", label: "Revenus" },
   { id: "fixes", label: "Dépenses fixes" },
   { id: "variables", label: "Dépenses variables" },
   { id: "appartements", label: "Appartements" },
+  { id: "test", label: "Test" },
   { id: "bilan", label: "Bilan" },
 ];
 
@@ -149,6 +151,7 @@ export function MainTabs() {
             {active === "fixes" && <DepensesFixesTab />}
             {active === "variables" && <DepensesVariablesTab />}
             {active === "appartements" && <AppartementsTab />}
+            {active === "test" && <TestTab />}
             {active === "bilan" && <BilanTab />}
           </div>
         </div>
