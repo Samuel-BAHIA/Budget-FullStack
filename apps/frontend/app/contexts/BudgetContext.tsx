@@ -25,10 +25,13 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
   });
 
   const updateTotal = (category: keyof BudgetData, value: number) => {
-    setTotals((prev) => ({
-      ...prev,
-      [category]: value,
-    }));
+    setTotals((prev) => {
+      if (prev[category] === value) return prev;
+      return {
+        ...prev,
+        [category]: value,
+      };
+    });
   };
 
   return (
@@ -45,4 +48,3 @@ export function useBudget() {
   }
   return context;
 }
-
