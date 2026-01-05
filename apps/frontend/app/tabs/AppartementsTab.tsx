@@ -4,18 +4,19 @@ import { useEffect, useState } from "react";
 import { AppartementBlock } from "../components/AppartementBlock";
 import { useBudget } from "../contexts/BudgetContext";
 
-export type AppartementType = "loue" | "achete";
+export type AppartementType = "location" | "propriete";
 
 export type AppartementData = {
   id: number;
   name: string;
   type: AppartementType;
   data: {
-    loyer: number;
+    loyer: number; // loyer payé ou perçu
     credit: number;
     assuranceCredit: number;
     taxeFonciere: number;
     impotsRevenu: number;
+    chargesCopro: number;
     assurance: number;
     internet: number;
     eau: number;
@@ -47,13 +48,14 @@ export function AppartementsTab() {
     {
       id: 1,
       name: "Appartement 1",
-      type: "loue",
+      type: "location",
       data: {
         loyer: 800,
         credit: 100,
         assuranceCredit: 20,
         taxeFonciere: 0,
         impotsRevenu: 0,
+        chargesCopro: 0,
         assurance: 40,
         internet: 30,
         eau: 50,
@@ -71,13 +73,14 @@ export function AppartementsTab() {
     const newAppartement: AppartementData = {
       id: newId,
       name: `Appartement ${newId}`,
-      type: "loue",
+      type: "location",
       data: {
         loyer: 0,
         credit: 0,
         assuranceCredit: 0,
         taxeFonciere: 0,
         impotsRevenu: 0,
+        chargesCopro: 0,
         eau: 0,
         internet: 0,
         assurance: 0,
@@ -125,13 +128,22 @@ export function AppartementsTab() {
   useEffect(() => {
     const totalAppartements = appartements.reduce((sum, apt) => {
       const d = apt.data;
+      if (apt.type === "propriete") {
+        return (
+          sum +
+          d.loyer +
+          d.impotsRevenu +
+          d.taxeFonciere +
+          d.chargesCopro +
+          d.assurance +
+          d.credit +
+          d.assuranceCredit
+        );
+      }
+      // location
       return (
         sum +
         d.loyer +
-        d.credit +
-        d.assuranceCredit +
-        d.taxeFonciere +
-        d.impotsRevenu +
         d.assurance +
         d.internet +
         d.eau +

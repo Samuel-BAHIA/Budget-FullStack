@@ -13,6 +13,7 @@ type EditableValueProps = {
   inputType?: "text" | "number" | "email" | "tel";
   className?: string;
   disabled?: boolean;
+  displaySuffix?: React.ReactNode;
 };
 
 // Icône de modification (crayon)
@@ -83,6 +84,7 @@ export function EditableValue({
   inputType = "text",
   className = "",
   disabled = false,
+  displaySuffix,
 }: EditableValueProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(formatInput(value));
@@ -204,7 +206,17 @@ export function EditableValue({
           </>
         ) : (
           <>
-            <span className="flex-1 text-lg font-medium">{displayValue}</span>
+            <div className="flex-1 flex items-baseline gap-1">
+              <span className="text-lg font-medium">{displayValue}</span>
+              {displaySuffix && (
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--theme-textSecondary)" }}
+                >
+                  {displaySuffix}
+                </span>
+              )}
+            </div>
             {!disabled && (
               <button
                 onClick={handleEdit}

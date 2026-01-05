@@ -42,7 +42,7 @@ type AppartementBlockProps = {
 export function AppartementBlock({
   appartementNumber,
   name,
-  type: initialType = "loue",
+  type: initialType = "location",
   initialData = {},
   onDataChange,
   onNameChange,
@@ -57,6 +57,7 @@ export function AppartementBlock({
   const [assuranceCredit, setAssuranceCredit] = useState(initialData.assuranceCredit || 0);
   const [taxeFonciere, setTaxeFonciere] = useState(initialData.taxeFonciere || 0);
   const [impotsRevenu, setImpotsRevenu] = useState(initialData.impotsRevenu || 0);
+  const [chargesCopro, setChargesCopro] = useState(initialData.chargesCopro || 0);
   const [assurance, setAssurance] = useState(initialData.assurance || 0);
   const [internet, setInternet] = useState(initialData.internet || 0);
   const [eau, setEau] = useState(initialData.eau || 0);
@@ -75,6 +76,7 @@ export function AppartementBlock({
     taxeFonciere,
     impotsRevenu,
     assurance,
+    chargesCopro,
     internet,
     eau,
     electricite,
@@ -110,30 +112,47 @@ export function AppartementBlock({
   };
 
   const totalDepenses =
-    loyer +
-    credit +
-    assuranceCredit +
-    taxeFonciere +
-    impotsRevenu +
-    assurance +
-    internet +
-    eau +
-    electricite +
-    gaz;
+    type === "propriete"
+      ? loyer +
+        impotsRevenu +
+        taxeFonciere +
+        chargesCopro +
+        assurance +
+        credit +
+        assuranceCredit
+      : loyer + assurance + internet + eau + electricite + gaz;
 
   const formatTotal = (value: number) => `${value.toLocaleString("fr-FR")} €`;
 
   const handleTypeChange = (newType: AppartementType) => {
-    setType(newType);
-    if (newType === "loue") {
-      setCredit(0);
-      setAssuranceCredit(0);
-      setTaxeFonciere(0);
-      setImpotsRevenu(0);
+    const nextValues = getCurrentData();
+    if (newType === "location") {
+      nextValues.credit = 0;
+      nextValues.assuranceCredit = 0;
+      nextValues.taxeFonciere = 0;
+      nextValues.impotsRevenu = 0;
+      nextValues.chargesCopro = 0;
     } else {
-      setLoyer(0);
+      nextValues.loyer = 0;
+      nextValues.internet = 0;
+      nextValues.eau = 0;
+      nextValues.electricite = 0;
+      nextValues.gaz = 0;
     }
-    setTimeout(updateAllData, 0);
+
+    setType(newType);
+    setCredit(nextValues.credit);
+    setAssuranceCredit(nextValues.assuranceCredit);
+    setTaxeFonciere(nextValues.taxeFonciere);
+    setImpotsRevenu(nextValues.impotsRevenu);
+    setChargesCopro(nextValues.chargesCopro);
+    setLoyer(nextValues.loyer);
+    setInternet(nextValues.internet);
+    setEau(nextValues.eau);
+    setElectricite(nextValues.electricite);
+    setGaz(nextValues.gaz);
+
+    onDataChange?.(nextValues, newType);
   };
 
   return (
@@ -177,8 +196,8 @@ export function AppartementBlock({
               color: "var(--theme-text)",
             }}
           >
-            <option value="loue">Loue</option>
-            <option value="achete">Achete</option>
+            <option value="location">Location</option>
+            <option value="propriete">Propriete</option>
           </select>
         </div>
 
@@ -208,72 +227,141 @@ export function AppartementBlock({
 
       {isExpanded && (
         <div className="space-y-4">
+          {/* Ligne revenus */}
           <div className="grid grid-cols-4 gap-4">
-            {type === "loue" && (
-              <div className="rounded-xl p-2" style={editableWrapperStyle}>
-                <EditableValueEuro label="Loyer" value={loyer} onSave={handleSave(setLoyer)} hintText={getLoyerHint} />
-              </div>
-            )}
-
-            {type === "achete" && (
-              <>
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
-                  <EditableValueEuro label="Credit" value={credit} onSave={handleSave(setCredit)} hintText={getDepenseHint} />
-                </div>
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
-                  <EditableValueEuro
-                    label="Assurance credit"
-                    value={assuranceCredit}
-                    onSave={handleSave(setAssuranceCredit)}
-                    hintText={getDepenseHint}
-                  />
-                </div>
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
-                  <EditableValueEuro
-                    label="Taxe fonciere"
-                    value={taxeFonciere}
-                    onSave={handleSave(setTaxeFonciere)}
-                    hintText={getDepenseHint}
-                  />
-                </div>
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
-                  <EditableValueEuro
-                    label="Impots sur revenu"
-                    value={impotsRevenu}
-                    onSave={handleSave(setImpotsRevenu)}
-                    hintText={getDepenseHint}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="grid grid-cols-4 gap-4">
-            <div className="rounded-xl p-2" style={editableWrapperStyle}>
-              <EditableValueEuro label="Assurance" value={assurance} onSave={handleSave(setAssurance)} hintText={getDepenseHint} />
-            </div>
-
-            <div className="rounded-xl p-2" style={editableWrapperStyle}>
-              <EditableValueEuro label="Internet" value={internet} onSave={handleSave(setInternet)} hintText={getDepenseHint} />
-            </div>
-
-            <div className="rounded-xl p-2" style={editableWrapperStyle}>
-              <EditableValueEuro label="Eau" value={eau} onSave={handleSave(setEau)} hintText={getDepenseHint} />
-            </div>
-
             <div className="rounded-xl p-2" style={editableWrapperStyle}>
               <EditableValueEuro
-                label="Electricite"
-                value={electricite}
-                onSave={handleSave(setElectricite)}
-                hintText={getDepenseHint}
+                label={type === "propriete" ? "Loyer percu" : "Loyer a charge"}
+                value={loyer}
+                onSave={handleSave(setLoyer)}
+                hintText={getLoyerHint}
+                displaySuffix="/mois"
               />
             </div>
-
-            <div className="rounded-xl p-2" style={editableWrapperStyle}>
-              <EditableValueEuro label="Gaz" value={gaz} onSave={handleSave(setGaz)} hintText={getDepenseHint} />
-            </div>
+            {type === "propriete" && (
+              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <EditableValueEuro
+                  label="Impots sur revenu"
+                  value={impotsRevenu}
+                  onSave={handleSave(setImpotsRevenu)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                />
+              </div>
+            )}
           </div>
+
+          {/* Ligne charges */}
+          {type === "propriete" && (
+            <div className="grid grid-cols-4 gap-4">
+              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <EditableValueEuro
+                  label="Taxe fonciere"
+                  value={taxeFonciere}
+                  onSave={handleSave(setTaxeFonciere)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                />
+              </div>
+              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <EditableValueEuro
+                  label="Charges copro"
+                  value={chargesCopro}
+                  onSave={handleSave(setChargesCopro)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                />
+              </div>
+              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <EditableValueEuro
+                  label="Assurance habitation"
+                  value={assurance}
+                  onSave={handleSave(setAssurance)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                />
+              </div>
+            </div>
+          )}
+
+          {type === "location" && (
+            <>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                  <EditableValueEuro
+                    label="Assurance habitation"
+                    value={assurance}
+                    onSave={handleSave(setAssurance)}
+                    hintText={getDepenseHint}
+                    displaySuffix="/mois"
+                  />
+                </div>
+                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                  <EditableValueEuro
+                    label="Internet"
+                    value={internet}
+                    onSave={handleSave(setInternet)}
+                    hintText={getDepenseHint}
+                    displaySuffix="/mois"
+                  />
+                </div>
+                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                  <EditableValueEuro
+                    label="Eau"
+                    value={eau}
+                    onSave={handleSave(setEau)}
+                    hintText={getDepenseHint}
+                    displaySuffix="/mois"
+                  />
+                </div>
+                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                  <EditableValueEuro
+                    label="Electricite"
+                    value={electricite}
+                    onSave={handleSave(setElectricite)}
+                    hintText={getDepenseHint}
+                    displaySuffix="/mois"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-4">
+                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                  <EditableValueEuro
+                    label="Gaz"
+                    value={gaz}
+                    onSave={handleSave(setGaz)}
+                    hintText={getDepenseHint}
+                    displaySuffix="/mois"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Ligne credit */}
+          {type === "propriete" && (
+            <div className="grid grid-cols-4 gap-4">
+              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <EditableValueEuro
+                  label="Credit"
+                  value={credit}
+                  onSave={handleSave(setCredit)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                />
+              </div>
+              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <EditableValueEuro
+                  label="Assurance credit"
+                  value={assuranceCredit}
+                  onSave={handleSave(setAssuranceCredit)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
