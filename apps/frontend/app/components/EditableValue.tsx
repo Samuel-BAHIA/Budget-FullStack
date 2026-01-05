@@ -14,6 +14,7 @@ type EditableValueProps = {
   className?: string;
   disabled?: boolean;
   displaySuffix?: React.ReactNode;
+  displayPrefix?: React.ReactNode;
 };
 
 // Icône de modification (crayon)
@@ -85,6 +86,7 @@ export function EditableValue({
   className = "",
   disabled = false,
   displaySuffix,
+  displayPrefix,
 }: EditableValueProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(formatInput(value));
@@ -207,6 +209,14 @@ export function EditableValue({
         ) : (
           <>
             <div className="flex-1 flex items-baseline gap-1">
+              {displayPrefix && (
+                <span
+                  className="text-lg font-semibold"
+                  style={{ color: "var(--theme-textSecondary)" }}
+                >
+                  {displayPrefix}
+                </span>
+              )}
               <span className="text-lg font-medium">{displayValue}</span>
               {displaySuffix && (
                 <span

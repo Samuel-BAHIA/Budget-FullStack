@@ -265,6 +265,8 @@ export function RevenusTab() {
               value={item.montant}
               onSave={handleSaveMontant(item.id)}
               hintText={getHint}
+              displayPrefix="+"
+              displaySuffix="/mois"
             />
           </div>
         ))}

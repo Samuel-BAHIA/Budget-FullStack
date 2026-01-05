@@ -313,9 +313,11 @@ export function DepensesVariablesTab() {
                   value={item.montant}
                   onSave={handleSaveMontant(section, item.id)}
                   hintText={getDepenseHint}
+                  displayPrefix="-"
+                  displaySuffix="/mois"
                 />
-            </div>
-          ))}
+              </div>
+            ))}
         </div>
       </div>
     );

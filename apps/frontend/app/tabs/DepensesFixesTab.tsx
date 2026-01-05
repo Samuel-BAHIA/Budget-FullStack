@@ -280,11 +280,13 @@ export function DepensesFixesTab() {
                     </>
                   )}
                 </div>
-                  <EditableValueEuro
-                    value={abo.montant}
-                    onSave={handleSaveMontant("abonnements", abo.id)}
-                    hintText={getDepenseHint}
-                  />
+                <EditableValueEuro
+                  value={abo.montant}
+                  onSave={handleSaveMontant("abonnements", abo.id)}
+                  hintText={getDepenseHint}
+                  displayPrefix="-"
+                  displaySuffix="/mois"
+                />
               </div>
             ))}
           </div>
@@ -382,11 +384,13 @@ export function DepensesFixesTab() {
                     </>
                   )}
                 </div>
-                  <EditableValueEuro
-                    value={item.montant}
-                    onSave={handleSaveMontant("voiture", item.id)}
-                    hintText={getDepenseHint}
-                  />
+                <EditableValueEuro
+                  value={item.montant}
+                  onSave={handleSaveMontant("voiture", item.id)}
+                  hintText={getDepenseHint}
+                  displayPrefix="-"
+                  displaySuffix="/mois"
+                />
               </div>
             ))}
           </div>
