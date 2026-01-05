@@ -14,16 +14,22 @@ type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements" | "tes
 
 const tabs: { id: TabId; label: string }[] = [
   { id: "revenus", label: "Revenus" },
-  { id: "fixes", label: "Dépenses fixes" },
-  { id: "variables", label: "Dépenses variables" },
+  { id: "fixes", label: "Depenses fixes" },
+  { id: "variables", label: "Depenses variables" },
   { id: "appartements", label: "Appartements" },
-  { id: "test", label: "Test" },
   { id: "bilan", label: "Bilan" },
+  { id: "test", label: "Test" },
 ];
 
-// Fonction pour formater le montant
-const formatMontant = (value: number) => {
-  return `${value.toLocaleString("fr-FR")} €`;
+// Fonction pour formater le montant avec signe
+const formatMontant = (
+  value: number,
+  sign: "positive" | "negative" | "none" = "none"
+) => {
+  const formatted = `${value.toLocaleString("fr-FR")} €`;
+  if (sign === "positive") return `+${formatted}`;
+  if (sign === "negative") return `-${formatted}`;
+  return formatted;
 };
 
 export function MainTabs() {
@@ -47,7 +53,7 @@ export function MainTabs() {
               className="mt-2"
               style={{ color: "var(--theme-textSecondary)" }}
             >
-              Gère tes revenus et dépenses, et visualise ton bilan.
+              Gere tes revenus et depenses, et visualise ton bilan.
             </p>
           </div>
           <ThemeSelector />
@@ -75,25 +81,39 @@ export function MainTabs() {
             >
               {tabs.map((t) => {
                 const isActive = active === t.id;
-                
-                // Déterminer le total et la couleur selon l'onglet
+
+                // Determiner le total et la couleur selon l'onglet
                 let total = 0;
                 let totalColor = "";
-                
+                let sign: "positive" | "negative" | "none" = "none";
+
                 if (t.id === "revenus") {
                   total = totals.revenus;
                   totalColor = "#22c55e"; // Vert
+                  sign = "positive";
                 } else if (t.id === "fixes") {
                   total = totals.depensesFixes;
                   totalColor = "#ef4444"; // Rouge
+                  sign = "negative";
                 } else if (t.id === "variables") {
                   total = totals.depensesVariables;
                   totalColor = "#ef4444"; // Rouge
+                  sign = "negative";
                 } else if (t.id === "appartements") {
                   total = totals.appartements;
                   totalColor = "#ef4444"; // Rouge
+                  sign = "negative";
+                } else if (t.id === "bilan") {
+                  total =
+                    totals.revenus -
+                    totals.depensesFixes -
+                    totals.depensesVariables -
+                    totals.appartements;
+                  const isPositive = total >= 0;
+                  totalColor = isPositive ? "#22c55e" : "#ef4444";
+                  sign = isPositive ? "positive" : "negative";
                 }
-                
+
                 return (
                   <button
                     key={t.id}
@@ -131,12 +151,16 @@ export function MainTabs() {
                     }}
                   >
                     {t.label}
-                    {(t.id === "revenus" || t.id === "fixes" || t.id === "variables" || t.id === "appartements") && (
+                    {(t.id === "revenus" ||
+                      t.id === "fixes" ||
+                      t.id === "variables" ||
+                      t.id === "appartements" ||
+                      t.id === "bilan") && (
                       <span
                         className="ml-2"
                         style={{ color: totalColor }}
                       >
-                        ({formatMontant(total)})
+                        ({formatMontant(Math.abs(total), sign)})
                       </span>
                     )}
                   </button>
@@ -159,11 +183,11 @@ export function MainTabs() {
             <div hidden={active !== "appartements"} aria-hidden={active !== "appartements"}>
               <AppartementsTab />
             </div>
-            <div hidden={active !== "test"} aria-hidden={active !== "test"}>
-              <TestTab />
-            </div>
             <div hidden={active !== "bilan"} aria-hidden={active !== "bilan"}>
               <BilanTab />
+            </div>
+            <div hidden={active !== "test"} aria-hidden={active !== "test"}>
+              <TestTab />
             </div>
           </div>
         </div>
