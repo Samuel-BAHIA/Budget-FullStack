@@ -147,12 +147,24 @@ export function MainTabs() {
 
           {/* Content */}
           <div className="p-6">
-            {active === "revenus" && <RevenusTab />}
-            {active === "fixes" && <DepensesFixesTab />}
-            {active === "variables" && <DepensesVariablesTab />}
-            {active === "appartements" && <AppartementsTab />}
-            {active === "test" && <TestTab />}
-            {active === "bilan" && <BilanTab />}
+            <div hidden={active !== "revenus"} aria-hidden={active !== "revenus"}>
+              <RevenusTab />
+            </div>
+            <div hidden={active !== "fixes"} aria-hidden={active !== "fixes"}>
+              <DepensesFixesTab />
+            </div>
+            <div hidden={active !== "variables"} aria-hidden={active !== "variables"}>
+              <DepensesVariablesTab />
+            </div>
+            <div hidden={active !== "appartements"} aria-hidden={active !== "appartements"}>
+              <AppartementsTab />
+            </div>
+            <div hidden={active !== "test"} aria-hidden={active !== "test"}>
+              <TestTab />
+            </div>
+            <div hidden={active !== "bilan"} aria-hidden={active !== "bilan"}>
+              <BilanTab />
+            </div>
           </div>
         </div>
       </div>
