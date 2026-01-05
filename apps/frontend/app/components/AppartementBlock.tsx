@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { EditableValueEuro } from "./EditableValueEuro";
 import type { AppartementData, AppartementType } from "../tabs/AppartementsTab";
 
@@ -68,6 +68,24 @@ export function AppartementBlock({
     backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 82%, white)",
     border: "1px solid color-mix(in srgb, var(--theme-border) 75%, white)",
   };
+
+  const positiveWrapperStyle = useMemo(
+    () => ({
+      ...editableWrapperStyle,
+      backgroundColor: "rgba(34,197,94,0.10)",
+      borderColor: "rgba(34,197,94,0.35)",
+    }),
+    []
+  );
+
+  const negativeWrapperStyle = useMemo(
+    () => ({
+      ...editableWrapperStyle,
+      backgroundColor: "rgba(239,68,68,0.08)",
+      borderColor: "rgba(239,68,68,0.35)",
+    }),
+    []
+  );
 
   const getCurrentData = (): AppartementData["data"] => ({
     loyer,
@@ -229,7 +247,7 @@ export function AppartementBlock({
         <div className="space-y-4">
           {/* Ligne revenus */}
           <div className="grid grid-cols-4 gap-4">
-            <div className="rounded-xl p-2" style={editableWrapperStyle}>
+            <div className="rounded-xl p-2" style={type === "propriete" ? positiveWrapperStyle : negativeWrapperStyle}>
               <EditableValueEuro
                 label={type === "propriete" ? "Loyer percu" : "Loyer a charge"}
                 value={loyer}
@@ -239,7 +257,7 @@ export function AppartementBlock({
               />
             </div>
             {type === "propriete" && (
-              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Impots sur revenu"
                   value={impotsRevenu}
@@ -254,7 +272,7 @@ export function AppartementBlock({
           {/* Ligne charges */}
           {type === "propriete" && (
             <div className="grid grid-cols-4 gap-4">
-              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Taxe fonciere"
                   value={taxeFonciere}
@@ -263,7 +281,7 @@ export function AppartementBlock({
                   displaySuffix="/mois"
                 />
               </div>
-              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Charges copro"
                   value={chargesCopro}
@@ -272,7 +290,7 @@ export function AppartementBlock({
                   displaySuffix="/mois"
                 />
               </div>
-              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Assurance habitation"
                   value={assurance}
@@ -287,7 +305,7 @@ export function AppartementBlock({
           {type === "location" && (
             <>
               <div className="grid grid-cols-4 gap-4">
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                   <EditableValueEuro
                     label="Assurance habitation"
                     value={assurance}
@@ -296,7 +314,7 @@ export function AppartementBlock({
                     displaySuffix="/mois"
                   />
                 </div>
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                   <EditableValueEuro
                     label="Internet"
                     value={internet}
@@ -305,7 +323,7 @@ export function AppartementBlock({
                     displaySuffix="/mois"
                   />
                 </div>
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                   <EditableValueEuro
                     label="Eau"
                     value={eau}
@@ -314,7 +332,7 @@ export function AppartementBlock({
                     displaySuffix="/mois"
                   />
                 </div>
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                   <EditableValueEuro
                     label="Electricite"
                     value={electricite}
@@ -326,7 +344,7 @@ export function AppartementBlock({
               </div>
 
               <div className="grid grid-cols-4 gap-4">
-                <div className="rounded-xl p-2" style={editableWrapperStyle}>
+                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                   <EditableValueEuro
                     label="Gaz"
                     value={gaz}
@@ -342,7 +360,7 @@ export function AppartementBlock({
           {/* Ligne credit */}
           {type === "propriete" && (
             <div className="grid grid-cols-4 gap-4">
-              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Credit"
                   value={credit}
@@ -351,7 +369,7 @@ export function AppartementBlock({
                   displaySuffix="/mois"
                 />
               </div>
-              <div className="rounded-xl p-2" style={editableWrapperStyle}>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Assurance credit"
                   value={assuranceCredit}

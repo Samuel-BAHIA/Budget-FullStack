@@ -105,6 +105,14 @@ export function DepensesVariablesTab() {
     }),
     []
   );
+  const negativeWrapperStyle: React.CSSProperties = useMemo(
+    () => ({
+      ...editableWrapperStyle,
+      backgroundColor: "rgba(239,68,68,0.08)",
+      borderColor: "rgba(239,68,68,0.35)",
+    }),
+    [editableWrapperStyle]
+  );
 
   const getDepenseHint = (value: string | number) => {
     const numValue = Number(value);
@@ -232,7 +240,7 @@ export function DepensesVariablesTab() {
         </div>
         <div className="grid grid-cols-4 gap-4">
           {items.map((item) => (
-            <div key={item.id} className="rounded-xl p-3 space-y-3" style={editableWrapperStyle}>
+            <div key={item.id} className="rounded-xl p-3 space-y-3" style={negativeWrapperStyle}>
               <div className="flex items-center justify-between gap-2">
                 {isSectionEditing(item.id) ? (
                   <>
@@ -301,11 +309,11 @@ export function DepensesVariablesTab() {
                   </>
                 )}
               </div>
-              <EditableValueEuro
-                value={item.montant}
-                onSave={handleSaveMontant(section, item.id)}
-                hintText={getDepenseHint}
-              />
+                <EditableValueEuro
+                  value={item.montant}
+                  onSave={handleSaveMontant(section, item.id)}
+                  hintText={getDepenseHint}
+                />
             </div>
           ))}
         </div>

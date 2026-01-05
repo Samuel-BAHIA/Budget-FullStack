@@ -102,6 +102,14 @@ export function DepensesFixesTab() {
     }),
     []
   );
+  const negativeWrapperStyle: React.CSSProperties = useMemo(
+    () => ({
+      ...editableWrapperStyle,
+      backgroundColor: "rgba(239,68,68,0.08)",
+      borderColor: "rgba(239,68,68,0.35)",
+    }),
+    [editableWrapperStyle]
+  );
 
   const getDepenseHint = (value: string | number) => {
     const numValue = Number(value);
@@ -203,7 +211,7 @@ export function DepensesFixesTab() {
           </div>
           <div className="grid grid-cols-4 gap-4">
             {abonnements.map((abo) => (
-              <div key={abo.id} className="rounded-xl p-3 space-y-3" style={editableWrapperStyle}>
+              <div key={abo.id} className="rounded-xl p-3 space-y-3" style={negativeWrapperStyle}>
                 <div className="flex items-center justify-between gap-2">
                   {editingTitle?.section === "abonnements" && editingTitle.id === abo.id ? (
                     <>
@@ -272,11 +280,11 @@ export function DepensesFixesTab() {
                     </>
                   )}
                 </div>
-                <EditableValueEuro
-                  value={abo.montant}
-                  onSave={handleSaveMontant("abonnements", abo.id)}
-                  hintText={getDepenseHint}
-                />
+                  <EditableValueEuro
+                    value={abo.montant}
+                    onSave={handleSaveMontant("abonnements", abo.id)}
+                    hintText={getDepenseHint}
+                  />
               </div>
             ))}
           </div>
@@ -305,7 +313,7 @@ export function DepensesFixesTab() {
           </div>
           <div className="grid grid-cols-4 gap-4">
             {voiture.map((item) => (
-              <div key={item.id} className="rounded-xl p-3 space-y-3" style={editableWrapperStyle}>
+                <div key={item.id} className="rounded-xl p-3 space-y-3" style={negativeWrapperStyle}>
                 <div className="flex items-center justify-between gap-2">
                   {editingTitle?.section === "voiture" && editingTitle.id === item.id ? (
                     <>
@@ -374,11 +382,11 @@ export function DepensesFixesTab() {
                     </>
                   )}
                 </div>
-                <EditableValueEuro
-                  value={item.montant}
-                  onSave={handleSaveMontant("voiture", item.id)}
-                  hintText={getDepenseHint}
-                />
+                  <EditableValueEuro
+                    value={item.montant}
+                    onSave={handleSaveMontant("voiture", item.id)}
+                    hintText={getDepenseHint}
+                  />
               </div>
             ))}
           </div>

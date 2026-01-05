@@ -93,6 +93,14 @@ export function RevenusTab() {
     }),
     []
   );
+  const positiveWrapperStyle: React.CSSProperties = useMemo(
+    () => ({
+      ...editableWrapperStyle,
+      backgroundColor: "rgba(34,197,94,0.10)",
+      borderColor: "rgba(34,197,94,0.35)",
+    }),
+    [editableWrapperStyle]
+  );
 
   const getHint = (value: string | number) => {
     const numValue = Number(value);
@@ -184,7 +192,7 @@ export function RevenusTab() {
 
       <div className="grid grid-cols-4 gap-4">
         {revenus.map((item) => (
-          <div key={item.id} className="rounded-xl p-3 space-y-3" style={editableWrapperStyle}>
+          <div key={item.id} className="rounded-xl p-3 space-y-3" style={positiveWrapperStyle}>
             <div className="flex items-center justify-between gap-2">
               {editingTitleId === item.id ? (
                 <>

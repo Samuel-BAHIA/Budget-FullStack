@@ -84,24 +84,40 @@ export function MainTabs() {
 
                 // Determiner le total et la couleur selon l'onglet
                 let total = 0;
-                let totalColor = "";
+                let totalColor = "var(--theme-tabInactiveText)";
+                let bgHover = "var(--theme-tabHoverBg)";
+                let activeBg = "var(--theme-tabActiveBg)";
+                let activeText = "var(--theme-tabActiveText)";
+                let inactiveText = "var(--theme-tabInactiveText)";
                 let sign: "positive" | "negative" | "none" = "none";
 
                 if (t.id === "revenus") {
                   total = totals.revenus;
-                  totalColor = "#22c55e"; // Vert
+                  totalColor = "var(--theme-success, #22c55e)";
+                  bgHover = "rgba(34,197,94,0.12)";
+                  activeBg = "rgba(34,197,94,0.18)";
+                  activeText = "#0f5132";
+                  inactiveText = "var(--theme-tabInactiveText)";
                   sign = "positive";
                 } else if (t.id === "fixes") {
                   total = totals.depensesFixes;
-                  totalColor = "#ef4444"; // Rouge
+                  totalColor = "var(--theme-danger, #ef4444)";
+                  bgHover = "rgba(239,68,68,0.12)";
+                  activeBg = "rgba(239,68,68,0.18)";
+                  activeText = "#7f1d1d";
+                  inactiveText = "var(--theme-tabInactiveText)";
                   sign = "negative";
                 } else if (t.id === "variables") {
                   total = totals.depensesVariables;
-                  totalColor = "#ef4444"; // Rouge
+                  totalColor = "var(--theme-danger, #ef4444)";
+                  bgHover = "rgba(239,68,68,0.12)";
+                  activeBg = "rgba(239,68,68,0.18)";
+                  activeText = "#7f1d1d";
+                  inactiveText = "var(--theme-tabInactiveText)";
                   sign = "negative";
                 } else if (t.id === "appartements") {
                   total = totals.appartements;
-                  totalColor = "#ef4444"; // Rouge
+                  totalColor = "var(--theme-tabInactiveText)";
                   sign = "negative";
                 } else if (t.id === "bilan") {
                   total =
@@ -110,7 +126,11 @@ export function MainTabs() {
                     totals.depensesVariables -
                     totals.appartements;
                   const isPositive = total >= 0;
-                  totalColor = isPositive ? "#22c55e" : "#ef4444";
+                  totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
+                  bgHover = isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)";
+                  activeBg = isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)";
+                  activeText = isPositive ? "#0f5132" : "#7f1d1d";
+                  inactiveText = "var(--theme-tabInactiveText)";
                   sign = isPositive ? "positive" : "negative";
                 }
 
@@ -126,27 +146,26 @@ export function MainTabs() {
                     style={
                       isActive
                         ? {
-                            borderColor: "var(--theme-tabActiveBg)",
-                            backgroundColor: "var(--theme-tabActiveBg)",
-                            color: "var(--theme-tabActiveText)",
+                            borderColor: activeBg,
+                            backgroundColor: activeBg,
+                            color: activeText,
                           }
                         : {
                             borderColor: "transparent",
                             backgroundColor: "transparent",
-                            color: "var(--theme-tabInactiveText)",
+                            color: inactiveText,
                           }
                     }
                     onMouseEnter={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.backgroundColor =
-                          "var(--theme-tabHoverBg)";
+                        e.currentTarget.style.backgroundColor = bgHover;
                         e.currentTarget.style.color = "var(--theme-text)";
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
                         e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.color = "var(--theme-tabInactiveText)";
+                        e.currentTarget.style.color = inactiveText;
                       }
                     }}
                   >
