@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EditableValueEuro } from "../components/EditableValueEuro";
+import { useBudget } from "../contexts/BudgetContext";
 
 export function DepensesFixesTab() {
   const [telephone, setTelephone] = useState(80);
   const [netflix, setNetflix] = useState(20);
   const [creditVoiture, setCreditVoiture] = useState(300);
   const [assurancesVoiture, setAssurancesVoiture] = useState(170);
+  const { updateTotal } = useBudget();
 
   const editableWrapperStyle: React.CSSProperties = {
     backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 82%, white)",
@@ -28,6 +30,12 @@ export function DepensesFixesTab() {
       setter(Number.isFinite(numValue) ? numValue : 0);
       await new Promise((resolve) => setTimeout(resolve, 200));
     };
+
+  useEffect(() => {
+    const total =
+      telephone + netflix + creditVoiture + assurancesVoiture;
+    updateTotal("depensesFixes", total);
+  }, [telephone, netflix, creditVoiture, assurancesVoiture, updateTotal]);
 
   return (
     <div className="space-y-6">
@@ -63,7 +71,7 @@ export function DepensesFixesTab() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Autres depenses</h3>
+          <h3 className="text-lg font-semibold">Voiture</h3>
           <div className="grid grid-cols-4 gap-4">
             <div className="rounded-xl p-2" style={editableWrapperStyle}>
               <EditableValueEuro
