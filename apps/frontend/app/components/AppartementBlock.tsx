@@ -234,7 +234,14 @@ export function AppartementBlock({
         backgroundColor: "var(--theme-bgCard)",
       }}
     >
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div
+        className="flex flex-wrap items-start justify-between gap-3 -mx-6 -mt-6 px-6 py-4 mb-4"
+        style={{
+          backgroundColor: "var(--theme-border)",
+          borderTopLeftRadius: "12px",
+          borderTopRightRadius: "12px",
+        }}
+      >
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           <button
             onClick={() => setIsExpanded(!isExpanded)}

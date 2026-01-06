@@ -139,7 +139,7 @@ export function MoneyCard({
                 <button
                   onClick={() => setIsEditing(true)}
                   className="rounded-md px-3 py-2 text-sm font-semibold transition hover:bg-[var(--theme-bgHover)]"
-                  style={{ color: "#ffffff" }}
+                  style={{ color: "#ffffff", transform: "scaleX(-1)" }}
                   title="Modifier le nom"
                 >
                   ✎

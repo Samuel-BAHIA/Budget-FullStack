@@ -141,16 +141,22 @@ export function RevenusTab() {
             className="rounded-2xl border p-4 space-y-3"
             style={{ borderColor: "var(--theme-border)", backgroundColor: "var(--theme-bgCard)" }}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 -mx-4 -mt-4 px-4 py-3"
+              style={{
+                backgroundColor: "var(--theme-border)",
+                borderTopLeftRadius: "16px",
+                borderTopRightRadius: "16px",
+              }}
+            >
               <div className="flex flex-wrap items-start sm:items-center gap-3 min-w-0 flex-1">
                 <input
                   type="text"
                   value={person.name}
                   onChange={(e) => handlePersonNameChange(person.id, e.target.value)}
-                  className="min-w-[180px] flex-1 rounded-md border px-3 py-2 text-sm font-semibold outline-none transition"
+                  className="min-w-[180px] flex-1 rounded-md border px-3 py-2 text-lg font-semibold outline-none transition bg-transparent"
                   style={{
                     borderColor: "var(--theme-border)",
-                    backgroundColor: "var(--theme-bgCard)",
                     color: "var(--theme-text)",
                   }}
                   onFocus={(e) => {
@@ -162,9 +168,11 @@ export function RevenusTab() {
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 />
-                <div className="flex items-center gap-2 text-sm font-semibold flex-wrap">
-                  <span style={{ color: "var(--theme-textSecondary)" }}>Total</span>
-                  <span style={{ color: "#22c55e" }}>
+                <div className="flex items-center gap-2 font-semibold flex-wrap">
+                  <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+                    Total
+                  </span>
+                  <span className="text-xl font-semibold" style={{ color: "#22c55e" }}>
                     +
                     {person.revenus.reduce((s, r) => s + r.montant, 0).toLocaleString("fr-FR")} ?
                   </span>
