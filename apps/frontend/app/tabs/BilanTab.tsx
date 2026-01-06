@@ -30,6 +30,7 @@ export function BilanTab() {
         total: depensesTotales,
       },
       net,
+      revenusParPersonnes: totals.revenusParPersonnes,
     };
   }, [totals]);
 
@@ -111,6 +112,49 @@ export function BilanTab() {
       });
   }, [pieData]);
 
+  const revenusVsCouts = useMemo(() => {
+    const baseHue = 140;
+    const colorForIndex = (idx: number) => `hsl(${(baseHue + idx * 45) % 360} 70% 50%)`;
+
+    const personSlices =
+      data.revenusParPersonnes && data.revenusParPersonnes.length
+        ? data.revenusParPersonnes.map((p, idx) => ({
+            label: p.name || `Personne ${idx + 1}`,
+            value: Math.max(0, p.montant),
+            color: colorForIndex(idx),
+          }))
+        : [{ label: "Revenus (personnes)", value: Math.max(0, data.revenus), color: colorForIndex(0) }];
+
+    const coutsGlobaux = Math.max(0, data.depenses.total + Math.max(-data.appartements, 0));
+    const slices = [
+      ...personSlices.filter((s) => s.value > 0),
+      { label: "Couts globaux", value: coutsGlobaux, color: "#ef4444" },
+    ].filter((s) => s.value > 0);
+
+    const totalValue = slices.reduce((sum, s) => sum + s.value, 0);
+    if (totalValue === 0)
+      return { total: 0, slices: [] as { label: string; value: number; color: string; percent: number }[], gradient: "" };
+
+    let cursor = 0;
+    const slicesWithPercent = slices.map((s) => {
+      const ratio = s.value / totalValue;
+      const start = cursor;
+      const end = cursor + ratio * 360;
+      cursor = end;
+      return { ...s, percent: Math.round(ratio * 100), start, end };
+    });
+
+    const gradient = slicesWithPercent
+      .map((s) => `${s.color} ${s.start}deg ${s.end}deg`)
+      .join(", ");
+
+    return {
+      total: totalValue,
+      slices: slicesWithPercent,
+      gradient,
+    };
+  }, [data]);
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Bilan</h2>
@@ -128,7 +172,7 @@ export function BilanTab() {
           backgroundColor: "var(--theme-bgCard)",
         }}
       >
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-semibold">Revenus</span>
             <span style={{ color: "#22c55e" }}>
@@ -157,6 +201,25 @@ export function BilanTab() {
             />
           </div>
           <div className="space-y-1 text-sm">
+            <div className="flex items-center gap-3">
+              <span className="w-28" style={{ color: "var(--theme-textSecondary)" }}>
+                Fixes + Variables
+              </span>
+              <div className="flex-1 h-3 rounded-full overflow-hidden bg-[var(--theme-border)]/30 flex">
+                {depensesParts.map((p) => {
+                  const totalDep = Math.max(1, data.depenses.total);
+                  const width = `${Math.max(0, (Math.abs(p.value) / totalDep) * 100)}%`;
+                  return (
+                    <div
+                      key={p.label}
+                      className="h-full"
+                      style={{ width, backgroundColor: p.color }}
+                      title={`${p.label}: ${formatMontant(Math.abs(p.value), p.sign)}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
             {depensesParts.map((p) => (
               <div key={p.label} className="flex items-center gap-3">
                 <span className="w-28" style={{ color: "var(--theme-textSecondary)" }}>
@@ -176,7 +239,7 @@ export function BilanTab() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-semibold">Appartements</span>
             <span style={{ color: data.appartements >= 0 ? "#22c55e" : "#ef4444" }}>
@@ -194,9 +257,27 @@ export function BilanTab() {
           </div>
         </div>
 
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-semibold">Total global</span>
+            <span
+              className="text-lg font-semibold"
+              style={{ color: data.net >= 0 ? "#22c55e" : "#ef4444" }}
+            >
+              {formatMontant(Math.abs(data.net), data.net >= 0 ? "positive" : "negative")}
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-[var(--theme-border)]/40">
+            <div
+              className="h-2 rounded-full"
+              style={barStyle(Math.abs(data.net), data.net >= 0 ? "rgba(34,197,94,0.65)" : "rgba(239,68,68,0.65)")}
+            />
+          </div>
+        </div>
+
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-semibold">Diagramme global</span>
+            <span className="font-semibold">Proportions des differents revenus/depenses</span>
             <span style={{ color: "var(--theme-textSecondary)" }}>
               Base: {pieData.total.toLocaleString("fr-FR")} €
             </span>
@@ -236,7 +317,7 @@ export function BilanTab() {
                     className="inline-block h-3 w-3 rounded-sm"
                     style={{ backgroundColor: s.color }}
                   />
-                  <span className="w-28" style={{ color: "var(--theme-textSecondary)" }}>
+                  <span className="w-32" style={{ color: "var(--theme-textSecondary)" }}>
                     {s.label}
                   </span>
                   <span className="font-medium">
@@ -253,21 +334,42 @@ export function BilanTab() {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold">Total global</span>
-            <span
-              className="text-lg font-semibold"
-              style={{ color: data.net >= 0 ? "#22c55e" : "#ef4444" }}
-            >
-              {formatMontant(Math.abs(data.net), data.net >= 0 ? "positive" : "negative")}
+            <span className="font-semibold">Revenus par personnes vs couts globaux</span>
+            <span style={{ color: "var(--theme-textSecondary)" }}>
+              Base: {revenusVsCouts.total.toLocaleString("fr-FR")} €
             </span>
           </div>
-          <div className="h-2 rounded-full bg-[var(--theme-border)]/40">
+          <div className="flex flex-wrap gap-6 items-center">
             <div
-              className="h-2 rounded-full"
-              style={barStyle(Math.abs(data.net), data.net >= 0 ? "rgba(34,197,94,0.65)" : "rgba(239,68,68,0.65)")}
+              className="relative h-40 w-40 sm:h-48 sm:w-48 rounded-full border"
+              style={{
+                borderColor: "var(--theme-border)",
+                background:
+                  revenusVsCouts.total === 0
+                    ? "var(--theme-border)"
+                    : `conic-gradient(${revenusVsCouts.gradient})`,
+              }}
             />
+            <div className="space-y-2 text-sm">
+              {revenusVsCouts.slices.map((s) => (
+                <div key={s.label} className="flex items-center gap-2">
+                  <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: s.color }} />
+                  <span className="w-40" style={{ color: "var(--theme-textSecondary)" }}>
+                    {s.label}
+                  </span>
+                  <span className="font-medium">
+                    {s.value.toLocaleString("fr-FR")} € ({s.percent}%)
+                  </span>
+                </div>
+              ))}
+              {revenusVsCouts.total === 0 && (
+                <p className="text-xs" style={{ color: "var(--theme-textSecondary)" }}>
+                  Ajoute des montants pour voir le diagramme.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>

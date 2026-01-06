@@ -26,7 +26,7 @@ export function RevenusTab() {
     { id: 1, name: "Personne 1", revenus: [{ id: 1, name: "Salaire", montant: 0 }] },
   ]);
   const [expandedByPerson, setExpandedByPerson] = useState<Record<number, boolean>>({});
-  const { updateTotal } = useBudget();
+  const { updateTotal, updateRevenusParPersonnes } = useBudget();
 
   const editableWrapperStyle: React.CSSProperties = useMemo(
     () => ({
@@ -134,8 +134,13 @@ export function RevenusTab() {
       (sum, person) => sum + person.revenus.reduce((s, r) => s + r.montant, 0),
       0
     );
+    const breakdown = persons.map((person) => ({
+      name: person.name || `Personne ${person.id}`,
+      montant: person.revenus.reduce((s, r) => s + r.montant, 0),
+    }));
     updateTotal("revenus", total);
-  }, [persons, updateTotal]);
+    updateRevenusParPersonnes(breakdown);
+  }, [persons, updateRevenusParPersonnes, updateTotal]);
 
   return (
     <div className="space-y-6">
