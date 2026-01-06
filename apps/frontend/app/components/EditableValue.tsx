@@ -259,7 +259,7 @@ export function EditableValue({
 
       {hint && (
         <p
-          className="text-xs"
+          className="text-xs text-center"
           style={{ color: "var(--theme-textMuted)" }}
         >
           {hint}

@@ -123,7 +123,7 @@ export function MoneyCard({
                 <button
                   onClick={() => setIsEditing(true)}
                   className="rounded-md px-3 py-2 text-sm font-semibold transition hover:bg-[var(--theme-bgHover)]"
-                  style={{ color: "#ffffff", transform: "rotate(180deg)" }}
+                  style={{ color: "#ffffff", transform: "scaleX(-1)" }}
                   title="Modifier le nom"
                 >
                   ✎
@@ -142,7 +142,7 @@ export function MoneyCard({
         valueColor={valueColor}
         valueClassName="ml-2 text-center"
         editIconColor={valueColor}
-        editIconTransform="rotate(180deg)"
+        editIconTransform="scaleX(-1)"
       />
     </div>
   );

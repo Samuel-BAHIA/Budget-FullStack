@@ -171,19 +171,6 @@ export function RevenusTab() {
               </div>
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
                 <button
-                  onClick={() => handleAddRevenue(person.id)}
-                  className="rounded-md border px-3 py-2 text-sm transition w-full sm:w-auto"
-                  style={{
-                    borderColor: "var(--theme-border)",
-                    backgroundColor: "var(--theme-bgCard)",
-                    color: "var(--theme-text)",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--theme-bgHover)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--theme-bgCard)")}
-                >
-                  + Ajouter un revenu
-                </button>
-                <button
                   onClick={() => handleDeletePerson(person.id)}
                   className="rounded-md border px-3 py-2 text-sm transition hover:bg-red-500/15 w-full sm:w-auto"
                   style={{
@@ -193,8 +180,10 @@ export function RevenusTab() {
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.12)")}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--theme-bgCard)")}
+                  title="Supprimer la personne"
+                  aria-label="Supprimer la personne"
                 >
-                  Supprimer
+                  🗑️
                 </button>
               </div>
             </div>
@@ -215,6 +204,23 @@ export function RevenusTab() {
                   wrapperStyle={positiveWrapperStyle}
                 />
               ))}
+              <button
+                onClick={() => handleAddRevenue(person.id)}
+                className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+                style={{
+                  borderColor: "var(--theme-border)",
+                  color: "var(--theme-textSecondary)",
+                  backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+                }}
+              >
+                <span
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+                  style={{ backgroundColor: "var(--theme-bgCard)", color: "var(--theme-text)" }}
+                >
+                  +
+                </span>
+                Ajouter un revenu
+              </button>
             </div>
           </div>
         ))}
