@@ -12,9 +12,13 @@ type EditableValueProps = {
   hintText?: string | ((value: string | number) => string);
   inputType?: "text" | "number" | "email" | "tel";
   className?: string;
+  valueColor?: string;
+  valueClassName?: string;
   disabled?: boolean;
   displaySuffix?: React.ReactNode;
   displayPrefix?: React.ReactNode;
+  editIconColor?: string;
+  editIconTransform?: string;
 };
 
 // Icône de modification (crayon)
@@ -84,9 +88,13 @@ export function EditableValue({
   hintText,
   inputType = "text",
   className = "",
+  valueColor,
+  valueClassName = "",
   disabled = false,
   displaySuffix,
   displayPrefix,
+  editIconColor,
+  editIconTransform,
 }: EditableValueProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(formatInput(value));
@@ -208,7 +216,7 @@ export function EditableValue({
           </>
         ) : (
           <>
-            <div className="flex-1 flex items-baseline gap-1">
+            <div className="flex-1 flex items-baseline gap-1 justify-center text-center">
               {displayPrefix && (
                 <span
                   className="text-lg font-semibold"
@@ -217,7 +225,12 @@ export function EditableValue({
                   {displayPrefix}
                 </span>
               )}
-              <span className="text-lg font-medium">{displayValue}</span>
+              <span
+                className={`text-lg font-medium ${valueClassName}`}
+                style={valueColor ? { color: valueColor } : undefined}
+              >
+                {displayValue}
+              </span>
               {displaySuffix && (
                 <span
                   className="text-xs"
@@ -231,7 +244,10 @@ export function EditableValue({
               <button
                 onClick={handleEdit}
                 className="rounded-md p-2 transition hover:bg-[var(--theme-bgHover)]"
-                style={{ color: "var(--theme-textSecondary)" }}
+                style={{
+                  color: editIconColor ?? "var(--theme-textSecondary)",
+                  transform: editIconTransform,
+                }}
                 title="Modifier"
               >
                 <EditIcon />
