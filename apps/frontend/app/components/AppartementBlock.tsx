@@ -101,17 +101,22 @@ export function AppartementBlock({
     gaz,
   });
 
-  const updateAllData = () => {
+  const updateAllData = (override?: Partial<AppartementData["data"]>) => {
     if (!onDataChange) return;
-    onDataChange(getCurrentData(), type);
+    const base = getCurrentData();
+    const next = override ? { ...base, ...override } : base;
+    onDataChange(next, type);
   };
 
-  const handleSave = (setter: (value: number) => void) => async (newValue: string) => {
-    const numValue = Number(newValue);
-    setter(Number.isFinite(numValue) ? numValue : 0);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    updateAllData();
-  };
+  const handleSave =
+    (setter: (value: number) => void, field: keyof AppartementData["data"]) =>
+    async (newValue: string) => {
+      const numValue = Number(newValue);
+      const safeValue = Number.isFinite(numValue) ? numValue : 0;
+      setter(safeValue);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      updateAllData({ [field]: safeValue });
+    };
 
   const getLoyerHint = (value: string | number) => {
     const numValue = Number(value);
@@ -131,16 +136,20 @@ export function AppartementBlock({
 
   const totalDepenses =
     type === "propriete"
-      ? loyer +
-        impotsRevenu +
-        taxeFonciere +
-        chargesCopro +
-        assurance +
-        credit +
-        assuranceCredit
-      : loyer + assurance + internet + eau + electricite + gaz;
+      ? loyer -
+        (impotsRevenu +
+          taxeFonciere +
+          chargesCopro +
+          assurance +
+          credit +
+          assuranceCredit)
+      : -1 * (loyer + assurance + internet + eau + electricite + gaz);
 
-  const formatTotal = (value: number) => `${value.toLocaleString("fr-FR")} €`;
+  const formatTotal = (value: number) => {
+    const sign = value >= 0 ? "+" : "-";
+    return `${sign}${Math.abs(value).toLocaleString("fr-FR")} €`;
+  };
+  const totalColor = totalDepenses >= 0 ? "#16a34a" : "#ef4444";
 
   const handleTypeChange = (newType: AppartementType) => {
     const nextValues = getCurrentData();
@@ -224,7 +233,9 @@ export function AppartementBlock({
             <p className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
               Total
             </p>
-            <p className="text-xl font-semibold">{formatTotal(totalDepenses)}</p>
+            <p className="text-xl font-semibold" style={{ color: totalColor }}>
+              {formatTotal(totalDepenses)}
+            </p>
           </div>
 
           {onDelete && (
@@ -251,7 +262,7 @@ export function AppartementBlock({
               <EditableValueEuro
                 label={type === "propriete" ? "Loyer percu" : "Loyer a charge"}
                 value={loyer}
-                onSave={handleSave(setLoyer)}
+                onSave={handleSave(setLoyer, "loyer")}
                 hintText={getLoyerHint}
                 displaySuffix="/mois"
                 displayPrefix={type === "propriete" ? "+" : "-"}
@@ -262,7 +273,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Impots sur revenu"
                   value={impotsRevenu}
-                  onSave={handleSave(setImpotsRevenu)}
+                  onSave={handleSave(setImpotsRevenu, "impotsRevenu")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -278,7 +289,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Taxe fonciere"
                   value={taxeFonciere}
-                  onSave={handleSave(setTaxeFonciere)}
+                  onSave={handleSave(setTaxeFonciere, "taxeFonciere")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -288,7 +299,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Charges copro"
                   value={chargesCopro}
-                  onSave={handleSave(setChargesCopro)}
+                  onSave={handleSave(setChargesCopro, "chargesCopro")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -298,7 +309,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Assurance habitation"
                   value={assurance}
-                  onSave={handleSave(setAssurance)}
+                  onSave={handleSave(setAssurance, "assurance")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -314,7 +325,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Assurance habitation"
                   value={assurance}
-                  onSave={handleSave(setAssurance)}
+                  onSave={handleSave(setAssurance, "assurance")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -324,7 +335,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Internet"
                   value={internet}
-                  onSave={handleSave(setInternet)}
+                  onSave={handleSave(setInternet, "internet")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -334,7 +345,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Eau"
                   value={eau}
-                  onSave={handleSave(setEau)}
+                  onSave={handleSave(setEau, "eau")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -344,7 +355,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Electricite"
                   value={electricite}
-                  onSave={handleSave(setElectricite)}
+                  onSave={handleSave(setElectricite, "electricite")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -357,7 +368,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Gaz"
                   value={gaz}
-                  onSave={handleSave(setGaz)}
+                  onSave={handleSave(setGaz, "gaz")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -374,7 +385,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Credit"
                   value={credit}
-                  onSave={handleSave(setCredit)}
+                  onSave={handleSave(setCredit, "credit")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"
@@ -384,7 +395,7 @@ export function AppartementBlock({
                 <EditableValueEuro
                   label="Assurance credit"
                   value={assuranceCredit}
-                  onSave={handleSave(setAssuranceCredit)}
+                  onSave={handleSave(setAssuranceCredit, "assuranceCredit")}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
                   displayPrefix="-"

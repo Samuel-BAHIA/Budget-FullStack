@@ -117,13 +117,14 @@ export function MainTabs() {
                   sign = "negative";
                 } else if (t.id === "appartements") {
                   total = totals.appartements;
-                  totalColor = "var(--theme-tabInactiveText)";
-                  sign = "negative";
+                  const isPositive = total >= 0;
+                  totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
+                  sign = isPositive ? "positive" : "negative";
                 } else if (t.id === "bilan") {
                   total =
                     totals.revenus -
                     totals.depensesFixes -
-                    totals.depensesVariables -
+                    totals.depensesVariables +
                     totals.appartements;
                   const isPositive = total >= 0;
                   totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";

@@ -129,27 +129,20 @@ export function AppartementsTab() {
     const totalAppartements = appartements.reduce((sum, apt) => {
       const d = apt.data;
       if (apt.type === "propriete") {
+        // Loyer percu (revenu) - toutes les charges/credits
         return (
           sum +
-          d.loyer +
-          d.impotsRevenu +
-          d.taxeFonciere +
-          d.chargesCopro +
-          d.assurance +
-          d.credit +
-          d.assuranceCredit
+          (d.loyer -
+            (d.impotsRevenu +
+              d.taxeFonciere +
+              d.chargesCopro +
+              d.assurance +
+              d.credit +
+              d.assuranceCredit))
         );
       }
-      // location
-      return (
-        sum +
-        d.loyer +
-        d.assurance +
-        d.internet +
-        d.eau +
-        d.electricite +
-        d.gaz
-      );
+      // Location : uniquement des depenses
+      return sum - (d.loyer + d.assurance + d.internet + d.eau + d.electricite + d.gaz);
     }, 0);
 
     updateTotal("appartements", totalAppartements);
