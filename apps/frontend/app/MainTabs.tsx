@@ -9,6 +9,18 @@ import { AppartementsTab } from "./tabs/AppartementsTab";
 import { ThemeSelector } from "./components/ThemeSelector";
 import { useBudget } from "./contexts/BudgetContext";
 
+const BalanceIcon = ({ color = "#fbbf24" }: { color?: string }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M12 4v2m0 0 5 9m-5-9-5 9m10 0H7m10 0a3 3 0 1 0 6 0m-6 0a3 3 0 1 1-6 0m-4 0a3 3 0 1 1-6 0m6 0H3m9 0v4m-3 0h6"
+      stroke={color}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements";
 
 const tabs: { id: TabId; label: string }[] = [
@@ -87,6 +99,7 @@ export function MainTabs() {
                 let activeBg = "var(--theme-tabActiveBg)";
                 let activeText = "var(--theme-tabActiveText)";
                 let inactiveText = "var(--theme-tabInactiveText)";
+                let icon: React.ReactNode = null;
                 let sign: "positive" | "negative" | "none" = "none";
 
                 if (t.id === "revenus") {
@@ -94,7 +107,7 @@ export function MainTabs() {
                   totalColor = "var(--theme-success, #22c55e)";
                   bgHover = "rgba(34,197,94,0.12)";
                   activeBg = "rgba(34,197,94,0.18)";
-                  activeText = "#0f5132";
+                  activeText = "#ffffff";
                   inactiveText = "var(--theme-tabInactiveText)";
                   sign = "positive";
                 } else if (t.id === "fixes") {
@@ -102,7 +115,7 @@ export function MainTabs() {
                   totalColor = "var(--theme-danger, #ef4444)";
                   bgHover = "rgba(239,68,68,0.12)";
                   activeBg = "rgba(239,68,68,0.18)";
-                  activeText = "#7f1d1d";
+                  activeText = "#ffffff";
                   inactiveText = "var(--theme-tabInactiveText)";
                   sign = "negative";
                 } else if (t.id === "variables") {
@@ -110,13 +123,16 @@ export function MainTabs() {
                   totalColor = "var(--theme-danger, #ef4444)";
                   bgHover = "rgba(239,68,68,0.12)";
                   activeBg = "rgba(239,68,68,0.18)";
-                  activeText = "#7f1d1d";
+                  activeText = "#ffffff";
                   inactiveText = "var(--theme-tabInactiveText)";
                   sign = "negative";
                 } else if (t.id === "appartements") {
                   total = totals.appartements;
                   const isPositive = total >= 0;
                   totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
+                  bgHover = isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)";
+                  activeBg = isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)";
+                  activeText = "#ffffff";
                   sign = isPositive ? "positive" : "negative";
                 } else if (t.id === "bilan") {
                   total =
@@ -128,9 +144,10 @@ export function MainTabs() {
                   totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
                   bgHover = isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)";
                   activeBg = isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)";
-                  activeText = isPositive ? "#0f5132" : "#7f1d1d";
+                  activeText = "#ffffff";
                   inactiveText = "var(--theme-tabInactiveText)";
                   sign = isPositive ? "positive" : "negative";
+                  icon = <BalanceIcon color="#fbbf24" />;
                 }
 
                 return (
@@ -168,6 +185,7 @@ export function MainTabs() {
                       }
                     }}
                   >
+                    {icon && <span className="mr-1.5 inline-flex align-middle">{icon}</span>}
                     {t.label}
                     {(t.id === "revenus" ||
                       t.id === "fixes" ||
