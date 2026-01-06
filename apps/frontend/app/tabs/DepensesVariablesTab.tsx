@@ -220,7 +220,7 @@ export function DepensesVariablesTab() {
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {items.map((item) => (
             <div key={item.id} className="rounded-xl p-3 space-y-3" style={negativeWrapperStyle}>
               <div className="flex items-center justify-between gap-2">
@@ -302,7 +302,7 @@ export function DepensesVariablesTab() {
           ))}
           <button
             onClick={() => handleAdd(section)}
-            className="rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+            className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
             style={{
               borderColor: "var(--theme-border)",
               color: "var(--theme-textSecondary)",

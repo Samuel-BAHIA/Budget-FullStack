@@ -171,7 +171,7 @@ export function RevenusTab() {
         Ajoute tes revenus (salaires, primes, etc.).
       </p>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {revenus.map((item) => (
           <div key={item.id} className="rounded-xl p-3 space-y-3" style={positiveWrapperStyle}>
             <div className="flex items-center justify-between gap-2">
@@ -253,7 +253,7 @@ export function RevenusTab() {
         ))}
         <button
           onClick={handleAdd}
-          className="rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+          className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
           style={{
             borderColor: "var(--theme-border)",
             color: "var(--theme-textSecondary)",

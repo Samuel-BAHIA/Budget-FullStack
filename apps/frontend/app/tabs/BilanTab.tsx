@@ -204,7 +204,7 @@ export function BilanTab() {
           <div className="flex flex-wrap gap-6 items-center">
             <div
               aria-label="Repartition revenus / depenses / appartements"
-              className="relative h-48 w-48 rounded-full border"
+              className="relative h-40 w-40 sm:h-48 sm:w-48 rounded-full border"
               style={{
                 borderColor: "var(--theme-border)",
                 background: pieData.total === 0 ? "var(--theme-border)" : `conic-gradient(${pieData.gradient})`,

@@ -257,7 +257,7 @@ export function AppartementBlock({
       {isExpanded && (
         <div className="space-y-4">
           {/* Ligne revenus */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-xl p-2" style={type === "propriete" ? positiveWrapperStyle : negativeWrapperStyle}>
               <EditableValueEuro
                 label={type === "propriete" ? "Loyer percu" : "Loyer a charge"}
@@ -284,7 +284,7 @@ export function AppartementBlock({
 
           {/* Ligne charges */}
           {type === "propriete" && (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Taxe fonciere"
@@ -320,7 +320,7 @@ export function AppartementBlock({
 
           {type === "location" && (
             <>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Assurance habitation"
@@ -363,7 +363,7 @@ export function AppartementBlock({
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Gaz"
@@ -380,7 +380,7 @@ export function AppartementBlock({
 
           {/* Ligne credit */}
           {type === "propriete" && (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-xl p-2" style={negativeWrapperStyle}>
                 <EditableValueEuro
                   label="Credit"
