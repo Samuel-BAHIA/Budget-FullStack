@@ -178,7 +178,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return "neutral";
   });
 
-  const theme = themes.find((t) => t.id === themeId) || themes[0];
+  const theme = (themes.find((t) => t.id === themeId) ?? themes[0])!;
 
   useEffect(() => {
     if (typeof window !== "undefined") {

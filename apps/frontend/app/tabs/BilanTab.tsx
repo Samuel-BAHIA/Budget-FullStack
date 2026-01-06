@@ -40,9 +40,9 @@ export function BilanTab() {
     backgroundColor: color,
   });
 
-  const depensesParts = [
-    { label: "Fixes", value: data.depenses.fixes, sign: "negative" as const, color: "rgba(239,68,68,0.45)" },
-    { label: "Variables", value: data.depenses.variables, sign: "negative" as const, color: "rgba(239,68,68,0.45)" },
+  const depensesParts: { label: string; value: number; sign: "positive" | "negative"; color: string }[] = [
+    { label: "Fixes", value: data.depenses.fixes, sign: "negative", color: "rgba(239,68,68,0.45)" },
+    { label: "Variables", value: data.depenses.variables, sign: "negative", color: "rgba(239,68,68,0.45)" },
   ];
 
   const pieData = useMemo(() => {
