@@ -237,8 +237,8 @@ export function RevenusTab() {
             className="rounded-2xl border p-4 space-y-3"
             style={{ borderColor: "var(--theme-border)", backgroundColor: "var(--theme-bgCard)" }}
           >
-            <div className="flex flex-wrap items-center gap-3 justify-between">
-              <div className="flex flex-wrap items-center gap-3 min-w-0 flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex flex-wrap items-start sm:items-center gap-3 min-w-0 flex-1">
                 <input
                   type="text"
                   value={person.name}
@@ -269,7 +269,7 @@ export function RevenusTab() {
                   </span>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
                 <button
                   onClick={() => handleAddRevenue(person.id)}
                   className="rounded-md border px-3 py-2 text-sm transition w-full sm:w-auto"
