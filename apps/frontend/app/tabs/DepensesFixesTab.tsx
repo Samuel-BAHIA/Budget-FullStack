@@ -6,7 +6,7 @@ import { MoneyCard } from "../components/MoneyCard";
 import { useBudget } from "../contexts/BudgetContext";
 
 type Expense = { id: number; name: string; montant: number };
-type SectionKey = "abonnements" | "voiture";
+type SectionKey = "abonnements" | "voiture" | "autres";
 
 export function DepensesFixesTab() {
   const [abonnements, setAbonnements] = useState<Expense[]>([
@@ -17,6 +17,7 @@ export function DepensesFixesTab() {
     { id: 1, name: "Credit voiture", montant: 300 },
     { id: 2, name: "Assurances voiture", montant: 170 },
   ]);
+  const [autres, setAutres] = useState<Expense[]>([{ id: 1, name: "Impots locaux", montant: 120 }]);
   const { updateTotal } = useBudget();
 
   const editableWrapperStyle: React.CSSProperties = useMemo(
@@ -43,10 +44,13 @@ export function DepensesFixesTab() {
     return "Depense elevee";
   };
 
+  const setterFor = (section: SectionKey) =>
+    section === "abonnements" ? setAbonnements : section === "voiture" ? setVoiture : setAutres;
+
   const handleSaveMontant =
     (section: SectionKey, id: number) => async (newValue: string) => {
       const numValue = Number(newValue);
-      const setter = section === "abonnements" ? setAbonnements : setVoiture;
+      const setter = setterFor(section);
       setter((prev) =>
         prev.map((item) =>
           item.id === id
@@ -58,20 +62,21 @@ export function DepensesFixesTab() {
     };
 
   const handleSaveName = (section: SectionKey, id: number) => (newName: string) => {
-    const setter = section === "abonnements" ? setAbonnements : setVoiture;
+    const setter = setterFor(section);
     setter((prev) =>
       prev.map((item) => (item.id === id ? { ...item, name: newName || item.name } : item))
     );
   };
 
   const handleDelete = (section: SectionKey, id: number) => {
-    const setter = section === "abonnements" ? setAbonnements : setVoiture;
+    const setter = setterFor(section);
     setter((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleAdd = (section: SectionKey) => {
-    const setter = section === "abonnements" ? setAbonnements : setVoiture;
-    const prefix = section === "abonnements" ? "Abonnement" : "Depense";
+    const setter = setterFor(section);
+    const prefix =
+      section === "abonnements" ? "Abonnement" : section === "voiture" ? "Depense voiture" : "Autre depense";
     setter((prev) => {
       const nextId = Math.max(0, ...prev.map((a) => a.id)) + 1;
       return [...prev, { id: nextId, name: `${prefix} ${nextId}`, montant: 0 }];
@@ -81,9 +86,10 @@ export function DepensesFixesTab() {
   useEffect(() => {
     const total =
       abonnements.reduce((sum, item) => sum + item.montant, 0) +
-      voiture.reduce((sum, item) => sum + item.montant, 0);
+      voiture.reduce((sum, item) => sum + item.montant, 0) +
+      autres.reduce((sum, item) => sum + item.montant, 0);
     updateTotal("depensesFixes", total);
-  }, [abonnements, voiture, updateTotal]);
+  }, [abonnements, voiture, autres, updateTotal]);
 
   const renderSection = (title: string, section: SectionKey, items: Expense[]) => {
     return (
@@ -142,6 +148,7 @@ export function DepensesFixesTab() {
       <div className="mt-6 space-y-8">
         {renderSection("Abonnements", "abonnements", abonnements)}
         {renderSection("Voiture", "voiture", voiture)}
+        {renderSection("Autres", "autres", autres)}
       </div>
     </div>
   );

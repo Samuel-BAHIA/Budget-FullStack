@@ -6,6 +6,18 @@ import { MoneyCard } from "../components/MoneyCard";
 import { TrashIcon } from "../components/icons/TrashIcon";
 import { useBudget } from "../contexts/BudgetContext";
 
+const ChevronDownIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 type Revenue = { id: number; name: string; montant: number };
 type Person = { id: number; name: string; revenus: Revenue[] };
 
@@ -13,6 +25,7 @@ export function RevenusTab() {
   const [persons, setPersons] = useState<Person[]>([
     { id: 1, name: "Personne 1", revenus: [{ id: 1, name: "Salaire", montant: 0 }] },
   ]);
+  const [expandedByPerson, setExpandedByPerson] = useState<Record<number, boolean>>({});
   const { updateTotal } = useBudget();
 
   const editableWrapperStyle: React.CSSProperties = useMemo(
@@ -141,96 +154,116 @@ export function RevenusTab() {
             className="rounded-2xl border p-4 space-y-3"
             style={{ borderColor: "var(--theme-border)", backgroundColor: "var(--theme-bgCard)" }}
           >
-            <div
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 -mx-4 -mt-4 px-4 py-3"
-              style={{
-                backgroundColor: "var(--theme-border)",
-                borderTopLeftRadius: "16px",
-                borderTopRightRadius: "16px",
-              }}
-            >
-              <div className="flex flex-wrap items-start sm:items-center gap-3 min-w-0 flex-1">
-                <input
-                  type="text"
-                  value={person.name}
-                  onChange={(e) => handlePersonNameChange(person.id, e.target.value)}
-                  className="min-w-[180px] flex-1 rounded-md border px-3 py-2 text-lg font-semibold outline-none transition bg-transparent"
-                  style={{
-                    borderColor: "var(--theme-border)",
-                    color: "var(--theme-text)",
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "var(--theme-borderLight)";
-                    e.currentTarget.style.boxShadow = "0 0 0 2px var(--theme-borderLight)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "var(--theme-border)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                />
-                <div className="flex items-center gap-2 font-semibold flex-wrap">
-                  <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
-                    Total
-                  </span>
-                  <span className="text-xl font-semibold" style={{ color: "#22c55e" }}>
-                    +
-                    {person.revenus.reduce((s, r) => s + r.montant, 0).toLocaleString("fr-FR")} ?
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
-                <button
-                  onClick={() => handleDeletePerson(person.id)}
-                  className="rounded-md px-2 py-2 text-sm transition w-full sm:w-auto flex items-center justify-center"
-                  style={{
-                    border: "1px solid transparent",
-                    backgroundColor: "transparent",
-                    color: "var(--theme-textSecondary)",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--theme-textSecondary)")}
-                  title="Supprimer la personne"
-                  aria-label="Supprimer la personne"
-                >
-                  <TrashIcon />
-                </button>
-              </div>
-            </div>
+            {(() => {
+              const isExpanded = expandedByPerson[person.id] ?? true;
+              const toggleExpanded = () =>
+                setExpandedByPerson((prev) => ({ ...prev, [person.id]: !isExpanded }));
+              return (
+                <>
+                  <div
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 -mx-4 -mt-4 px-4 py-3"
+                    style={{
+                      backgroundColor: "var(--theme-border)",
+                      borderTopLeftRadius: "16px",
+                      borderTopRightRadius: "16px",
+                    }}
+                  >
+                    <div className="flex flex-wrap items-start sm:items-center gap-3 min-w-0 flex-1">
+                      <button
+                        onClick={toggleExpanded}
+                        className="rounded-md p-1 transition hover:bg-[var(--theme-bgHover)]"
+                        style={{ color: "var(--theme-textSecondary)" }}
+                        title={isExpanded ? "Reduire" : "Derouler"}
+                        aria-label={isExpanded ? "Reduire" : "Derouler"}
+                      >
+                        {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                      </button>
+                      <input
+                        type="text"
+                        value={person.name}
+                        onChange={(e) => handlePersonNameChange(person.id, e.target.value)}
+                        className="min-w-[180px] flex-1 rounded-md border px-3 py-2 text-lg font-semibold outline-none transition bg-transparent"
+                        style={{
+                          borderColor: "var(--theme-border)",
+                          color: "var(--theme-text)",
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.borderColor = "var(--theme-borderLight)";
+                          e.currentTarget.style.boxShadow = "0 0 0 2px var(--theme-borderLight)";
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.borderColor = "var(--theme-border)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                      />
+                      <div className="flex items-center gap-2 font-semibold flex-wrap">
+                        <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+                          Total
+                        </span>
+                        <span className="text-xl font-semibold" style={{ color: "#22c55e" }}>
+                          +
+                          {person.revenus.reduce((s, r) => s + r.montant, 0).toLocaleString("fr-FR")} €
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
+                      <button
+                        onClick={() => handleDeletePerson(person.id)}
+                        className="rounded-md px-2 py-2 text-sm transition w-full sm:w-auto flex items-center justify-center"
+                        style={{
+                          border: "1px solid transparent",
+                          backgroundColor: "transparent",
+                          color: "var(--theme-textSecondary)",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--theme-textSecondary)")}
+                        title="Supprimer la personne"
+                        aria-label="Supprimer la personne"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {person.revenus.map((item) => (
-                <MoneyCard
-                  key={item.id}
-                  name={item.name}
-                  value={item.montant}
-                  positive
-                  onDelete={() => handleDeleteRevenue(person.id, item.id)}
-                  onSaveValue={handleSaveMontant(person.id, item.id)}
-                  onSaveName={handleSaveName(person.id, item.id)}
-                  hintText={getHint}
-                  displayPrefix="+"
-                  displaySuffix="/mois"
-                  wrapperStyle={positiveWrapperStyle}
-                />
-              ))}
-              <button
-                onClick={() => handleAddRevenue(person.id)}
-                className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
-                style={{
-                  borderColor: "rgba(34,197,94,0.35)",
-                  color: "var(--theme-success, #22c55e)",
-                  backgroundColor: "rgba(34,197,94,0.12)",
-                }}
-              >
-                <span
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
-                  style={{ backgroundColor: "rgba(34,197,94,0.16)", color: "var(--theme-success, #22c55e)" }}
-                >
-                  +
-                </span>
-                Ajouter un revenu
-              </button>
-            </div>
+                  {isExpanded && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {person.revenus.map((item) => (
+                        <MoneyCard
+                          key={item.id}
+                          name={item.name}
+                          value={item.montant}
+                          positive
+                          onDelete={() => handleDeleteRevenue(person.id, item.id)}
+                          onSaveValue={handleSaveMontant(person.id, item.id)}
+                          onSaveName={handleSaveName(person.id, item.id)}
+                          hintText={getHint}
+                          displayPrefix="+"
+                          displaySuffix="/mois"
+                          wrapperStyle={positiveWrapperStyle}
+                        />
+                      ))}
+                      <button
+                        onClick={() => handleAddRevenue(person.id)}
+                        className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+                        style={{
+                          borderColor: "rgba(34,197,94,0.35)",
+                          color: "var(--theme-success, #22c55e)",
+                          backgroundColor: "rgba(34,197,94,0.12)",
+                        }}
+                      >
+                        <span
+                          className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+                          style={{ backgroundColor: "rgba(34,197,94,0.16)", color: "var(--theme-success, #22c55e)" }}
+                        >
+                          +
+                        </span>
+                        Ajouter un revenu
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         ))}
 
