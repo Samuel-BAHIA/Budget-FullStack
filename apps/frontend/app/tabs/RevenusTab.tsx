@@ -163,26 +163,7 @@ export function RevenusTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h2 className="text-xl font-semibold">Revenus</h2>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-1 rounded-md border px-3 py-2 text-sm transition"
-          style={{
-            borderColor: "var(--theme-border)",
-            backgroundColor: "var(--theme-bgCard)",
-            color: "var(--theme-text)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--theme-bgHover)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--theme-bgCard)";
-          }}
-        >
-          <span style={{ fontWeight: 700 }}>+</span> Ajouter
-        </button>
-      </div>
+      <h2 className="text-xl font-semibold">Revenus</h2>
       <p
         className="mt-1 text-sm"
         style={{ color: "var(--theme-textSecondary)" }}
@@ -270,6 +251,23 @@ export function RevenusTab() {
             />
           </div>
         ))}
+        <button
+          onClick={handleAdd}
+          className="rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+          style={{
+            borderColor: "var(--theme-border)",
+            color: "var(--theme-textSecondary)",
+            backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+          }}
+        >
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+            style={{ backgroundColor: "var(--theme-bgCard)", color: "var(--theme-text)" }}
+          >
+            +
+          </span>
+          Ajouter un revenu
+        </button>
       </div>
     </div>
   );

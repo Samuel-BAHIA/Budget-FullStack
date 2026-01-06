@@ -160,24 +160,6 @@ export function AppartementsTab() {
             Gere tes appartements achetes ou loues, et leurs informations.
           </p>
         </div>
-        <button
-          onClick={handleAddAppartement}
-          className="flex items-center gap-2 rounded-lg border px-4 py-2 transition"
-          style={{
-            borderColor: "var(--theme-border)",
-            backgroundColor: "var(--theme-bgCard)",
-            color: "var(--theme-text)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--theme-bgHover)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--theme-bgCard)";
-          }}
-        >
-          <PlusIcon />
-          <span>Ajouter</span>
-        </button>
       </div>
 
       <div className="space-y-6">
@@ -193,6 +175,18 @@ export function AppartementsTab() {
             onDelete={handleDeleteAppartement(apt.id)}
           />
         ))}
+        <button
+          onClick={handleAddAppartement}
+          className="w-full rounded-xl border-2 border-dashed p-6 text-sm font-semibold flex items-center justify-center gap-3 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+          style={{
+            borderColor: "var(--theme-border)",
+            color: "var(--theme-textSecondary)",
+            backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+          }}
+        >
+          <PlusIcon />
+          Ajouter un appartement
+        </button>
       </div>
     </div>
   );

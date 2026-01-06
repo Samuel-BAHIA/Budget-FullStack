@@ -191,23 +191,6 @@ export function DepensesFixesTab() {
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-semibold">Abonnements</h3>
-            <button
-              onClick={() => handleAdd("abonnements")}
-              className="flex items-center gap-1 rounded-md border px-2 py-1 text-sm transition"
-              style={{
-                borderColor: "var(--theme-border)",
-                backgroundColor: "var(--theme-bgCard)",
-                color: "var(--theme-text)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--theme-bgHover)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--theme-bgCard)";
-              }}
-            >
-              <span style={{ fontWeight: 700 }}>+</span> Ajouter
-            </button>
           </div>
           <div className="grid grid-cols-4 gap-4">
             {abonnements.map((abo) => (
@@ -289,29 +272,29 @@ export function DepensesFixesTab() {
                 />
               </div>
             ))}
+            <button
+              onClick={() => handleAdd("abonnements")}
+              className="rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+              style={{
+                borderColor: "var(--theme-border)",
+                color: "var(--theme-textSecondary)",
+                backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+              }}
+            >
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+                style={{ backgroundColor: "var(--theme-bgCard)", color: "var(--theme-text)" }}
+              >
+                +
+              </span>
+              Ajouter
+            </button>
           </div>
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-semibold">Voiture</h3>
-            <button
-              onClick={() => handleAdd("voiture")}
-              className="flex items-center gap-1 rounded-md border px-2 py-1 text-sm transition"
-              style={{
-                borderColor: "var(--theme-border)",
-                backgroundColor: "var(--theme-bgCard)",
-                color: "var(--theme-text)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--theme-bgHover)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--theme-bgCard)";
-              }}
-            >
-              <span style={{ fontWeight: 700 }}>+</span> Ajouter
-            </button>
           </div>
           <div className="grid grid-cols-4 gap-4">
             {voiture.map((item) => (
@@ -393,6 +376,23 @@ export function DepensesFixesTab() {
                 />
               </div>
             ))}
+            <button
+              onClick={() => handleAdd("voiture")}
+              className="rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+              style={{
+                borderColor: "var(--theme-border)",
+                color: "var(--theme-textSecondary)",
+                backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+              }}
+            >
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+                style={{ backgroundColor: "var(--theme-bgCard)", color: "var(--theme-text)" }}
+              >
+                +
+              </span>
+              Ajouter
+            </button>
           </div>
         </div>
       </div>
