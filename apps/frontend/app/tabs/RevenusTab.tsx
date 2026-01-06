@@ -258,7 +258,7 @@ export function RevenusTab() {
                     e.currentTarget.style.boxShadow = "none";
                   }}
                 />
-                <div className="flex items-center gap-2 text-sm font-semibold">
+                <div className="flex items-center gap-2 text-sm font-semibold flex-wrap">
                   <span style={{ color: "var(--theme-textSecondary)" }}>Total</span>
                   <span style={{ color: "#22c55e" }}>
                     +
@@ -269,10 +269,10 @@ export function RevenusTab() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handleAddRevenue(person.id)}
-                  className="rounded-md border px-3 py-2 text-sm transition"
+                  className="rounded-md border px-3 py-2 text-sm transition w-full sm:w-auto"
                   style={{
                     borderColor: "var(--theme-border)",
                     backgroundColor: "var(--theme-bgCard)",
@@ -285,7 +285,7 @@ export function RevenusTab() {
                 </button>
                 <button
                   onClick={() => handleDeletePerson(person.id)}
-                  className="rounded-md border px-3 py-2 text-sm transition hover:bg-red-500/15"
+                  className="rounded-md border px-3 py-2 text-sm transition hover:bg-red-500/15 w-full sm:w-auto"
                   style={{
                     borderColor: "var(--theme-border)",
                     backgroundColor: "var(--theme-bgCard)",
