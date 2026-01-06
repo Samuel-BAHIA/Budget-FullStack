@@ -254,6 +254,7 @@ export function AppartementBlock({
                 onSave={handleSave(setLoyer)}
                 hintText={getLoyerHint}
                 displaySuffix="/mois"
+                displayPrefix={type === "propriete" ? "+" : "-"}
               />
             </div>
             {type === "propriete" && (
@@ -264,6 +265,7 @@ export function AppartementBlock({
                   onSave={handleSave(setImpotsRevenu)}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
+                  displayPrefix="-"
                 />
               </div>
             )}
@@ -279,6 +281,7 @@ export function AppartementBlock({
                   onSave={handleSave(setTaxeFonciere)}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
+                  displayPrefix="-"
                 />
               </div>
               <div className="rounded-xl p-2" style={negativeWrapperStyle}>
@@ -288,6 +291,7 @@ export function AppartementBlock({
                   onSave={handleSave(setChargesCopro)}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
+                  displayPrefix="-"
                 />
               </div>
               <div className="rounded-xl p-2" style={negativeWrapperStyle}>
@@ -297,6 +301,7 @@ export function AppartementBlock({
                   onSave={handleSave(setAssurance)}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
+                  displayPrefix="-"
                 />
               </div>
             </div>
@@ -306,56 +311,61 @@ export function AppartementBlock({
             <>
               <div className="grid grid-cols-4 gap-4">
                 <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                  <EditableValueEuro
-                    label="Assurance habitation"
-                    value={assurance}
-                    onSave={handleSave(setAssurance)}
-                    hintText={getDepenseHint}
-                    displaySuffix="/mois"
-                  />
-                </div>
-                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                  <EditableValueEuro
-                    label="Internet"
-                    value={internet}
-                    onSave={handleSave(setInternet)}
-                    hintText={getDepenseHint}
-                    displaySuffix="/mois"
-                  />
-                </div>
-                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                  <EditableValueEuro
-                    label="Eau"
-                    value={eau}
-                    onSave={handleSave(setEau)}
-                    hintText={getDepenseHint}
-                    displaySuffix="/mois"
-                  />
-                </div>
-                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                  <EditableValueEuro
-                    label="Electricite"
-                    value={electricite}
-                    onSave={handleSave(setElectricite)}
-                    hintText={getDepenseHint}
-                    displaySuffix="/mois"
-                  />
-                </div>
+                <EditableValueEuro
+                  label="Assurance habitation"
+                  value={assurance}
+                  onSave={handleSave(setAssurance)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                  displayPrefix="-"
+                />
               </div>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
+                <EditableValueEuro
+                  label="Internet"
+                  value={internet}
+                  onSave={handleSave(setInternet)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                  displayPrefix="-"
+                />
+              </div>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
+                <EditableValueEuro
+                  label="Eau"
+                  value={eau}
+                  onSave={handleSave(setEau)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                  displayPrefix="-"
+                />
+              </div>
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
+                <EditableValueEuro
+                  label="Electricite"
+                  value={electricite}
+                  onSave={handleSave(setElectricite)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                  displayPrefix="-"
+                />
+              </div>
+            </div>
 
-              <div className="grid grid-cols-4 gap-4">
-                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                  <EditableValueEuro
-                    label="Gaz"
-                    value={gaz}
-                    onSave={handleSave(setGaz)}
-                    hintText={getDepenseHint}
-                    displaySuffix="/mois"
-                  />
-                </div>
+            <div className="grid grid-cols-4 gap-4">
+              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
+                <EditableValueEuro
+                  label="Gaz"
+                  value={gaz}
+                  onSave={handleSave(setGaz)}
+                  hintText={getDepenseHint}
+                  displaySuffix="/mois"
+                  displayPrefix="-"
+                />
               </div>
-            </>
-          )}
+            </div>
+          </>
+        )}
 
           {/* Ligne credit */}
           {type === "propriete" && (
@@ -367,6 +377,7 @@ export function AppartementBlock({
                   onSave={handleSave(setCredit)}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
+                  displayPrefix="-"
                 />
               </div>
               <div className="rounded-xl p-2" style={negativeWrapperStyle}>
@@ -376,6 +387,7 @@ export function AppartementBlock({
                   onSave={handleSave(setAssuranceCredit)}
                   hintText={getDepenseHint}
                   displaySuffix="/mois"
+                  displayPrefix="-"
                 />
               </div>
             </div>
