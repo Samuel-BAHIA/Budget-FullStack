@@ -3,6 +3,7 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { MoneyCard } from "../components/MoneyCard";
+import { TrashIcon } from "../components/icons/TrashIcon";
 import { useBudget } from "../contexts/BudgetContext";
 
 type Revenue = { id: number; name: string; montant: number };
@@ -165,25 +166,25 @@ export function RevenusTab() {
                   <span style={{ color: "var(--theme-textSecondary)" }}>Total</span>
                   <span style={{ color: "#22c55e" }}>
                     +
-                    {person.revenus.reduce((s, r) => s + r.montant, 0).toLocaleString("fr-FR")} €
+                    {person.revenus.reduce((s, r) => s + r.montant, 0).toLocaleString("fr-FR")} ?
                   </span>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
                 <button
                   onClick={() => handleDeletePerson(person.id)}
-                  className="rounded-md border px-3 py-2 text-sm transition hover:bg-red-500/15 w-full sm:w-auto"
+                  className="rounded-md px-2 py-2 text-sm transition w-full sm:w-auto flex items-center justify-center"
                   style={{
-                    borderColor: "var(--theme-border)",
-                    backgroundColor: "var(--theme-bgCard)",
+                    border: "1px solid transparent",
+                    backgroundColor: "transparent",
                     color: "var(--theme-textSecondary)",
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.12)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--theme-bgCard)")}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--theme-textSecondary)")}
                   title="Supprimer la personne"
                   aria-label="Supprimer la personne"
                 >
-                  🗑️
+                  <TrashIcon />
                 </button>
               </div>
             </div>
@@ -208,14 +209,14 @@ export function RevenusTab() {
                 onClick={() => handleAddRevenue(person.id)}
                 className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
                 style={{
-                  borderColor: "var(--theme-border)",
-                  color: "var(--theme-textSecondary)",
-                  backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+                  borderColor: "rgba(34,197,94,0.35)",
+                  color: "var(--theme-success, #22c55e)",
+                  backgroundColor: "rgba(34,197,94,0.12)",
                 }}
               >
                 <span
                   className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
-                  style={{ backgroundColor: "var(--theme-bgCard)", color: "var(--theme-text)" }}
+                  style={{ backgroundColor: "rgba(34,197,94,0.16)", color: "var(--theme-success, #22c55e)" }}
                 >
                   +
                 </span>

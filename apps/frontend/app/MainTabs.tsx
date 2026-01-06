@@ -6,11 +6,10 @@ import { DepensesFixesTab } from "./tabs/DepensesFixesTab";
 import { DepensesVariablesTab } from "./tabs/DepensesVariablesTab";
 import { BilanTab } from "./tabs/BilanTab";
 import { AppartementsTab } from "./tabs/AppartementsTab";
-import { TestTab } from "./tabs/TestTab";
 import { ThemeSelector } from "./components/ThemeSelector";
 import { useBudget } from "./contexts/BudgetContext";
 
-type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements" | "test";
+type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements";
 
 const tabs: { id: TabId; label: string }[] = [
   { id: "revenus", label: "Revenus" },
@@ -18,7 +17,6 @@ const tabs: { id: TabId; label: string }[] = [
   { id: "variables", label: "Depenses variables" },
   { id: "appartements", label: "Appartements" },
   { id: "bilan", label: "Bilan" },
-  { id: "test", label: "Test" },
 ];
 
 // Fonction pour formater le montant avec signe
@@ -205,9 +203,6 @@ export function MainTabs() {
             </div>
             <div hidden={active !== "bilan"} aria-hidden={active !== "bilan"}>
               <BilanTab />
-            </div>
-            <div hidden={active !== "test"} aria-hidden={active !== "test"}>
-              <TestTab />
             </div>
           </div>
         </div>

@@ -1,7 +1,9 @@
 "use client";
 
+import type React from "react";
 import { useMemo, useState } from "react";
-import { EditableValueEuro } from "./EditableValueEuro";
+import { MoneyCard } from "./MoneyCard";
+import { TrashIcon } from "./icons/TrashIcon";
 import type { AppartementData, AppartementType } from "../tabs/AppartementsTab";
 
 // Icones
@@ -17,17 +19,14 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-const TrashIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M3.75 4.5H14.25M6.75 4.5V3C6.75 2.58579 7.08579 2.25 7.5 2.25H10.5C10.9142 2.25 11.25 2.58579 11.25 3V4.5M4.5 4.5V15C4.5 15.4142 4.83579 15.75 5.25 15.75H12.75C13.1642 15.75 13.5 15.4142 13.5 15V4.5M7.5 8.25V12.75M10.5 8.25V12.75"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+type CardConfig = {
+  key: keyof AppartementData["data"];
+  label: string;
+  value: number;
+  setter: (value: number) => void;
+  hint?: (value: string | number) => string;
+  positive?: boolean;
+};
 
 type AppartementBlockProps = {
   appartementNumber: number;
@@ -182,6 +181,51 @@ export function AppartementBlock({
     onDataChange?.(nextValues, newType);
   };
 
+  const renderCards = (cards: CardConfig[]) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {cards.map((card) => (
+        <MoneyCard
+          key={card.key}
+          name={card.label}
+          value={card.value}
+          positive={!!card.positive}
+          onSaveValue={handleSave(card.setter, card.key)}
+          hintText={card.hint}
+          displayPrefix={card.positive ? "+" : "-"}
+          displaySuffix="/mois"
+          wrapperStyle={card.positive ? positiveWrapperStyle : negativeWrapperStyle}
+          allowNameEdit={false}
+          allowDelete={false}
+        />
+      ))}
+    </div>
+  );
+
+  const proprieteIncomeCards: CardConfig[] = [
+    { key: "loyer", label: "Loyer percu", value: loyer, setter: setLoyer, hint: getLoyerHint, positive: true },
+    { key: "impotsRevenu", label: "Impots sur revenu", value: impotsRevenu, setter: setImpotsRevenu, hint: getDepenseHint },
+  ];
+
+  const proprieteChargesCards: CardConfig[] = [
+    { key: "taxeFonciere", label: "Taxe fonciere", value: taxeFonciere, setter: setTaxeFonciere, hint: getDepenseHint },
+    { key: "chargesCopro", label: "Charges copro", value: chargesCopro, setter: setChargesCopro, hint: getDepenseHint },
+    { key: "assurance", label: "Assurance habitation", value: assurance, setter: setAssurance, hint: getDepenseHint },
+  ];
+
+  const proprieteCreditCards: CardConfig[] = [
+    { key: "credit", label: "Credit", value: credit, setter: setCredit, hint: getDepenseHint },
+    { key: "assuranceCredit", label: "Assurance credit", value: assuranceCredit, setter: setAssuranceCredit, hint: getDepenseHint },
+  ];
+
+  const locationCards: CardConfig[] = [
+    { key: "loyer", label: "Loyer a charge", value: loyer, setter: setLoyer, hint: getLoyerHint },
+    { key: "assurance", label: "Assurance habitation", value: assurance, setter: setAssurance, hint: getDepenseHint },
+    { key: "internet", label: "Internet", value: internet, setter: setInternet, hint: getDepenseHint },
+    { key: "eau", label: "Eau", value: eau, setter: setEau, hint: getDepenseHint },
+    { key: "electricite", label: "Electricite", value: electricite, setter: setElectricite, hint: getDepenseHint },
+    { key: "gaz", label: "Gaz", value: gaz, setter: setGaz, hint: getDepenseHint },
+  ];
+
   return (
     <div
       className="rounded-xl border p-6"
@@ -256,152 +300,14 @@ export function AppartementBlock({
 
       {isExpanded && (
         <div className="space-y-4">
-          {/* Ligne revenus */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="rounded-xl p-2" style={type === "propriete" ? positiveWrapperStyle : negativeWrapperStyle}>
-              <EditableValueEuro
-                label={type === "propriete" ? "Loyer percu" : "Loyer a charge"}
-                value={loyer}
-                onSave={handleSave(setLoyer, "loyer")}
-                hintText={getLoyerHint}
-                displaySuffix="/mois"
-                displayPrefix={type === "propriete" ? "+" : "-"}
-              />
-            </div>
-            {type === "propriete" && (
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Impots sur revenu"
-                  value={impotsRevenu}
-                  onSave={handleSave(setImpotsRevenu, "impotsRevenu")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Ligne charges */}
-          {type === "propriete" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Taxe fonciere"
-                  value={taxeFonciere}
-                  onSave={handleSave(setTaxeFonciere, "taxeFonciere")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Charges copro"
-                  value={chargesCopro}
-                  onSave={handleSave(setChargesCopro, "chargesCopro")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Assurance habitation"
-                  value={assurance}
-                  onSave={handleSave(setAssurance, "assurance")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-            </div>
-          )}
-
-          {type === "location" && (
+          {type === "propriete" ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Assurance habitation"
-                  value={assurance}
-                  onSave={handleSave(setAssurance, "assurance")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Internet"
-                  value={internet}
-                  onSave={handleSave(setInternet, "internet")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Eau"
-                  value={eau}
-                  onSave={handleSave(setEau, "eau")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Electricite"
-                  value={electricite}
-                  onSave={handleSave(setElectricite, "electricite")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-            </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Gaz"
-                  value={gaz}
-                  onSave={handleSave(setGaz, "gaz")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-          {/* Ligne credit */}
-          {type === "propriete" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Credit"
-                  value={credit}
-                  onSave={handleSave(setCredit, "credit")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-              <div className="rounded-xl p-2" style={negativeWrapperStyle}>
-                <EditableValueEuro
-                  label="Assurance credit"
-                  value={assuranceCredit}
-                  onSave={handleSave(setAssuranceCredit, "assuranceCredit")}
-                  hintText={getDepenseHint}
-                  displaySuffix="/mois"
-                  displayPrefix="-"
-                />
-              </div>
-            </div>
+              {renderCards(proprieteIncomeCards)}
+              {renderCards(proprieteChargesCards)}
+              {renderCards(proprieteCreditCards)}
+            </>
+          ) : (
+            renderCards(locationCards)
           )}
         </div>
       )}
