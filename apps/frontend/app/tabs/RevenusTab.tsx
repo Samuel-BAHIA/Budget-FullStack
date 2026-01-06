@@ -5,6 +5,7 @@ import { EditableValueEuro } from "../components/EditableValueEuro";
 import { useBudget } from "../contexts/BudgetContext";
 
 type Revenue = { id: number; name: string; montant: number };
+type Person = { id: number; name: string; revenus: Revenue[] };
 
 const EditIcon = () => (
   <svg
@@ -79,10 +80,14 @@ const TrashIcon = () => (
 );
 
 export function RevenusTab() {
-  const [revenus, setRevenus] = useState<Revenue[]>([
-    { id: 1, name: "Salaire 1", montant: 0 },
+  const [persons, setPersons] = useState<Person[]>([
+    {
+      id: 1,
+      name: "Personne 1",
+      revenus: [{ id: 1, name: "Salaire", montant: 0 }],
+    },
   ]);
-  const [editingTitleId, setEditingTitleId] = useState<number | null>(null);
+  const [editingTitle, setEditingTitle] = useState<{ personId: number; revenueId: number } | null>(null);
   const [titleDraft, setTitleDraft] = useState("");
   const { updateTotal } = useBudget();
 
@@ -110,56 +115,110 @@ export function RevenusTab() {
     return "Revenu eleve";
   };
 
-  const handleSaveMontant = (id: number) => async (newValue: string) => {
-    const numValue = Number(newValue);
-    setRevenus((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, montant: Number.isFinite(numValue) ? numValue : 0 }
-          : item
-      )
-    );
-    await new Promise((resolve) => setTimeout(resolve, 200));
-  };
+  const handleSaveMontant =
+    (personId: number, revenueId: number) => async (newValue: string) => {
+      const numValue = Number(newValue);
+      setPersons((prev) =>
+        prev.map((p) =>
+          p.id === personId
+            ? {
+                ...p,
+                revenus: p.revenus.map((r) =>
+                  r.id === revenueId ? { ...r, montant: Number.isFinite(numValue) ? numValue : 0 } : r
+                ),
+              }
+            : p
+        )
+      );
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    };
 
-  const handleEditTitle = (id: number, current: string) => {
-    setEditingTitleId(id);
+  const handleEditTitle = (personId: number, revenueId: number, current: string) => {
+    setEditingTitle({ personId, revenueId });
     setTitleDraft(current);
   };
 
   const handleSaveTitle = () => {
-    if (editingTitleId === null) return;
-    setRevenus((prev) =>
-      prev.map((item) =>
-        item.id === editingTitleId
-          ? { ...item, name: titleDraft || item.name }
-          : item
+    if (!editingTitle) return;
+    const { personId, revenueId } = editingTitle;
+    setPersons((prev) =>
+      prev.map((p) =>
+        p.id === personId
+          ? {
+              ...p,
+              revenus: p.revenus.map((r) =>
+                r.id === revenueId ? { ...r, name: titleDraft || r.name } : r
+              ),
+            }
+          : p
       )
     );
-    setEditingTitleId(null);
+    setEditingTitle(null);
     setTitleDraft("");
   };
 
   const handleCancelTitle = () => {
-    setEditingTitleId(null);
+    setEditingTitle(null);
     setTitleDraft("");
   };
 
-  const handleDelete = (id: number) => {
-    setRevenus((prev) => prev.filter((item) => item.id !== id));
+  const handleDeleteRevenue = (personId: number, revenueId: number) => {
+    setPersons((prev) =>
+      prev.map((p) =>
+        p.id === personId ? { ...p, revenus: p.revenus.filter((r) => r.id !== revenueId) } : p
+      )
+    );
   };
 
-  const handleAdd = () => {
-    setRevenus((prev) => {
-      const nextId = Math.max(0, ...prev.map((a) => a.id)) + 1;
-      return [...prev, { id: nextId, name: `Salaire ${nextId}`, montant: 0 }];
+  const handleAddRevenue = (personId: number) => {
+    setPersons((prev) =>
+      prev.map((p) =>
+        p.id === personId
+          ? {
+              ...p,
+              revenus: [
+                ...p.revenus,
+                {
+                  id: Math.max(0, ...p.revenus.map((r) => r.id)) + 1,
+                  name: `Revenu ${p.revenus.length + 1}`,
+                  montant: 0,
+                },
+              ],
+            }
+          : p
+      )
+    );
+  };
+
+  const handleAddPerson = () => {
+    setPersons((prev) => {
+      const nextId = Math.max(0, ...prev.map((p) => p.id)) + 1;
+      return [
+        ...prev,
+        {
+          id: nextId,
+          name: `Personne ${nextId}`,
+          revenus: [{ id: 1, name: "Revenu 1", montant: 0 }],
+        },
+      ];
     });
   };
 
+  const handleDeletePerson = (personId: number) => {
+    setPersons((prev) => prev.filter((p) => p.id !== personId));
+  };
+
+  const handlePersonNameChange = (personId: number, name: string) => {
+    setPersons((prev) => prev.map((p) => (p.id === personId ? { ...p, name } : p)));
+  };
+
   useEffect(() => {
-    const total = revenus.reduce((sum, item) => sum + item.montant, 0);
+    const total = persons.reduce(
+      (sum, person) => sum + person.revenus.reduce((s, r) => s + r.montant, 0),
+      0
+    );
     updateTotal("revenus", total);
-  }, [revenus, updateTotal]);
+  }, [persons, updateTotal]);
 
   return (
     <div className="space-y-6">
@@ -171,88 +230,163 @@ export function RevenusTab() {
         Ajoute tes revenus (salaires, primes, etc.).
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {revenus.map((item) => (
-          <div key={item.id} className="rounded-xl p-3 space-y-3" style={positiveWrapperStyle}>
-            <div className="flex items-center justify-between gap-2">
-              {editingTitleId === item.id ? (
-                <>
-                  <input
-                    type="text"
-                    value={titleDraft}
-                    onChange={(e) => setTitleDraft(e.target.value)}
-                    className="flex-1 rounded-md border px-3 py-2 text-sm font-semibold outline-none transition"
-                    style={{
-                      borderColor: "var(--theme-border)",
-                      backgroundColor: "var(--theme-bgCard)",
-                      color: "var(--theme-text)",
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.borderColor = "var(--theme-borderLight)";
-                      e.currentTarget.style.boxShadow =
-                        "0 0 0 2px var(--theme-borderLight)";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.borderColor = "var(--theme-border)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  />
-                  <button
-                    onClick={handleSaveTitle}
-                    className="rounded-md p-2 transition"
-                    style={{
-                      backgroundColor: "var(--theme-tabActiveBg)",
-                      color: "var(--theme-tabActiveText)",
-                    }}
-                    title="Valider"
-                  >
-                    <CheckIcon />
-                  </button>
-                  <button
-                    onClick={handleCancelTitle}
-                    className="rounded-md p-2 transition"
-                    style={{
-                      backgroundColor: "var(--theme-bgHover)",
-                      color: "var(--theme-text)",
-                    }}
-                    title="Annuler"
-                  >
-                    <CancelIcon />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span className="flex-1 text-base font-semibold">{item.name}</span>
-                  <button
-                    onClick={() => handleEditTitle(item.id, item.name)}
-                    className="rounded-md p-2 transition hover:bg-[var(--theme-bgHover)]"
-                    style={{ color: "var(--theme-textSecondary)" }}
-                    title="Modifier le nom"
-                  >
-                    <EditIcon />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="rounded-md p-2 transition hover:bg-red-500/15"
-                    style={{ color: "var(--theme-textSecondary)" }}
-                    title="Supprimer"
-                  >
-                    <TrashIcon />
-                  </button>
-                </>
-              )}
+      <div className="space-y-5">
+        {persons.map((person) => (
+          <div
+            key={person.id}
+            className="rounded-2xl border p-4 space-y-3"
+            style={{ borderColor: "var(--theme-border)", backgroundColor: "var(--theme-bgCard)" }}
+          >
+            <div className="flex flex-wrap items-center gap-3 justify-between">
+              <div className="flex flex-wrap items-center gap-3 min-w-0 flex-1">
+                <input
+                  type="text"
+                  value={person.name}
+                  onChange={(e) => handlePersonNameChange(person.id, e.target.value)}
+                  className="min-w-[180px] flex-1 rounded-md border px-3 py-2 text-sm font-semibold outline-none transition"
+                  style={{
+                    borderColor: "var(--theme-border)",
+                    backgroundColor: "var(--theme-bgCard)",
+                    color: "var(--theme-text)",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "var(--theme-borderLight)";
+                    e.currentTarget.style.boxShadow = "0 0 0 2px var(--theme-borderLight)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "var(--theme-border)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <span style={{ color: "var(--theme-textSecondary)" }}>Total</span>
+                  <span style={{ color: "#22c55e" }}>
+                    +
+                    {person.revenus
+                      .reduce((s, r) => s + r.montant, 0)
+                      .toLocaleString("fr-FR")}{" "}
+                    €
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleAddRevenue(person.id)}
+                  className="rounded-md border px-3 py-2 text-sm transition"
+                  style={{
+                    borderColor: "var(--theme-border)",
+                    backgroundColor: "var(--theme-bgCard)",
+                    color: "var(--theme-text)",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--theme-bgHover)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--theme-bgCard)")}
+                >
+                  + Ajouter un revenu
+                </button>
+                <button
+                  onClick={() => handleDeletePerson(person.id)}
+                  className="rounded-md border px-3 py-2 text-sm transition hover:bg-red-500/15"
+                  style={{
+                    borderColor: "var(--theme-border)",
+                    backgroundColor: "var(--theme-bgCard)",
+                    color: "var(--theme-textSecondary)",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.12)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--theme-bgCard)")}
+                >
+                  Supprimer
+                </button>
+              </div>
             </div>
-            <EditableValueEuro
-              value={item.montant}
-              onSave={handleSaveMontant(item.id)}
-              hintText={getHint}
-              displayPrefix="+"
-              displaySuffix="/mois"
-            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {person.revenus.map((item) => {
+                const isEditing = editingTitle?.personId === person.id && editingTitle.revenueId === item.id;
+                return (
+                  <div key={item.id} className="rounded-xl p-3 space-y-3" style={positiveWrapperStyle}>
+                    <div className="flex items-center justify-between gap-2">
+                      {isEditing ? (
+                        <>
+                          <input
+                            type="text"
+                            value={titleDraft}
+                            onChange={(e) => setTitleDraft(e.target.value)}
+                            className="flex-1 rounded-md border px-3 py-2 text-sm font-semibold outline-none transition"
+                            style={{
+                              borderColor: "var(--theme-border)",
+                              backgroundColor: "var(--theme-bgCard)",
+                              color: "var(--theme-text)",
+                            }}
+                            onFocus={(e) => {
+                              e.currentTarget.style.borderColor = "var(--theme-borderLight)";
+                              e.currentTarget.style.boxShadow = "0 0 0 2px var(--theme-borderLight)";
+                            }}
+                            onBlur={(e) => {
+                              e.currentTarget.style.borderColor = "var(--theme-border)";
+                              e.currentTarget.style.boxShadow = "none";
+                            }}
+                          />
+                          <button
+                            onClick={handleSaveTitle}
+                            className="rounded-md p-2 transition"
+                            style={{
+                              backgroundColor: "var(--theme-tabActiveBg)",
+                              color: "var(--theme-tabActiveText)",
+                            }}
+                            title="Valider"
+                          >
+                            <CheckIcon />
+                          </button>
+                          <button
+                            onClick={handleCancelTitle}
+                            className="rounded-md p-2 transition"
+                            style={{
+                              backgroundColor: "var(--theme-bgHover)",
+                              color: "var(--theme-text)",
+                            }}
+                            title="Annuler"
+                          >
+                            <CancelIcon />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="flex-1 text-base font-semibold">{item.name}</span>
+                          <button
+                            onClick={() => handleEditTitle(person.id, item.id, item.name)}
+                            className="rounded-md p-2 transition hover:bg-[var(--theme-bgHover)]"
+                            style={{ color: "var(--theme-textSecondary)" }}
+                            title="Modifier le nom"
+                          >
+                            <EditIcon />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRevenue(person.id, item.id)}
+                            className="rounded-md p-2 transition hover:bg-red-500/15"
+                            style={{ color: "var(--theme-textSecondary)" }}
+                            title="Supprimer"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    <EditableValueEuro
+                      value={item.montant}
+                      onSave={handleSaveMontant(person.id, item.id)}
+                      hintText={getHint}
+                      displayPrefix="+"
+                      displaySuffix="/mois"
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ))}
+
         <button
-          onClick={handleAdd}
+          onClick={handleAddPerson}
           className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
           style={{
             borderColor: "var(--theme-border)",
@@ -266,7 +400,7 @@ export function RevenusTab() {
           >
             +
           </span>
-          Ajouter un revenu
+          Ajouter une personne
         </button>
       </div>
     </div>
