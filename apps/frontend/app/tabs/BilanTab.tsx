@@ -19,8 +19,8 @@ export function BilanTab() {
   const { totals } = useBudget();
 
   const slicesRaw = useMemo<Slice[]>(() => {
-    const greenPalette = ["#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#a7f3d0"];
-    const colorForIndex = (idx: number) => greenPalette[idx % greenPalette.length];
+    const greenPalette = ["#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#a7f3d0"] as const;
+    const colorForIndex = (idx: number): string => greenPalette[idx % greenPalette.length] ?? greenPalette[0];
 
     const personSlices =
       totals.revenusParPersonnes && totals.revenusParPersonnes.length
@@ -66,7 +66,7 @@ export function BilanTab() {
   }, [slicesRaw, totalSlices]);
 
   const pieLabels = useMemo(() => {
-    const radius = 55; // plus proche du centre pour limiter les chevauchements
+    const radius = 55; // closer to center to reduce overlap
     return pieGlobal.slices.map((s) => {
       const angleRad = ((s.start! + s.end!) / 2) * (Math.PI / 180);
       const x = Math.cos(angleRad) * radius;

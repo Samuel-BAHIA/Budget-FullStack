@@ -47,7 +47,9 @@ export function BudgetProvider({ children }: { children: ReactNode }) {
       const sameLength = prev.revenusParPersonnes.length === revenus.length;
       const sameContent =
         sameLength &&
-        prev.revenusParPersonnes.every((p, idx) => p.name === revenus[idx].name && p.montant === revenus[idx].montant);
+        prev.revenusParPersonnes.every(
+          (p, idx) => revenus[idx] && p.name === revenus[idx].name && p.montant === revenus[idx].montant
+        );
       if (sameContent) return prev;
       return { ...prev, revenusParPersonnes: revenus };
     });
