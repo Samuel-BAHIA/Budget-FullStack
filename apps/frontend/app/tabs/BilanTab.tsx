@@ -18,42 +18,32 @@ const formatMontant = (
 export function BilanTab() {
   const { totals } = useBudget();
 
-  const data = useMemo(() => {
-    const depensesTotales = totals.depensesFixes + totals.depensesVariables;
-    return {
-      revenus: totals.revenus,
-      depensesFixes: totals.depensesFixes,
-      depensesVariables: totals.depensesVariables,
-      depensesTotal: depensesTotales,
-      appartements: totals.appartements,
-      revenusParPersonnes: totals.revenusParPersonnes,
-    };
-  }, [totals]);
-
   const slicesRaw = useMemo<Slice[]>(() => {
-    const colorForIndex = (idx: number) => `hsl(${120 + ((idx * 8) % 25)} 65% 45%)`; // nuances de vert pour revenus
+    const greenPalette = ["#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#a7f3d0"];
+    const colorForIndex = (idx: number) => greenPalette[idx % greenPalette.length];
 
     const personSlices =
-      data.revenusParPersonnes && data.revenusParPersonnes.length
-        ? data.revenusParPersonnes.map((p, idx) => ({
+      totals.revenusParPersonnes && totals.revenusParPersonnes.length
+        ? totals.revenusParPersonnes.map((p, idx) => ({
             label: p.name || `Personne ${idx + 1}`,
             value: Math.max(0, p.montant),
             color: colorForIndex(idx),
           }))
-        : [{ label: "Revenus (personnes)", value: Math.max(0, data.revenus), color: colorForIndex(0) }];
+        : [{ label: "Revenus (personnes)", value: Math.max(0, totals.revenus), color: colorForIndex(0) }];
 
-    const costSlices: Slice[] = [
+    const slices: Slice[] = [
+      ...personSlices,
       {
         label: "Appartements",
-        value: Math.abs(data.appartements),
-        color: data.appartements >= 0 ? "#16a34a" : "#b91c1c",
+        value: Math.abs(totals.appartements),
+        color: totals.appartements >= 0 ? "#15803d" : "#b91c1c",
       },
-      { label: "Depenses fixes", value: Math.max(0, data.depensesFixes), color: "#ef4444" },
-      { label: "Depenses variables", value: Math.max(0, data.depensesVariables), color: "#f87171" },
-    ];
+      { label: "Depenses fixes", value: Math.max(0, totals.depensesFixes), color: "#ef4444" },
+      { label: "Depenses variables", value: Math.max(0, totals.depensesVariables), color: "#f87171" },
+    ].filter((s) => s.value > 0);
 
-    return [...personSlices, ...costSlices].filter((s) => s.value > 0);
-  }, [data]);
+    return slices;
+  }, [totals]);
 
   const totalSlices = slicesRaw.reduce((sum, s) => sum + s.value, 0);
 
@@ -76,7 +66,7 @@ export function BilanTab() {
   }, [slicesRaw, totalSlices]);
 
   const pieLabels = useMemo(() => {
-    const radius = 70;
+    const radius = 55; // plus proche du centre pour limiter les chevauchements
     return pieGlobal.slices.map((s) => {
       const angleRad = ((s.start! + s.end!) / 2) * (Math.PI / 180);
       const x = Math.cos(angleRad) * radius;
@@ -87,10 +77,7 @@ export function BilanTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Bilan</h2>
-      <p className="mt-2 text-sm" style={{ color: "var(--theme-textSecondary)" }}>
-        Vue globale et répartition revenus / dépenses / appartements.
-      </p>
+      <h2 className="text-xl font-semibold">Revenus par personnes et dépenses détaillées</h2>
 
       <div
         className="rounded-2xl border p-4 space-y-6"
@@ -114,7 +101,7 @@ export function BilanTab() {
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-semibold">Revenus par personnes et dépenses détaillées</span>
+            <span className="font-semibold">Répartition détaillée</span>
             <span style={{ color: "var(--theme-textSecondary)" }}>
               Base: {pieGlobal.total.toLocaleString("fr-FR")} €
             </span>
