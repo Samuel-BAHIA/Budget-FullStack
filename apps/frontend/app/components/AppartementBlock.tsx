@@ -190,8 +190,8 @@ export function AppartementBlock({
         backgroundColor: "var(--theme-bgCard)",
       }}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="rounded-md p-1 transition hover:bg-[var(--theme-bgHover)]"
@@ -209,14 +209,14 @@ export function AppartementBlock({
               setAppartementName(newName);
               onNameChange?.(newName);
             }}
-            className="bg-transparent text-lg font-semibold outline-none"
+            className="bg-transparent text-lg font-semibold outline-none min-w-[180px] flex-1"
             style={{ color: "var(--theme-text)" }}
             placeholder={`Appartement ${appartementNumber}`}
           />
           <select
             value={type}
             onChange={(e) => handleTypeChange(e.target.value as AppartementType)}
-            className="rounded-md border px-2 py-1 text-sm"
+            className="rounded-md border px-2 py-1 text-sm w-full sm:w-auto"
             style={{
               borderColor: "var(--theme-border)",
               backgroundColor: "var(--theme-bgCard)",
