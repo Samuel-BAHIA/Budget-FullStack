@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-import { useMemo, useState } from "react";
-import { MoneyCard } from "./MoneyCard";
+import { useState } from "react";
 import { TrashIcon } from "./icons/TrashIcon";
 import type { AppartementData, AppartementType } from "../tabs/AppartementsTab";
 
@@ -24,7 +22,6 @@ type CardConfig = {
   label: string;
   value: number;
   setter: (value: number) => void;
-  hint?: (value: string | number) => string;
   positive?: boolean;
 };
 
@@ -67,29 +64,6 @@ export function AppartementBlock({
   const [electricite, setElectricite] = useState(initialData.electricite || 0);
   const [gaz, setGaz] = useState(initialData.gaz || 0);
 
-  const editableWrapperStyle: React.CSSProperties = {
-    backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 82%, white)",
-    border: "1px solid color-mix(in srgb, var(--theme-border) 75%, white)",
-  };
-
-  const positiveWrapperStyle = useMemo(
-    () => ({
-      ...editableWrapperStyle,
-      backgroundColor: "rgba(34,197,94,0.10)",
-      borderColor: "rgba(34,197,94,0.35)",
-    }),
-    []
-  );
-
-  const negativeWrapperStyle = useMemo(
-    () => ({
-      ...editableWrapperStyle,
-      backgroundColor: "rgba(239,68,68,0.08)",
-      borderColor: "rgba(239,68,68,0.35)",
-    }),
-    []
-  );
-
   const getCurrentData = (): AppartementData["data"] => ({
     loyer,
     credit,
@@ -120,22 +94,6 @@ export function AppartementBlock({
       await new Promise((resolve) => setTimeout(resolve, 300));
       updateAllData({ [field]: safeValue });
     };
-
-  const getLoyerHint = (value: string | number) => {
-    const numValue = Number(value);
-    if (numValue === 0) return "Aucun loyer defini";
-    if (numValue < 500) return "Loyer tres bas";
-    if (numValue < 1000) return "Loyer modere";
-    return "Loyer eleve";
-  };
-
-  const getDepenseHint = (value: string | number) => {
-    const numValue = Number(value);
-    if (numValue === 0) return "Aucune depense definie";
-    if (numValue < 50) return "Depense faible";
-    if (numValue < 100) return "Depense moderee";
-    return "Depense elevee";
-  };
 
   const totalDepenses =
     type === "propriete"
@@ -188,49 +146,88 @@ export function AppartementBlock({
     onDataChange?.(nextValues, newType);
   };
 
-  const renderCards = (cards: CardConfig[]) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map((card) => (
-        <MoneyCard
-          key={card.key}
-          name={card.label}
-          value={card.value}
-          positive={!!card.positive}
-          onSaveValue={handleSave(card.setter, card.key)}
-          hintText={card.hint}
-          displayPrefix={card.positive ? "+" : "-"}
-          displaySuffix="/mois"
-          wrapperStyle={card.positive ? positiveWrapperStyle : negativeWrapperStyle}
-          allowNameEdit={false}
-          allowDelete={false}
-        />
-      ))}
+  const renderSliders = (cards: CardConfig[]) => (
+    <div className="space-y-3">
+      {cards.map((card) => {
+        const sign = card.positive ? "+" : "-";
+        const valueDisplay = `${sign}${Math.abs(card.value).toLocaleString("fr-FR")} €/mois`;
+        const maxValue = Math.max(2000, Math.ceil(Math.abs(card.value) * 1.5));
+        const isPositive = !!card.positive;
+        return (
+          <div
+            key={card.key}
+            className="flex items-center gap-3 rounded-lg border px-3 py-2"
+            style={{ borderColor: "var(--theme-border)" }}
+          >
+            <span
+              className="w-48 text-sm font-semibold"
+              style={{
+                color: "var(--theme-text)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              title={card.label}
+            >
+              {card.label}
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={maxValue}
+              step={10}
+              value={Math.max(0, Math.abs(card.value))}
+              onChange={(e) => handleSave(card.setter, card.key)(e.target.value)}
+              className="flex-1 accent-[var(--theme-tabActiveBg)]"
+              aria-label={`Ajuster ${card.label}`}
+            />
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                min={0}
+                step={10}
+                value={Math.max(0, Math.abs(card.value))}
+                onChange={(e) => handleSave(card.setter, card.key)(e.target.value)}
+                className="w-28 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
+                style={{
+                  borderColor: "var(--theme-border)",
+                  backgroundColor: "var(--theme-bgCard)",
+                  color: isPositive ? "#16a34a" : "#ef4444",
+                }}
+              />
+              <span className="text-sm font-semibold" style={{ color: isPositive ? "#16a34a" : "#ef4444" }}>
+                €/mois
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
   const proprieteIncomeCards: CardConfig[] = [
-    { key: "loyer", label: "Loyer percu", value: loyer, setter: setLoyer, hint: getLoyerHint, positive: true },
-    { key: "impotsRevenu", label: "Impots sur revenu", value: impotsRevenu, setter: setImpotsRevenu, hint: getDepenseHint },
+    { key: "loyer", label: "Loyer percu", value: loyer, setter: setLoyer, positive: true },
+    { key: "impotsRevenu", label: "Impots sur revenu", value: impotsRevenu, setter: setImpotsRevenu },
   ];
 
   const proprieteChargesCards: CardConfig[] = [
-    { key: "taxeFonciere", label: "Taxe fonciere", value: taxeFonciere, setter: setTaxeFonciere, hint: getDepenseHint },
-    { key: "chargesCopro", label: "Charges copro", value: chargesCopro, setter: setChargesCopro, hint: getDepenseHint },
-    { key: "assurance", label: "Assurance habitation", value: assurance, setter: setAssurance, hint: getDepenseHint },
+    { key: "taxeFonciere", label: "Taxe fonciere", value: taxeFonciere, setter: setTaxeFonciere },
+    { key: "chargesCopro", label: "Charges copro", value: chargesCopro, setter: setChargesCopro },
+    { key: "assurance", label: "Assurance habitation", value: assurance, setter: setAssurance },
   ];
 
   const proprieteCreditCards: CardConfig[] = [
-    { key: "credit", label: "Credit", value: credit, setter: setCredit, hint: getDepenseHint },
-    { key: "assuranceCredit", label: "Assurance credit", value: assuranceCredit, setter: setAssuranceCredit, hint: getDepenseHint },
+    { key: "credit", label: "Credit", value: credit, setter: setCredit },
+    { key: "assuranceCredit", label: "Assurance credit", value: assuranceCredit, setter: setAssuranceCredit },
   ];
 
   const locationCards: CardConfig[] = [
-    { key: "loyer", label: "Loyer a charge", value: loyer, setter: setLoyer, hint: getLoyerHint },
-    { key: "assurance", label: "Assurance habitation", value: assurance, setter: setAssurance, hint: getDepenseHint },
-    { key: "internet", label: "Internet", value: internet, setter: setInternet, hint: getDepenseHint },
-    { key: "eau", label: "Eau", value: eau, setter: setEau, hint: getDepenseHint },
-    { key: "electricite", label: "Electricite", value: electricite, setter: setElectricite, hint: getDepenseHint },
-    { key: "gaz", label: "Gaz", value: gaz, setter: setGaz, hint: getDepenseHint },
+    { key: "loyer", label: "Loyer a charge", value: loyer, setter: setLoyer },
+    { key: "assurance", label: "Assurance habitation", value: assurance, setter: setAssurance },
+    { key: "internet", label: "Internet", value: internet, setter: setInternet },
+    { key: "eau", label: "Eau", value: eau, setter: setEau },
+    { key: "electricite", label: "Electricite", value: electricite, setter: setElectricite },
+    { key: "gaz", label: "Gaz", value: gaz, setter: setGaz },
   ];
 
   return (
@@ -318,12 +315,12 @@ export function AppartementBlock({
         <div className="space-y-4">
           {type === "propriete" ? (
             <>
-              {renderCards(proprieteIncomeCards)}
-              {renderCards(proprieteChargesCards)}
-              {renderCards(proprieteCreditCards)}
+              {renderSliders(proprieteIncomeCards)}
+              {renderSliders(proprieteChargesCards)}
+              {renderSliders(proprieteCreditCards)}
             </>
           ) : (
-            renderCards(locationCards)
+            renderSliders(locationCards)
           )}
         </div>
       )}

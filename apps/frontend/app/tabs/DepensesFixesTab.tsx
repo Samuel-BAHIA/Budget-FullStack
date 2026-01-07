@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-import { useEffect, useMemo, useState } from "react";
-import { MoneyCard } from "../components/MoneyCard";
+import { useEffect, useState } from "react";
 import { useBudget } from "../contexts/BudgetContext";
 
 type Expense = { id: number; name: string; montant: number };
@@ -24,30 +22,6 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
   ]);
   const [autres, setAutres] = useState<Expense[]>([{ id: 1, name: "Impots locaux", montant: 120 }]);
   const { updateTotal } = useBudget();
-
-  const editableWrapperStyle: React.CSSProperties = useMemo(
-    () => ({
-      backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 82%, white)",
-      border: "1px solid color-mix(in srgb, var(--theme-border) 75%, white)",
-    }),
-    []
-  );
-  const negativeWrapperStyle: React.CSSProperties = useMemo(
-    () => ({
-      ...editableWrapperStyle,
-      backgroundColor: "rgba(239,68,68,0.08)",
-      borderColor: "rgba(239,68,68,0.35)",
-    }),
-    [editableWrapperStyle]
-  );
-
-  const getDepenseHint = (value: string | number) => {
-    const numValue = Number(value);
-    if (numValue === 0) return "Aucune depense definie";
-    if (numValue < 50) return "Depense faible";
-    if (numValue < 150) return "Depense moderee";
-    return "Depense elevee";
-  };
 
   const setterFor = (section: SectionKey) =>
     section === "abonnements" ? setAbonnements : section === "voiture" ? setVoiture : setAutres;
@@ -107,25 +81,69 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {items.map((item) => (
-            <MoneyCard
-              key={item.id}
-              name={item.name}
-              value={item.montant}
-              positive={false}
-              onDelete={() => handleDelete(section, item.id)}
-              onSaveValue={handleSaveMontant(section, item.id)}
-              onSaveName={handleSaveName(section, item.id)}
-              hintText={getDepenseHint}
-              displayPrefix="-"
-              displaySuffix="/mois"
-              wrapperStyle={negativeWrapperStyle}
-            />
-          ))}
+        <div className="space-y-3">
+          {items.map((item) => {
+            const maxValue = Math.max(2000, Math.ceil(Math.abs(item.montant) * 1.5));
+            return (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-lg border px-3 py-2"
+                style={{ borderColor: "var(--theme-border)" }}
+              >
+                <input
+                  type="text"
+                  value={item.name}
+                  onChange={(e) => handleSaveName(section, item.id)(e.target.value)}
+                  className="w-48 rounded-md border px-2 py-1 text-sm font-semibold outline-none"
+                  style={{
+                    borderColor: "var(--theme-border)",
+                    backgroundColor: "var(--theme-bgCard)",
+                    color: "var(--theme-text)",
+                  }}
+                />
+                <input
+                  type="range"
+                  min={0}
+                  max={maxValue}
+                  step={10}
+                  value={Math.max(0, item.montant)}
+                  onChange={(e) => handleSaveMontant(section, item.id)(e.target.value)}
+                  className="flex-1 accent-[var(--theme-tabActiveBg)]"
+                  aria-label={`Ajuster ${item.name}`}
+                />
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={0}
+                    step={10}
+                    value={Math.max(0, item.montant)}
+                    onChange={(e) => handleSaveMontant(section, item.id)(e.target.value)}
+                    className="w-24 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
+                    style={{
+                      borderColor: "var(--theme-border)",
+                      backgroundColor: "var(--theme-bgCard)",
+                      color: "#ef4444",
+                    }}
+                  />
+                  <span className="text-sm font-semibold" style={{ color: "#ef4444" }}>
+                    €/mois
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleDelete(section, item.id)}
+                  className="rounded-md px-2 py-1 text-sm transition hover:bg-[var(--theme-bgHover)]"
+                  style={{ color: "var(--theme-textSecondary)" }}
+                  aria-label="Supprimer"
+                  title="Supprimer"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
           <button
             onClick={() => handleAdd(section)}
-            className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+            className="flex items-center gap-3 rounded-lg border-2 border-dashed px-3 py-2 w-full justify-center text-sm font-semibold transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
             style={{
               borderColor: "rgba(239,68,68,0.35)",
               color: "var(--theme-danger, #ef4444)",
@@ -167,3 +185,4 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
     </div>
   );
 }
+

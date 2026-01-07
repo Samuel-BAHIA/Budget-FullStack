@@ -8,6 +8,7 @@ import { AppartementsTab, type AppartementData } from "./tabs/AppartementsTab";
 import { BilanTab } from "./tabs/BilanTab";
 import { useBudget } from "./contexts/BudgetContext";
 import { TrashIcon } from "./components/icons/TrashIcon";
+import { useTheme } from "./contexts/ThemeContext";
 
 type MainTabId = "revenus" | "depenses" | "patrimoine" | "bilan";
 type DepenseTab = "variables" | "fixes" | "locations";
@@ -59,6 +60,7 @@ const defaultProperty = (id: number): AppartementData => ({
 
 export function MainTabs() {
   const { totals } = useBudget();
+  const { theme, setTheme, themes } = useTheme();
   const [activeTab, setActiveTab] = useState<MainTabId>("revenus");
   const [showRevenusChildren, setShowRevenusChildren] = useState(false);
   const [activeDepenseTab, setActiveDepenseTab] = useState<DepenseTab>("variables");
@@ -95,24 +97,62 @@ export function MainTabs() {
   const [activePatrimoineId, setActivePatrimoineId] = useState<number | null>(1);
   const [showPatrimoineChildren, setShowPatrimoineChildren] = useState(false);
   const [variablesSectionTotals, setVariablesSectionTotals] = useState<{ quotidien: number; voitures: number; autres: number }>({
-    quotidien: 0,
-    voitures: 0,
-    autres: 0,
+    quotidien: 450,
+    voitures: 190,
+    autres: 250,
   });
   const [fixesSectionTotals, setFixesSectionTotals] = useState<{ abonnements: number; voiture: number; autres: number }>({
-    abonnements: 0,
-    voiture: 0,
-    autres: 0,
+    abonnements: 100,
+    voiture: 470,
+    autres: 120,
   });
-  const [patrimoineTotal, setPatrimoineTotal] = useState<number>(0);
+
+  const revenusTotal = useMemo(
+    () => persons.reduce((sum, p) => sum + p.revenus.reduce((s, r) => s + r.montant, 0), 0),
+    [persons]
+  );
+
+  const depensesVariablesTotal = useMemo(
+    () => variablesSectionTotals.quotidien + variablesSectionTotals.voitures + variablesSectionTotals.autres,
+    [variablesSectionTotals]
+  );
+
+  const depensesFixesTotal = useMemo(
+    () => fixesSectionTotals.abonnements + fixesSectionTotals.voiture + fixesSectionTotals.autres,
+    [fixesSectionTotals]
+  );
+
+  const calcAppartementTotal = (apt: AppartementData) => {
+    const d = apt.data;
+    if (apt.type === "propriete") {
+      return d.loyer - (d.impotsRevenu + d.taxeFonciere + d.chargesCopro + d.assurance + d.credit + d.assuranceCredit);
+    }
+    return -(d.loyer + d.assurance + d.internet + d.eau + d.electricite + d.gaz);
+  };
+
+  const locationsTotal = useMemo(
+    () => locations.reduce((sum, loc) => sum + calcAppartementTotal(loc), 0),
+    [locations]
+  );
+
+  const patrimoineTotal = useMemo(
+    () => patrimoine.reduce((sum, prop) => sum + calcAppartementTotal(prop), 0),
+    [patrimoine]
+  );
 
   const depensesTotal = useMemo(
-    () => totals.depensesFixes + totals.depensesVariables + Math.min(0, totals.appartements),
-    [totals]
+    () => depensesFixesTotal + depensesVariablesTotal + Math.abs(locationsTotal),
+    [depensesFixesTotal, depensesVariablesTotal, locationsTotal]
   );
+
   const bilanTotal = useMemo(
-    () => totals.revenus + totals.appartements - totals.depensesFixes - totals.depensesVariables,
-    [totals]
+    () =>
+      revenusTotal -
+      depensesFixesTotal -
+      depensesVariablesTotal -
+      Math.abs(locationsTotal) +
+      patrimoineTotal,
+    [revenusTotal, depensesFixesTotal, depensesVariablesTotal, locationsTotal, patrimoineTotal]
   );
 
   const renderNavButton = ({
@@ -128,24 +168,31 @@ export function MainTabs() {
   }: NavButtonProps) => {
     const paddingLeft = 12 + level * 12;
     const isChild = level > 0;
+    const fontSize = level === 0 ? "15px" : level === 1 ? "14px" : "13px";
+    const textColor = active
+      ? "var(--theme-tabActiveText)"
+      : muted || isChild
+      ? "color-mix(in srgb, var(--theme-textSecondary) 80%, var(--theme-text) 20%)"
+      : "var(--theme-tabInactiveText)";
+    const totalColor = (value?: number) => {
+      if (typeof value !== "number") return textColor;
+      const base = amountColor(value);
+      return isChild ? `color-mix(in srgb, ${base} 70%, transparent)` : base;
+    };
     return (
       <button
         type="button"
         onClick={onClick}
-        className={`w-full rounded-xl border text-left transition flex items-center justify-between gap-3`}
+        className="w-full rounded-xl border text-left transition flex items-center justify-between gap-3"
         style={{
           padding: "10px 12px",
           paddingLeft,
           backgroundColor: active
             ? isChild
-              ? "color-mix(in srgb, var(--theme-tabActiveBg) 85%, var(--theme-bg))"
+              ? "color-mix(in srgb, var(--theme-tabActiveBg) 35%, var(--theme-bg))"
               : "var(--theme-tabActiveBg)"
             : "transparent",
-          color: active
-            ? "var(--theme-tabActiveText)"
-            : muted
-            ? "var(--theme-textSecondary)"
-            : "var(--theme-tabInactiveText)",
+          color: textColor,
           borderColor: active
             ? isChild
               ? "color-mix(in srgb, var(--theme-tabActiveBg) 65%, var(--theme-border))"
@@ -156,34 +203,41 @@ export function MainTabs() {
               ? "0 0 0 1px color-mix(in srgb, var(--theme-tabActiveBg) 50%, var(--theme-borderLight))"
               : "inset 0 0 0 1px var(--theme-tabActiveBg)"
             : "none",
+          fontSize,
         }}
       >
-        <span className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                if (deleteDisabled) return;
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="rounded-md p-1 transition hover:bg-[var(--theme-bgHover)]"
+              style={{ color: deleteDisabled ? "var(--theme-textSecondary)" : "#ef4444", cursor: deleteDisabled ? "not-allowed" : "pointer" }}
+              aria-label="Supprimer"
+            >
+              <TrashIcon />
+            </button>
+          )}
           {caret && (
             <span className="text-sm" aria-hidden>
               {caret === "open" ? "\u25be" : "\u25b8"}
             </span>
           )}
-          <span className="font-semibold">{label}</span>
-        </span>
-        {typeof total === "number" && (
-          <span className="text-sm font-semibold" style={{ color: amountColor(total) }}>
-            {formatMontant(total)}
-          </span>
-        )}
-        {onDelete && (
           <span
-            onClick={(e) => {
-              if (deleteDisabled) return;
-              e.stopPropagation();
-              onDelete();
-            }}
-            className="inline-flex items-center rounded-md px-1.5 py-1 text-xs"
-            style={{ color: deleteDisabled ? "var(--theme-textSecondary)" : "#ef4444", cursor: deleteDisabled ? "not-allowed" : "pointer" }}
-            aria-label="Supprimer"
-            role="button"
+            className="font-semibold block truncate"
+            style={{ whiteSpace: "nowrap" }}
+            title={label}
           >
-            <TrashIcon />
+            {label}
+          </span>
+        </div>
+        {typeof total === "number" && (
+          <span className="text-sm font-semibold" style={{ color: totalColor(total) }}>
+            {formatMontant(total)}
           </span>
         )}
       </button>
@@ -394,10 +448,7 @@ export function MainTabs() {
           lockType
           title="Patrimoine"
           description="Suivi de tes proprietes (revenus et charges)."
-          addLabel="Ajouter une propriete"
           disableBudgetUpdate
-          onTotalChange={setPatrimoineTotal}
-          activeOnlyId={activePatrimoineId}
         />
       );
     if (activeDepenseTab === "variables")
@@ -437,17 +488,34 @@ export function MainTabs() {
     montant: personTotal(p),
   }));
 
-  const calcAppartementTotal = (apt: AppartementData) => {
-    const d = apt.data;
-    if (apt.type === "propriete") {
-      return d.loyer - (d.impotsRevenu + d.taxeFonciere + d.chargesCopro + d.assurance + d.credit + d.assuranceCredit);
-    }
-    return -(d.loyer + d.assurance + d.internet + d.eau + d.electricite + d.gaz);
-  };
-
   return (
     <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)]">
       <div className="mx-auto max-w-7xl px-4 py-6 lg:py-8">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-lg font-semibold">Budget AI</h1>
+          <div className="flex items-center gap-2">
+            <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+              Thème
+            </span>
+            <select
+              value={theme.id}
+              onChange={(e) => setTheme(e.target.value as any)}
+              className="rounded-md border px-2 py-1 text-sm"
+              style={{
+                borderColor: "var(--theme-border)",
+                backgroundColor: "var(--theme-bgCard)",
+                color: "var(--theme-text)",
+              }}
+            >
+              {themes.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-[280px,1fr] lg:gap-8">
           <aside
             className="rounded-2xl border shadow-sm"
@@ -458,7 +526,7 @@ export function MainTabs() {
                 label: "Revenus",
                 active: activeTab === "revenus",
                 onClick: () => handleMainTabClick("revenus"),
-                total: totals.revenus,
+                total: revenusTotal,
                 caret: showRevenusChildren ? "open" : "closed",
               })}
 
@@ -501,7 +569,7 @@ export function MainTabs() {
                   label: "Depenses",
                   active: activeTab === "depenses",
                   onClick: () => handleMainTabClick("depenses"),
-                  total: depensesTotal,
+                  total: -depensesTotal,
                   caret: showDepensesChildren ? "open" : "closed",
                 })}
 
@@ -511,7 +579,7 @@ export function MainTabs() {
                       label: "Variables",
                       active: activeDepenseTab === "variables",
                       onClick: () => handleDepenseTabClick("variables"),
-                      total: totals.depensesVariables,
+                      total: -depensesVariablesTotal,
                       caret: showVariablesChildren ? "open" : "closed",
                       level: 1,
                     })}
@@ -524,7 +592,7 @@ export function MainTabs() {
                           onClick: () => handleVariableChildClick("quotidien"),
                           level: 2,
                           muted: true,
-                          total: variablesSectionTotals.quotidien,
+                          total: -variablesSectionTotals.quotidien,
                         })}
                         {renderNavButton({
                           label: "Voiture",
@@ -532,7 +600,7 @@ export function MainTabs() {
                           onClick: () => handleVariableChildClick("voitures"),
                           level: 2,
                           muted: true,
-                          total: variablesSectionTotals.voitures,
+                          total: -variablesSectionTotals.voitures,
                         })}
                         {renderNavButton({
                           label: "Autres",
@@ -540,7 +608,7 @@ export function MainTabs() {
                           onClick: () => handleVariableChildClick("autres"),
                           level: 2,
                           muted: true,
-                          total: variablesSectionTotals.autres,
+                          total: -variablesSectionTotals.autres,
                         })}
                       </div>
                     )}
@@ -549,7 +617,7 @@ export function MainTabs() {
                       label: "Fixes",
                       active: activeDepenseTab === "fixes",
                       onClick: () => handleDepenseTabClick("fixes"),
-                      total: totals.depensesFixes,
+                      total: -depensesFixesTotal,
                       caret: showFixesChildren ? "open" : "closed",
                       level: 1,
                     })}
@@ -562,7 +630,7 @@ export function MainTabs() {
                           onClick: () => handleFixeChildClick("abonnements"),
                           level: 2,
                           muted: true,
-                          total: fixesSectionTotals.abonnements,
+                          total: -fixesSectionTotals.abonnements,
                         })}
                         {renderNavButton({
                           label: "Voiture",
@@ -570,7 +638,7 @@ export function MainTabs() {
                           onClick: () => handleFixeChildClick("voiture"),
                           level: 2,
                           muted: true,
-                          total: fixesSectionTotals.voiture,
+                          total: -fixesSectionTotals.voiture,
                         })}
                         {renderNavButton({
                           label: "Autres",
@@ -578,7 +646,7 @@ export function MainTabs() {
                           onClick: () => handleFixeChildClick("autres"),
                           level: 2,
                           muted: true,
-                          total: fixesSectionTotals.autres,
+                          total: -fixesSectionTotals.autres,
                         })}
                       </div>
                     )}
@@ -587,7 +655,7 @@ export function MainTabs() {
                       label: "Locations",
                       active: activeDepenseTab === "locations",
                       onClick: () => handleDepenseTabClick("locations"),
-                      total: totals.appartements,
+                      total: -Math.abs(locationsTotal),
                       caret: showLocationsChildren ? "open" : "closed",
                       level: 1,
                     })}
@@ -662,17 +730,6 @@ export function MainTabs() {
                       })}
                     </React.Fragment>
                   ))}
-                  <button
-                    type="button"
-                    onClick={handleAddPatrimoine}
-                    className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
-                    style={{
-                      color: "var(--theme-textSecondary)",
-                      backgroundColor: "transparent",
-                    }}
-                  >
-                    + Ajouter une propriete
-                  </button>
                 </div>
               )}
 

@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
 import { useEffect, useState } from "react";
-import { MoneyCard } from "../components/MoneyCard";
 import { TrashIcon } from "../components/icons/TrashIcon";
 import { useBudget } from "../contexts/BudgetContext";
 
@@ -120,7 +118,7 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
         className="mt-1 text-sm"
         style={{ color: "var(--theme-textSecondary)" }}
       >
-        Chaque personne a ses revenus : édite le nom, le salaire, et ajoute d'autres revenus si besoin.
+        Chaque personne a ses revenus : edite le nom, le salaire, et ajoute d'autres revenus si besoin.
       </p>
 
       <div className="space-y-6">
@@ -167,29 +165,69 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {person.revenus.map((item) => (
-                <MoneyCard
-                  key={item.id}
-                  name={item.name}
-                  value={item.montant}
-                  positive
-                  onDelete={() => handleDeleteRevenue(person.id, item.id)}
-                  onSaveValue={handleSaveValue(person.id, item.id)}
-                  onSaveName={handleSaveName(person.id, item.id)}
-                  hintText="Revenu"
-                  displayPrefix="+"
-                  displaySuffix="/mois"
-                  wrapperStyle={{
-                    backgroundColor: "rgba(34,197,94,0.10)", // vert léger cohérent avec dépenses positives
-                    border: "1px solid rgba(34,197,94,0.35)",
-                    boxShadow: "0 0 0 1px rgba(34,197,94,0.25)",
-                  }}
-                />
-              ))}
+            <div className="space-y-3">
+              {person.revenus.map((item) => {
+                const maxValue = Math.max(2000, Math.ceil(Math.abs(item.montant) * 1.5));
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-lg border px-3 py-2"
+                    style={{ borderColor: "var(--theme-border)" }}
+                  >
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => handleSaveName(person.id, item.id)(e.target.value)}
+                      className="w-48 rounded-md border px-2 py-1 text-sm font-semibold outline-none"
+                      style={{
+                        borderColor: "var(--theme-border)",
+                        backgroundColor: "var(--theme-bgCard)",
+                        color: "var(--theme-text)",
+                      }}
+                    />
+                    <input
+                      type="range"
+                      min={0}
+                      max={maxValue}
+                      step={10}
+                      value={Math.max(0, item.montant)}
+                      onChange={(e) => handleSaveValue(person.id, item.id)(e.target.value)}
+                      className="flex-1 accent-[var(--theme-tabActiveBg)]"
+                      aria-label={`Ajuster ${item.name}`}
+                    />
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min={0}
+                        step={10}
+                        value={Math.max(0, item.montant)}
+                        onChange={(e) => handleSaveValue(person.id, item.id)(e.target.value)}
+                        className="w-24 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
+                        style={{
+                          borderColor: "var(--theme-border)",
+                          backgroundColor: "var(--theme-bgCard)",
+                          color: "#16a34a",
+                        }}
+                      />
+                      <span className="text-sm font-semibold" style={{ color: "#16a34a" }}>
+                        €/mois
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteRevenue(person.id, item.id)}
+                      className="rounded-md px-2 py-1 text-sm transition hover:bg-[var(--theme-bgHover)]"
+                      style={{ color: "var(--theme-textSecondary)" }}
+                      aria-label="Supprimer le revenu"
+                      title="Supprimer le revenu"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
               <button
                 onClick={() => handleAddRevenue(person.id)}
-                className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+                className="flex items-center gap-3 rounded-lg border-2 border-dashed px-3 py-2 w-full justify-center text-sm font-semibold transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
                 style={{
                   borderColor: "rgba(34,197,94,0.35)",
                   color: "var(--theme-success, #22c55e)",

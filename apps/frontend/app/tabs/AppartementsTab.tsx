@@ -94,6 +94,7 @@ export function AppartementsTab({
     defaultAppartement(1),
   ]);
   const appartements = externalAppartements ?? internalAppartements;
+  const showAll = forceType === "propriete";
   const setAppartements = (
     updater: AppartementData[] | ((prev: AppartementData[]) => AppartementData[])
   ) => {
@@ -231,16 +232,28 @@ export function AppartementsTab({
                   min={0}
                   max={maxValue}
                   step={10}
-                  value={card.value}
+                  value={Math.max(0, card.value)}
                   onChange={(e) => handleSaveField(target.id, card.key)(e.target.value)}
                   className="flex-1 accent-[var(--theme-tabActiveBg)]"
                 />
-                <span
-                  className="w-20 text-right text-sm font-semibold"
-                  style={{ color: "var(--theme-text)" }}
-                >
-                  {`${card.value.toLocaleString("fr-FR")} €`}
-                </span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    min={0}
+                    step={10}
+                    value={Math.max(0, card.value)}
+                    onChange={(e) => handleSaveField(target.id, card.key)(e.target.value)}
+                    className="w-24 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
+                    style={{
+                      borderColor: "var(--theme-border)",
+                      backgroundColor: "var(--theme-bgCard)",
+                      color: "#ef4444",
+                    }}
+                  />
+                  <span className="text-sm font-semibold" style={{ color: "#ef4444" }}>
+                    €/mois
+                  </span>
+                </div>
               </div>
             );
           })}
@@ -265,10 +278,7 @@ export function AppartementsTab({
         {carouselMode ? (
           renderCarousel()
         ) : (
-          (activeOnlyId
-            ? appartements.filter((a) => a.id === activeOnlyId)
-            : appartements
-          ).map((apt) => (
+          ((showAll ? appartements : activeOnlyId ? appartements.filter((a) => a.id === activeOnlyId) : appartements)).map((apt) => (
             <AppartementBlock
               key={apt.id}
               appartementNumber={apt.id}
@@ -283,7 +293,7 @@ export function AppartementsTab({
             />
           ))
         )}
-        {!carouselMode && (
+        {!carouselMode && !(forceType === "propriete") && (
           <button
             onClick={handleAddAppartement}
             className="w-full rounded-xl border-2 border-dashed p-6 text-sm font-semibold flex items-center justify-center gap-3 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
@@ -301,3 +311,5 @@ export function AppartementsTab({
     </div>
   );
 }
+
+
