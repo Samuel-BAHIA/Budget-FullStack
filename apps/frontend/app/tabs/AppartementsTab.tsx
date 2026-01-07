@@ -25,6 +25,13 @@ export type AppartementData = {
   };
 };
 
+type ValueCard = {
+  key: keyof AppartementData["data"];
+  label: string;
+  value: number;
+  positive?: boolean;
+};
+
 type Props = {
   appartements?: AppartementData[];
   onAppartementsChange?: (appartements: AppartementData[]) => void;
@@ -172,7 +179,7 @@ export function AppartementsTab({
     }
   }, [appartements, updateTotal, disableBudgetUpdate, onTotalChange]);
 
-  const locationCardConfigs = (apt: AppartementData) => [
+  const locationCardConfigs = (apt: AppartementData): ValueCard[] => [
     { key: "loyer", label: "Loyer", value: apt.data.loyer },
     { key: "assurance", label: "Assurance habitation", value: apt.data.assurance },
     { key: "internet", label: "Internet", value: apt.data.internet },
@@ -181,7 +188,7 @@ export function AppartementsTab({
     { key: "gaz", label: "Gaz", value: apt.data.gaz },
   ];
 
-  const proprieteCardConfigs = (apt: AppartementData) => [
+  const proprieteCardConfigs = (apt: AppartementData): ValueCard[] => [
     { key: "loyer", label: "Loyer percu", value: apt.data.loyer, positive: true },
     { key: "impotsRevenu", label: "Impots sur revenu", value: apt.data.impotsRevenu },
     { key: "taxeFonciere", label: "Taxe fonciere", value: apt.data.taxeFonciere },

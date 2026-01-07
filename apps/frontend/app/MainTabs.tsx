@@ -178,7 +178,7 @@ export function MainTabs() {
     const totalFontSize = level === 0 ? "15px" : level === 1 ? "13px" : "11px";
     const totalFontWeight = level === 0 ? 800 : level === 1 ? 700 : 600;
     const totalColor = (value?: number) => {
-      if (typeof value !== "number") return textColor;
+      if (typeof value !== "number") return labelColor;
       const base = amountColor(value);
       if (!isChild) return base;
       return `color-mix(in srgb, ${base} 55%, var(--theme-textSecondary))`;

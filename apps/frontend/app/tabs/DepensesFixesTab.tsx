@@ -163,10 +163,10 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
     );
   };
 
-  const sectionsToRender: { title: string; key: SectionKey; items: Expense[] }[] = [
-    { title: "Abonnements", key: "abonnements", items: abonnements },
-    { title: "Voiture", key: "voiture", items: voiture },
-    { title: "Autres", key: "autres", items: autres },
+  const sectionsToRender = [
+    { title: "Abonnements", key: "abonnements" as SectionKey, items: abonnements },
+    { title: "Voiture", key: "voiture" as SectionKey, items: voiture },
+    { title: "Autres", key: "autres" as SectionKey, items: autres },
   ].filter((s) => !activeSection || s.key === activeSection);
 
   return (

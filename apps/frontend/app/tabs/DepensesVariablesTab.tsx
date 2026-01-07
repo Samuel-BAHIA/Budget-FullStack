@@ -160,10 +160,10 @@ export function DepensesVariablesTab({ activeSection, onSectionTotalsChange }: P
     );
   };
 
-  const sectionsToRender: { title: string; key: SectionKey; items: Expense[]; hint: string }[] = [
-    { title: "Quotidien", key: "quotidien", items: quotidien, hint: "une depense quotidienne" },
-    { title: "Voitures", key: "voitures", items: voitures, hint: "une depense voiture" },
-    { title: "Autres", key: "autres", items: autres, hint: "une depense autre" },
+  const sectionsToRender = [
+    { title: "Quotidien", key: "quotidien" as SectionKey, items: quotidien, hint: "une depense quotidienne" },
+    { title: "Voitures", key: "voitures" as SectionKey, items: voitures, hint: "une depense voiture" },
+    { title: "Autres", key: "autres" as SectionKey, items: autres, hint: "une depense autre" },
   ].filter((s) => !activeSection || s.key === activeSection);
 
   return (

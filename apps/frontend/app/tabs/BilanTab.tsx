@@ -197,7 +197,7 @@ export function BilanTab() {
   );
 
   const [activeSlide, setActiveSlide] = useState(0);
-  const slide = slides[activeSlide] ?? slides[0];
+  const slide = slides[activeSlide] ?? null;
 
   const legendSlices = pieGlobal.slices;
   const signForSlice = (s: Slice): "positive" | "negative" | "none" => {
@@ -278,9 +278,15 @@ export function BilanTab() {
               >
                 {"<"}
               </button>
-              <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
-                {slide.title} ({activeSlide + 1}/{slides.length})
-              </span>
+              {slide ? (
+                <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+                  {slide.title} ({activeSlide + 1}/{slides.length})
+                </span>
+              ) : (
+                <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+                  Aucune slide
+                </span>
+              )}
               <button
                 type="button"
                 className="px-2 py-1 rounded border text-sm"
@@ -293,7 +299,7 @@ export function BilanTab() {
           </div>
 
           <div className="rounded-xl border p-4 min-h-[220px]" style={{ borderColor: "var(--theme-border)" }}>
-            {slide.content}
+            {slide ? slide.content : <p className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>Aucune donnée</p>}
           </div>
 
           <div className="flex flex-wrap gap-2">
