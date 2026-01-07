@@ -1,15 +1,24 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useBudget } from "../contexts/BudgetContext";
 
-type Slice = { label: string; value: number; color: string; percent?: number; start?: number; end?: number; width?: number };
+type Slice = {
+  label: string;
+  value: number;
+  color: string;
+  percent?: number;
+  start?: number;
+  end?: number;
+  width?: number;
+  midAngle?: number;
+};
 
 const formatMontant = (
   value: number,
   sign: "positive" | "negative" | "none" = "none"
 ) => {
-  const formatted = `${value.toLocaleString("fr-FR")} €`;
+  const formatted = `${value.toLocaleString("fr-FR")} \u20ac`;
   if (sign === "positive") return `+${formatted}`;
   if (sign === "negative") return `-${formatted}`;
   return formatted;
@@ -47,10 +56,6 @@ export function BilanTab() {
 
   const totalSlices = slicesRaw.reduce((sum, s) => sum + s.value, 0);
 
-  const barSlices = totalSlices
-    ? slicesRaw.map((s) => ({ ...s, width: (s.value / totalSlices) * 100 }))
-    : [];
-
   const pieGlobal = useMemo(() => {
     if (totalSlices === 0) return { total: 0, slices: [] as Slice[], gradient: "" };
     let cursor = 0;
@@ -59,25 +64,151 @@ export function BilanTab() {
       const start = cursor;
       const end = cursor + ratio * 360;
       cursor = end;
-      return { ...s, percent: Math.round(ratio * 100), start, end };
+      return { ...s, percent: Math.round(ratio * 100), start, end, midAngle: (start + end) / 2 };
     });
     const gradient = slices.map((s) => `${s.color} ${s.start}deg ${s.end}deg`).join(", ");
     return { total: totalSlices, slices, gradient };
   }, [slicesRaw, totalSlices]);
 
-  const pieLabels = useMemo(() => {
-    const radius = 55; // closer to center to reduce overlap
-    return pieGlobal.slices.map((s) => {
-      const angleRad = ((s.start! + s.end!) / 2) * (Math.PI / 180);
-      const x = Math.cos(angleRad) * radius;
-      const y = Math.sin(angleRad) * radius;
-      return { ...s, x, y };
-    });
-  }, [pieGlobal]);
+  const personSlicesMini = useMemo<Slice[]>(() => {
+    const greenPalette = ["#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#a7f3d0"] as const;
+    const colorForIndex = (idx: number): string => greenPalette[idx % greenPalette.length] ?? greenPalette[0];
+
+    return totals.revenusParPersonnes && totals.revenusParPersonnes.length
+      ? totals.revenusParPersonnes.map((p, idx) => ({
+          label: p.name || `Personne ${idx + 1}`,
+          value: Math.max(0, p.montant),
+          color: colorForIndex(idx),
+        }))
+      : [{ label: "Revenus (personnes)", value: Math.max(0, totals.revenus), color: colorForIndex(0) }];
+  }, [totals]);
+
+  const depensesFixesPos = Math.max(0, totals.depensesFixes);
+  const depensesVariablesPos = Math.max(0, totals.depensesVariables);
+  const appartPos = Math.max(0, totals.appartements);
+  const appartNeg = Math.max(0, -totals.appartements);
+  const revenusPos = Math.max(0, totals.revenus);
+
+  const totalDepenses = depensesFixesPos + depensesVariablesPos + appartNeg;
+  const totalRevenus = revenusPos + appartPos;
+  const totalGlobal = Math.max(totalDepenses + totalRevenus, 1);
+  const totalMix = totalGlobal;
+
+  const slides = useMemo(
+    () => [
+      {
+        title: "Camembert detaille",
+        content: (
+          <div className="flex items-center justify-center">
+            <div
+              className="h-40 w-40 sm:h-48 sm:w-48 rounded-full border"
+              style={{
+                borderColor: "var(--theme-border)",
+                background:
+                  pieGlobal.total === 0 ? "var(--theme-border)" : `conic-gradient(${pieGlobal.gradient})`,
+              }}
+            />
+          </div>
+        ),
+      },
+      {
+        title: "Radial bars",
+        content: (
+          <div className="relative h-44 w-44 mx-auto">
+            <svg viewBox="0 0 200 200" className="h-full w-full">
+              {slicesRaw.slice(0, 6).map((s, idx) => {
+                const radius = 80 - idx * 10;
+                const circumference = 2 * Math.PI * radius;
+                const dash = (s.value / Math.max(totalSlices, 1)) * circumference;
+                return (
+                  <circle
+                    key={s.label}
+                    cx="100"
+                    cy="100"
+                    r={radius}
+                    fill="transparent"
+                    stroke={s.color}
+                    strokeWidth="8"
+                    strokeDasharray={`${dash} ${circumference}`}
+                    strokeDashoffset={-0.25 * circumference}
+                    strokeLinecap="round"
+                    opacity={0.85}
+                  />
+                );
+              })}
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center text-xs text-center px-2">
+              Proportions par anneaux
+            </div>
+          </div>
+        ),
+      },
+      {
+        title: "Small multiples (donuts par personne)",
+        content: (
+          <div className="flex flex-wrap gap-3">
+            {personSlicesMini.map((p) => (
+              <div key={p.label} className="flex flex-col items-center gap-1">
+                <div
+                  className="h-16 w-16 rounded-full"
+                  style={{
+                    background: `conic-gradient(${p.color} ${(p.value / Math.max(totalSlices, 1)) * 360}deg, var(--theme-border) 0)`,
+                    border: "1px solid var(--theme-border)",
+                  }}
+                />
+                <span className="text-[11px]" style={{ color: "var(--theme-textSecondary)" }}>
+                  {p.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        ),
+      },
+      {
+        title: "Bandes empilees",
+        content: (
+          <div className="space-y-1">
+            <div className="text-[11px]" style={{ color: "var(--theme-textSecondary)" }}>
+              Vue en deux lignes (positif / negatif)
+            </div>
+            <div className="space-y-1">
+              <div className="h-3 rounded-full overflow-hidden flex bg-[var(--theme-border)]/30">
+                <div className="h-full bg-emerald-500" style={{ width: `${(revenusPos / totalMix) * 100}%` }} />
+                <div className="h-full bg-emerald-600" style={{ width: `${(appartPos / totalMix) * 100}%` }} />
+              </div>
+              <div className="h-3 rounded-full overflow-hidden flex bg-[var(--theme-border)]/30">
+                <div className="h-full bg-rose-500" style={{ width: `${(depensesFixesPos / totalMix) * 100}%` }} />
+                <div className="h-full bg-rose-400" style={{ width: `${(depensesVariablesPos / totalMix) * 100}%` }} />
+                <div className="h-full bg-amber-500" style={{ width: `${(appartNeg / totalMix) * 100}%` }} />
+              </div>
+            </div>
+            <div className="flex gap-2 text-[11px] flex-wrap">
+              <span className="text-emerald-700">Revenus</span>
+              <span className="text-emerald-600">Appart (+)</span>
+              <span className="text-rose-600">Depenses fixes</span>
+              <span className="text-rose-500">Depenses variables</span>
+              <span className="text-amber-600">Appart (-)</span>
+            </div>
+          </div>
+        ),
+      },
+    ],
+    [pieGlobal, slicesRaw, totalSlices, personSlicesMini, revenusPos, appartPos, depensesFixesPos, depensesVariablesPos, appartNeg, totalMix]
+  );
+
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slide = slides[activeSlide] ?? slides[0];
+
+  const legendSlices = pieGlobal.slices;
+  const signForSlice = (s: Slice): "positive" | "negative" | "none" => {
+    if (s.label.startsWith("Depenses")) return "negative";
+    if (s.label === "Appartements") return totals.appartements < 0 ? "negative" : "positive";
+    return "positive";
+  };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Revenus par personnes et dépenses détaillées</h2>
+      <h2 className="text-xl font-semibold">Revenus par personnes et depenses detaillees</h2>
 
       <div
         className="rounded-2xl border p-4 space-y-6"
@@ -85,73 +216,101 @@ export function BilanTab() {
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="font-semibold">Vue globale (tous les montants = 100%)</span>
+            <span className="font-semibold">Repartition des Depenses/Revenus (treemap)</span>
           </div>
-          <div className="h-4 rounded-full bg-[var(--theme-border)]/30 overflow-hidden flex">
-            {barSlices.map((s) => (
-              <div
-                key={s.label}
-                className="h-full"
-                style={{ width: `${s.width}%`, backgroundColor: s.color }}
-                title={`${s.label} ${formatMontant(s.value, s.label.startsWith("Depenses") ? "negative" : "positive")}`}
-              />
-            ))}
+          <div
+            className="relative w-full h-40 rounded-lg overflow-hidden border"
+            style={{ borderColor: "var(--theme-border)" }}
+          >
+            <div className="absolute inset-0 flex flex-wrap">
+              {slicesRaw.map((s) => (
+                <div
+                  key={s.label}
+                  className="flex items-center justify-center text-[11px] font-semibold"
+                  style={{
+                    flexBasis: `${Math.max((s.value / Math.max(totalSlices, 1)) * 100, 8)}%`,
+                    minWidth: "60px",
+                    minHeight: "40px",
+                    backgroundColor: s.color,
+                    color: "#0b0b0b",
+                    opacity: 0.9,
+                    border: "1px solid rgba(0,0,0,0.08)",
+                  }}
+                >
+                  {s.label}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">Répartition détaillée</span>
-            <span style={{ color: "var(--theme-textSecondary)" }}>
-              Base: {pieGlobal.total.toLocaleString("fr-FR")} €
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-6 items-center">
-            <div
-              className="relative h-40 w-40 sm:h-48 sm:w-48 rounded-full border"
-              style={{
-                borderColor: "var(--theme-border)",
-                background:
-                  pieGlobal.total === 0 ? "var(--theme-border)" : `conic-gradient(${pieGlobal.gradient})`,
-              }}
-            >
-              {pieLabels.map((s) => (
-                <span
-                  key={s.label}
-                  className="absolute text-[11px] font-semibold px-1.5 py-0.5 rounded-md shadow-sm"
-                  style={{
-                    left: "50%",
-                    top: "50%",
-                    transform: `translate(${s.x}px, ${s.y}px) translate(-50%, -50%)`,
-                    backgroundColor: "rgba(0,0,0,0.55)",
-                    color: "white",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    minWidth: "32px",
-                    textAlign: "center",
-                  }}
-                >
-                  {s.percent}%
-                </span>
-              ))}
-            </div>
-            <div className="space-y-2 text-sm">
-              {pieGlobal.slices.map((s) => (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <span className="font-semibold">Legende</span>
+            <div className="space-y-1 text-sm">
+              {legendSlices.map((s) => (
                 <div key={s.label} className="flex items-center gap-2">
                   <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: s.color }} />
-                  <span className="w-40" style={{ color: "var(--theme-textSecondary)" }}>
+                  <span className="w-48" style={{ color: "var(--theme-textSecondary)" }}>
                     {s.label}
                   </span>
                   <span className="font-medium">
-                    {s.value.toLocaleString("fr-FR")} € ({s.percent}%)
+                    {formatMontant(s.value, signForSlice(s))} ({s.percent}%)
                   </span>
                 </div>
               ))}
-              {pieGlobal.total === 0 && (
+              {legendSlices.length === 0 && (
                 <p className="text-xs" style={{ color: "var(--theme-textSecondary)" }}>
-                  Ajoute des montants pour voir le diagramme.
+                  Ajoute des montants pour voir les diagrammes.
                 </p>
               )}
             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="font-semibold">Visualisations (carrousel)</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="px-2 py-1 rounded border text-sm"
+                style={{ borderColor: "var(--theme-border)" }}
+                onClick={() => setActiveSlide((s) => (s - 1 + slides.length) % slides.length)}
+              >
+                {"<"}
+              </button>
+              <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+                {slide.title} ({activeSlide + 1}/{slides.length})
+              </span>
+              <button
+                type="button"
+                className="px-2 py-1 rounded border text-sm"
+                style={{ borderColor: "var(--theme-border)" }}
+                onClick={() => setActiveSlide((s) => (s + 1) % slides.length)}
+              >
+                {">"}
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border p-4 min-h-[220px]" style={{ borderColor: "var(--theme-border)" }}>
+            {slide.content}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {slides.map((s, idx) => (
+              <button
+                key={s.title}
+                type="button"
+                onClick={() => setActiveSlide(idx)}
+                className={`px-3 py-1 rounded-full border text-xs ${idx === activeSlide ? "font-semibold" : ""}`}
+                style={{
+                  borderColor: "var(--theme-border)",
+                  backgroundColor: idx === activeSlide ? "var(--theme-border)" : "transparent",
+                }}
+              >
+                {idx + 1}
+              </button>
+            ))}
           </div>
         </div>
       </div>
