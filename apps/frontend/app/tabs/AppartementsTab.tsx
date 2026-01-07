@@ -181,6 +181,16 @@ export function AppartementsTab({
     { key: "gaz", label: "Gaz", value: apt.data.gaz },
   ];
 
+  const proprieteCardConfigs = (apt: AppartementData) => [
+    { key: "loyer", label: "Loyer percu", value: apt.data.loyer, positive: true },
+    { key: "impotsRevenu", label: "Impots sur revenu", value: apt.data.impotsRevenu },
+    { key: "taxeFonciere", label: "Taxe fonciere", value: apt.data.taxeFonciere },
+    { key: "chargesCopro", label: "Charges copro", value: apt.data.chargesCopro },
+    { key: "assurance", label: "Assurance habitation", value: apt.data.assurance },
+    { key: "credit", label: "Credit", value: apt.data.credit },
+    { key: "assuranceCredit", label: "Assurance credit", value: apt.data.assuranceCredit },
+  ];
+
   const handleSaveField =
     (aptId: number, field: keyof AppartementData["data"]) => async (newValue: string) => {
       const numValue = Number(newValue);
@@ -275,7 +285,66 @@ export function AppartementsTab({
       </div>
 
       <div className="space-y-6">
-        {carouselMode ? (
+        {forceType === "propriete" && !carouselMode ? (
+          (activeOnlyId ? appartements.filter((a) => a.id === activeOnlyId) : appartements).map((apt) => (
+            <div key={apt.id} className="space-y-3">
+              <h3 className="text-lg font-semibold truncate" title={apt.name}>
+                {apt.name}
+              </h3>
+              <div className="space-y-3">
+                {proprieteCardConfigs(apt).map((card) => {
+                  const maxValue = Math.max(2000, Math.ceil((card.value || 0) * 1.5));
+                  const isPositive = !!card.positive;
+                  return (
+                    <div
+                      key={card.key}
+                      className="flex items-center gap-3 rounded-lg border px-3 py-2"
+                      style={{ borderColor: "var(--theme-border)" }}
+                    >
+                      <span
+                        className="w-48 text-sm font-semibold truncate"
+                        style={{ color: "var(--theme-text)" }}
+                        title={card.label}
+                      >
+                        {card.label}
+                      </span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={maxValue}
+                        step={10}
+                        value={Math.max(0, card.value)}
+                        onChange={(e) => handleSaveField(apt.id, card.key)(e.target.value)}
+                        className="flex-1 accent-[var(--theme-tabActiveBg)]"
+                      />
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          step={10}
+                          value={Math.max(0, card.value)}
+                          onChange={(e) => handleSaveField(apt.id, card.key)(e.target.value)}
+                          className="w-24 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
+                          style={{
+                            borderColor: "var(--theme-border)",
+                            backgroundColor: "var(--theme-bgCard)",
+                            color: isPositive ? "#16a34a" : "#ef4444",
+                          }}
+                        />
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: isPositive ? "#16a34a" : "#ef4444" }}
+                        >
+                          €/mois
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        ) : carouselMode ? (
           renderCarousel()
         ) : (
           ((showAll ? appartements : activeOnlyId ? appartements.filter((a) => a.id === activeOnlyId) : appartements)).map((apt) => (
