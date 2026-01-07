@@ -10,9 +10,10 @@ type SectionKey = "quotidien" | "voitures" | "autres";
 
 type Props = {
   activeSection?: SectionKey;
+  onSectionTotalsChange?: (totals: Record<SectionKey, number>) => void;
 };
 
-export function DepensesVariablesTab({ activeSection }: Props) {
+export function DepensesVariablesTab({ activeSection, onSectionTotalsChange }: Props) {
   const [quotidien, setQuotidien] = useState<Expense[]>([{ id: 1, name: "Courses", montant: 450 }]);
   const [voitures, setVoitures] = useState<Expense[]>([
     { id: 1, name: "Carburant", montant: 120 },
@@ -84,12 +85,17 @@ export function DepensesVariablesTab({ activeSection }: Props) {
   };
 
   useEffect(() => {
-    const total =
-      quotidien.reduce((sum, item) => sum + item.montant, 0) +
-      voitures.reduce((sum, item) => sum + item.montant, 0) +
-      autres.reduce((sum, item) => sum + item.montant, 0);
+    const totalsBySection: Record<SectionKey, number> = {
+      quotidien: quotidien.reduce((sum, item) => sum + item.montant, 0),
+      voitures: voitures.reduce((sum, item) => sum + item.montant, 0),
+      autres: autres.reduce((sum, item) => sum + item.montant, 0),
+    };
+    const total = totalsBySection.quotidien + totalsBySection.voitures + totalsBySection.autres;
     updateTotal("depensesVariables", total);
-  }, [quotidien, voitures, autres, updateTotal]);
+    if (onSectionTotalsChange) {
+      onSectionTotalsChange(totalsBySection);
+    }
+  }, [quotidien, voitures, autres, updateTotal, onSectionTotalsChange]);
 
   const renderSection = (title: string, section: SectionKey, items: Expense[], setterLabel: string) => {
     return (

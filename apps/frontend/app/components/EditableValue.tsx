@@ -157,7 +157,13 @@ export function EditableValue({
       {label && (
         <label
           className="block text-sm font-medium"
-          style={{ color: "var(--theme-textSecondary)" }}
+          style={{
+            color: "var(--theme-textSecondary)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+          title={label}
         >
           {label}
         </label>

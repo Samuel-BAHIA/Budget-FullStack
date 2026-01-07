@@ -36,6 +36,8 @@ type AppartementBlockProps = {
   onDataChange?: (data: AppartementData["data"], type: AppartementType) => void;
   onNameChange?: (name: string) => void;
   onDelete?: () => void;
+  forceType?: AppartementType;
+  lockType?: boolean;
 };
 
 export function AppartementBlock({
@@ -46,10 +48,12 @@ export function AppartementBlock({
   onDataChange,
   onNameChange,
   onDelete,
+  forceType,
+  lockType = false,
 }: AppartementBlockProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [appartementName, setAppartementName] = useState(name || `Appartement ${appartementNumber}`);
-  const [type, setType] = useState<AppartementType>(initialType);
+  const [type, setType] = useState<AppartementType>(forceType ?? initialType);
 
   const [loyer, setLoyer] = useState(initialData.loyer || 0);
   const [credit, setCredit] = useState(initialData.credit || 0);
@@ -151,6 +155,9 @@ export function AppartementBlock({
   const totalColor = totalDepenses >= 0 ? "#16a34a" : "#ef4444";
 
   const handleTypeChange = (newType: AppartementType) => {
+    if (lockType && forceType) {
+      return;
+    }
     const nextValues = getCurrentData();
     if (newType === "location") {
       nextValues.credit = 0;
@@ -264,19 +271,21 @@ export function AppartementBlock({
             style={{ color: "var(--theme-text)" }}
             placeholder={`Appartement ${appartementNumber}`}
           />
-          <select
-            value={type}
-            onChange={(e) => handleTypeChange(e.target.value as AppartementType)}
-            className="rounded-md border px-2 py-1 text-sm w-full sm:w-auto"
-            style={{
-              borderColor: "var(--theme-border)",
-              backgroundColor: "var(--theme-bgCard)",
-              color: "var(--theme-text)",
-            }}
-          >
-            <option value="location">Location</option>
-            <option value="propriete">Propriete</option>
-          </select>
+          {!lockType && (
+            <select
+              value={type}
+              onChange={(e) => handleTypeChange(e.target.value as AppartementType)}
+              className="rounded-md border px-2 py-1 text-sm w-full sm:w-auto"
+              style={{
+                borderColor: "var(--theme-border)",
+                backgroundColor: "var(--theme-bgCard)",
+                color: "var(--theme-text)",
+              }}
+            >
+              <option value="location">Location</option>
+              <option value="propriete">Propriete</option>
+            </select>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

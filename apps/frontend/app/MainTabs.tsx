@@ -1,17 +1,16 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { RevenusTab, type Person } from "./tabs/RevenusTab";
 import { DepensesVariablesTab } from "./tabs/DepensesVariablesTab";
 import { DepensesFixesTab } from "./tabs/DepensesFixesTab";
-import { AppartementsTab } from "./tabs/AppartementsTab";
-import type { AppartementData } from "./tabs/AppartementsTab";
-import { RevenusTab, type Person } from "./tabs/RevenusTab";
-import { TrashIcon } from "./components/icons/TrashIcon";
+import { AppartementsTab, type AppartementData } from "./tabs/AppartementsTab";
 import { BilanTab } from "./tabs/BilanTab";
 import { useBudget } from "./contexts/BudgetContext";
+import { TrashIcon } from "./components/icons/TrashIcon";
 
-type MainTabId = "revenus" | "depenses" | "bilan";
-type DepenseTab = "variables" | "fixes" | "appartements";
+type MainTabId = "revenus" | "depenses" | "patrimoine" | "bilan";
+type DepenseTab = "variables" | "fixes" | "locations";
 type VariableSection = "quotidien" | "voitures" | "autres";
 type FixeSection = "abonnements" | "voiture" | "autres";
 
@@ -24,6 +23,7 @@ type NavButtonProps = {
   level?: number;
   muted?: boolean;
   onDelete?: () => void;
+  deleteDisabled?: boolean;
 };
 
 const formatMontant = (value: number) => {
@@ -38,6 +38,25 @@ const amountColor = (value: number) => {
   return "var(--theme-textSecondary)";
 };
 
+const defaultProperty = (id: number): AppartementData => ({
+  id,
+  name: `Propriete ${id}`,
+  type: "propriete",
+  data: {
+    loyer: 800,
+    credit: 100,
+    assuranceCredit: 20,
+    taxeFonciere: 0,
+    impotsRevenu: 0,
+    chargesCopro: 0,
+    assurance: 40,
+    internet: 30,
+    eau: 50,
+    electricite: 60,
+    gaz: 45,
+  },
+});
+
 export function MainTabs() {
   const { totals } = useBudget();
   const [activeTab, setActiveTab] = useState<MainTabId>("revenus");
@@ -46,34 +65,46 @@ export function MainTabs() {
   const [showDepensesChildren, setShowDepensesChildren] = useState(false);
   const [showVariablesChildren, setShowVariablesChildren] = useState(false);
   const [showFixesChildren, setShowFixesChildren] = useState(false);
-  const [showAppartChildren, setShowAppartChildren] = useState(false);
+  const [showLocationsChildren, setShowLocationsChildren] = useState(false);
   const [activeVariableSection, setActiveVariableSection] = useState<VariableSection>("quotidien");
   const [activeFixeSection, setActiveFixeSection] = useState<FixeSection>("abonnements");
   const [persons, setPersons] = useState<Person[]>([
     { id: 1, name: "Personne 1", revenus: [{ id: 1, name: "Salaire", montant: 0 }] },
   ]);
   const [activePersonId, setActivePersonId] = useState<number | null>(1);
-  const [appartements, setAppartements] = useState<AppartementData[]>(() => [
-    {
-      id: 1,
-      name: "Appartement 1",
-      type: "location",
-      data: {
-        loyer: 800,
-        credit: 100,
-        assuranceCredit: 20,
-        taxeFonciere: 0,
-        impotsRevenu: 0,
-        chargesCopro: 0,
-        assurance: 40,
-        internet: 30,
-        eau: 50,
-        electricite: 60,
-        gaz: 45,
-      },
+  const [locations, setLocations] = useState<AppartementData[]>([{
+    id: 1,
+    name: "Location 1",
+    type: "location",
+    data: {
+      loyer: 800,
+      credit: 0,
+      assuranceCredit: 0,
+      taxeFonciere: 0,
+      impotsRevenu: 0,
+      chargesCopro: 0,
+      assurance: 40,
+      internet: 30,
+      eau: 50,
+      electricite: 60,
+      gaz: 45,
     },
-  ]);
-  const [activeAppartementId, setActiveAppartementId] = useState<number | null>(1);
+  }]);
+  const [activeLocationId, setActiveLocationId] = useState<number | null>(1);
+  const [patrimoine, setPatrimoine] = useState<AppartementData[]>([defaultProperty(1)]);
+  const [activePatrimoineId, setActivePatrimoineId] = useState<number | null>(1);
+  const [showPatrimoineChildren, setShowPatrimoineChildren] = useState(false);
+  const [variablesSectionTotals, setVariablesSectionTotals] = useState<{ quotidien: number; voitures: number; autres: number }>({
+    quotidien: 0,
+    voitures: 0,
+    autres: 0,
+  });
+  const [fixesSectionTotals, setFixesSectionTotals] = useState<{ abonnements: number; voiture: number; autres: number }>({
+    abonnements: 0,
+    voiture: 0,
+    autres: 0,
+  });
+  const [patrimoineTotal, setPatrimoineTotal] = useState<number>(0);
 
   const depensesTotal = useMemo(
     () => totals.depensesFixes + totals.depensesVariables + Math.min(0, totals.appartements),
@@ -90,11 +121,13 @@ export function MainTabs() {
     onClick,
     total,
     caret,
-  level = 0,
-  muted,
-  onDelete,
-}: NavButtonProps) => {
+    level = 0,
+    muted,
+    onDelete,
+    deleteDisabled,
+  }: NavButtonProps) => {
     const paddingLeft = 12 + level * 12;
+    const isChild = level > 0;
     return (
       <button
         type="button"
@@ -103,14 +136,26 @@ export function MainTabs() {
         style={{
           padding: "10px 12px",
           paddingLeft,
-          backgroundColor: active ? "var(--theme-tabActiveBg)" : "transparent",
+          backgroundColor: active
+            ? isChild
+              ? "color-mix(in srgb, var(--theme-tabActiveBg) 85%, var(--theme-bg))"
+              : "var(--theme-tabActiveBg)"
+            : "transparent",
           color: active
             ? "var(--theme-tabActiveText)"
             : muted
             ? "var(--theme-textSecondary)"
             : "var(--theme-tabInactiveText)",
-          borderColor: active ? "var(--theme-tabActiveBg)" : "transparent",
-          boxShadow: active ? "inset 0 0 0 1px var(--theme-tabActiveBg)" : "none",
+          borderColor: active
+            ? isChild
+              ? "color-mix(in srgb, var(--theme-tabActiveBg) 65%, var(--theme-border))"
+              : "var(--theme-tabActiveBg)"
+            : "transparent",
+          boxShadow: active
+            ? isChild
+              ? "0 0 0 1px color-mix(in srgb, var(--theme-tabActiveBg) 50%, var(--theme-borderLight))"
+              : "inset 0 0 0 1px var(--theme-tabActiveBg)"
+            : "none",
         }}
       >
         <span className="flex items-center gap-2">
@@ -129,11 +174,12 @@ export function MainTabs() {
         {onDelete && (
           <span
             onClick={(e) => {
+              if (deleteDisabled) return;
               e.stopPropagation();
               onDelete();
             }}
             className="inline-flex items-center rounded-md px-1.5 py-1 text-xs"
-            style={{ color: "#ef4444" }}
+            style={{ color: deleteDisabled ? "var(--theme-textSecondary)" : "#ef4444", cursor: deleteDisabled ? "not-allowed" : "pointer" }}
             aria-label="Supprimer"
             role="button"
           >
@@ -152,7 +198,7 @@ export function MainTabs() {
         if (!next) {
           setShowVariablesChildren(false);
           setShowFixesChildren(false);
-          setShowAppartChildren(false);
+          setShowLocationsChildren(false);
         }
       } else {
         setActiveTab("depenses");
@@ -160,13 +206,38 @@ export function MainTabs() {
         setShowVariablesChildren(true);
         setActiveDepenseTab("variables");
       }
-    } else {
-      setActiveTab(tab);
-      setShowRevenusChildren(tab === "revenus" ? !showRevenusChildren : false);
+    } else if (tab === "revenus") {
+      if (activeTab === "revenus") {
+        setShowRevenusChildren((prev) => !prev);
+      } else {
+        setActiveTab("revenus");
+        setShowRevenusChildren(true);
+      }
       setShowDepensesChildren(false);
       setShowVariablesChildren(false);
       setShowFixesChildren(false);
-      setShowAppartChildren(false);
+      setShowLocationsChildren(false);
+      setShowPatrimoineChildren(false);
+    } else if (tab === "patrimoine") {
+      if (activeTab === "patrimoine") {
+        setShowPatrimoineChildren((prev) => !prev);
+      } else {
+        setActiveTab("patrimoine");
+        setShowPatrimoineChildren(true);
+      }
+      setShowDepensesChildren(false);
+      setShowVariablesChildren(false);
+      setShowFixesChildren(false);
+      setShowLocationsChildren(false);
+      setShowRevenusChildren(false);
+    } else {
+      setActiveTab(tab);
+      setShowDepensesChildren(false);
+      setShowVariablesChildren(false);
+      setShowFixesChildren(false);
+      setShowLocationsChildren(false);
+      setShowRevenusChildren(false);
+      setShowPatrimoineChildren(false);
     }
   };
 
@@ -178,15 +249,15 @@ export function MainTabs() {
     if (tab === "variables") {
       setShowVariablesChildren((prev) => (activeDepenseTab === "variables" ? !prev : true));
       setShowFixesChildren(false);
-      setShowAppartChildren(false);
+      setShowLocationsChildren(false);
     } else if (tab === "fixes") {
       setShowFixesChildren((prev) => (activeDepenseTab === "fixes" ? !prev : true));
       setShowVariablesChildren(false);
-      setShowAppartChildren(false);
+      setShowLocationsChildren(false);
     } else {
       setShowVariablesChildren(false);
       setShowFixesChildren(false);
-      setShowAppartChildren((prev) => (activeDepenseTab === "appartements" ? !prev : true));
+      setShowLocationsChildren((prev) => (activeDepenseTab === "locations" ? !prev : true));
     }
   };
 
@@ -196,7 +267,7 @@ export function MainTabs() {
     setShowDepensesChildren(true);
     setShowVariablesChildren(true);
     setShowFixesChildren(false);
-    setShowAppartChildren(false);
+    setShowLocationsChildren(false);
     setActiveVariableSection(section);
   };
 
@@ -206,26 +277,26 @@ export function MainTabs() {
     setShowDepensesChildren(true);
     setShowFixesChildren(true);
     setShowVariablesChildren(false);
-    setShowAppartChildren(false);
+    setShowLocationsChildren(false);
     setActiveFixeSection(section);
   };
 
-  const handleAppartementClick = (item: AppartementData) => {
+  const handleLocationClick = (item: AppartementData) => {
     setActiveTab("depenses");
-    setActiveDepenseTab("appartements");
+    setActiveDepenseTab("locations");
     setShowDepensesChildren(true);
-    setShowAppartChildren(true);
+    setShowLocationsChildren(true);
     setShowVariablesChildren(false);
     setShowFixesChildren(false);
-    setActiveAppartementId(item.id);
+    setActiveLocationId(item.id);
   };
 
-  const handleAddAppartement = () => {
-    setAppartements((prev) => {
+  const handleAddLocation = () => {
+    setLocations((prev) => {
       const nextId = Math.max(0, ...prev.map((a) => a.id)) + 1;
       const next: AppartementData = {
         id: nextId,
-        name: `Appartement ${nextId}`,
+        name: `Location ${nextId}`,
         type: "location",
         data: {
           loyer: 0,
@@ -241,21 +312,21 @@ export function MainTabs() {
           gaz: 0,
         },
       };
-      setActiveAppartementId(nextId);
+      setActiveLocationId(nextId);
       return [...prev, next];
     });
     setActiveTab("depenses");
-    setActiveDepenseTab("appartements");
+    setActiveDepenseTab("locations");
     setShowDepensesChildren(true);
-    setShowAppartChildren(true);
+    setShowLocationsChildren(true);
     setShowVariablesChildren(false);
     setShowFixesChildren(false);
   };
 
-  const handleAppartementsChange = (next: AppartementData[]) => {
-    setAppartements(next);
-    if (activeAppartementId !== null && !next.find((a) => a.id === activeAppartementId)) {
-      setActiveAppartementId(next[0]?.id ?? null);
+  const handleLocationsChange = (next: AppartementData[]) => {
+    setLocations(next);
+    if (activeLocationId !== null && !next.find((a) => a.id === activeLocationId)) {
+      setActiveLocationId(next[0]?.id ?? null);
     }
   };
 
@@ -266,37 +337,112 @@ export function MainTabs() {
     }
   };
 
-  const activeAppartement = appartements.find((apt) => apt.id === activeAppartementId) ?? appartements[0];
+  const handleAddPerson = () => {
+    setPersons((prev) => {
+      const nextId = Math.max(0, ...prev.map((p) => p.id)) + 1;
+      const next = [...prev, { id: nextId, name: `Personne ${nextId}`, revenus: [{ id: 1, name: "Revenu 1", montant: 0 }] }];
+      setActivePersonId(nextId);
+      return next;
+    });
+    setActiveTab("revenus");
+    setShowRevenusChildren(true);
+  };
+
+  const handleDeletePersonSide = (personId: number) => {
+    setPersons((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = prev.filter((p) => p.id !== personId);
+      if (activePersonId === personId) {
+        setActivePersonId(next[0]?.id ?? null);
+      }
+      return next;
+    });
+  };
+
+  const handleAddPatrimoine = () => {
+    setPatrimoine((prev) => {
+      const nextId = Math.max(0, ...prev.map((p) => p.id)) + 1;
+      const next = [...prev, defaultProperty(nextId)];
+      setActivePatrimoineId(nextId);
+      return next;
+    });
+    setActiveTab("patrimoine");
+    setShowPatrimoineChildren(true);
+  };
+
+  const handleDeletePatrimoine = (id: number) => {
+    setPatrimoine((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = prev.filter((p) => p.id !== id);
+      if (activePatrimoineId === id) {
+        setActivePatrimoineId(next[0]?.id ?? null);
+      }
+      return next;
+    });
+  };
+
+  const renderContent = () => {
+    if (activeTab === "revenus")
+      return <RevenusTab persons={persons} onPersonsChange={handlePersonsChange} activePersonId={activePersonId} />;
+    if (activeTab === "bilan") return <BilanTab />;
+    if (activeTab === "patrimoine")
+      return (
+        <AppartementsTab
+          appartements={patrimoine}
+          onAppartementsChange={setPatrimoine}
+          forceType="propriete"
+          lockType
+          title="Patrimoine"
+          description="Suivi de tes proprietes (revenus et charges)."
+          addLabel="Ajouter une propriete"
+          disableBudgetUpdate
+          onTotalChange={setPatrimoineTotal}
+          activeOnlyId={activePatrimoineId}
+        />
+      );
+    if (activeDepenseTab === "variables")
+      return (
+        <DepensesVariablesTab
+          activeSection={activeVariableSection}
+          onSectionTotalsChange={setVariablesSectionTotals}
+        />
+      );
+    if (activeDepenseTab === "fixes")
+      return (
+        <DepensesFixesTab
+          activeSection={activeFixeSection}
+          onSectionTotalsChange={setFixesSectionTotals}
+        />
+      );
+    return (
+      <AppartementsTab
+        appartements={locations}
+        onAppartementsChange={handleLocationsChange}
+        forceType="location"
+        lockType
+        title="Locations"
+        description="Gere tes locations et leurs charges."
+        addLabel="Ajouter une location"
+        activeOnlyId={activeLocationId}
+        carouselMode
+        cardsPerPage={3}
+      />
+    );
+  };
+
   const personTotal = (p: Person) => p.revenus.reduce((s, r) => s + r.montant, 0);
   const revenusPersons = persons.map((p) => ({
     id: p.id,
     name: p.name || `Personne ${p.id}`,
     montant: personTotal(p),
   }));
+
   const calcAppartementTotal = (apt: AppartementData) => {
     const d = apt.data;
     if (apt.type === "propriete") {
-      return (
-        d.loyer -
-        (d.impotsRevenu + d.taxeFonciere + d.chargesCopro + d.assurance + d.credit + d.assuranceCredit)
-      );
+      return d.loyer - (d.impotsRevenu + d.taxeFonciere + d.chargesCopro + d.assurance + d.credit + d.assuranceCredit);
     }
     return -(d.loyer + d.assurance + d.internet + d.eau + d.electricite + d.gaz);
-  };
-
-  const renderContent = () => {
-    if (activeTab === "revenus") return <RevenusTab persons={persons} onPersonsChange={handlePersonsChange} />;
-    if (activeTab === "bilan") return <BilanTab />;
-    if (activeDepenseTab === "variables")
-      return <DepensesVariablesTab activeSection={activeVariableSection} />;
-    if (activeDepenseTab === "fixes")
-      return <DepensesFixesTab activeSection={activeFixeSection} />;
-    return (
-      <AppartementsTab
-        appartements={appartements}
-        onAppartementsChange={handleAppartementsChange}
-      />
-    );
   };
 
   return (
@@ -311,18 +457,7 @@ export function MainTabs() {
               {renderNavButton({
                 label: "Revenus",
                 active: activeTab === "revenus",
-                onClick: () => {
-                  if (activeTab === "revenus") {
-                    setShowRevenusChildren((prev) => !prev);
-                  } else {
-                    handleMainTabClick("revenus");
-                    setShowRevenusChildren(true);
-                  }
-                  setShowDepensesChildren(false);
-                  setShowVariablesChildren(false);
-                  setShowFixesChildren(false);
-                  setShowAppartChildren(false);
-                },
+                onClick: () => handleMainTabClick("revenus"),
                 total: totals.revenus,
                 caret: showRevenusChildren ? "open" : "closed",
               })}
@@ -342,18 +477,8 @@ export function MainTabs() {
                         level: 1,
                         muted: true,
                         total: person.montant,
-                        onDelete: () => {
-                          setPersons((prev) => {
-                            const next = prev.filter((p) => p.id !== person.id);
-                            if (next.length === 0) {
-                              return [{ id: 1, name: "Personne 1", revenus: [{ id: 1, name: "Salaire", montant: 0 }] }];
-                            }
-                            if (activePersonId === person.id) {
-                              setActivePersonId(next[0].id);
-                            }
-                            return next;
-                          });
-                        },
+                        onDelete: () => handleDeletePersonSide(person.id),
+                        deleteDisabled: persons.length <= 1,
                       })}
                     </React.Fragment>
                   ))}
@@ -364,19 +489,7 @@ export function MainTabs() {
                       color: "var(--theme-textSecondary)",
                       backgroundColor: "transparent",
                     }}
-                    onClick={() => {
-                      setPersons((prev) => {
-                        const nextId = Math.max(0, ...prev.map((p) => p.id)) + 1;
-                        const next = [
-                          ...prev,
-                          { id: nextId, name: `Personne ${nextId}`, revenus: [{ id: 1, name: "Revenu 1", montant: 0 }] },
-                        ];
-                        setActivePersonId(nextId);
-                        return next;
-                      });
-                      setActiveTab("revenus");
-                      setShowRevenusChildren(true);
-                    }}
+                    onClick={handleAddPerson}
                   >
                     + Ajouter
                   </button>
@@ -411,7 +524,7 @@ export function MainTabs() {
                           onClick: () => handleVariableChildClick("quotidien"),
                           level: 2,
                           muted: true,
-                          total: totals.depensesVariables,
+                          total: variablesSectionTotals.quotidien,
                         })}
                         {renderNavButton({
                           label: "Voiture",
@@ -419,7 +532,7 @@ export function MainTabs() {
                           onClick: () => handleVariableChildClick("voitures"),
                           level: 2,
                           muted: true,
-                          total: totals.depensesVariables,
+                          total: variablesSectionTotals.voitures,
                         })}
                         {renderNavButton({
                           label: "Autres",
@@ -427,7 +540,7 @@ export function MainTabs() {
                           onClick: () => handleVariableChildClick("autres"),
                           level: 2,
                           muted: true,
-                          total: totals.depensesVariables,
+                          total: variablesSectionTotals.autres,
                         })}
                       </div>
                     )}
@@ -449,7 +562,7 @@ export function MainTabs() {
                           onClick: () => handleFixeChildClick("abonnements"),
                           level: 2,
                           muted: true,
-                          total: totals.depensesFixes,
+                          total: fixesSectionTotals.abonnements,
                         })}
                         {renderNavButton({
                           label: "Voiture",
@@ -457,7 +570,7 @@ export function MainTabs() {
                           onClick: () => handleFixeChildClick("voiture"),
                           level: 2,
                           muted: true,
-                          total: totals.depensesFixes,
+                          total: fixesSectionTotals.voiture,
                         })}
                         {renderNavButton({
                           label: "Autres",
@@ -465,59 +578,103 @@ export function MainTabs() {
                           onClick: () => handleFixeChildClick("autres"),
                           level: 2,
                           muted: true,
-                          total: totals.depensesFixes,
+                          total: fixesSectionTotals.autres,
                         })}
                       </div>
                     )}
 
                     {renderNavButton({
-                      label: "Appartements",
-                      active: activeDepenseTab === "appartements",
-                      onClick: () => handleDepenseTabClick("appartements"),
+                      label: "Locations",
+                      active: activeDepenseTab === "locations",
+                      onClick: () => handleDepenseTabClick("locations"),
                       total: totals.appartements,
-                      caret: showAppartChildren ? "open" : "closed",
+                      caret: showLocationsChildren ? "open" : "closed",
                       level: 1,
                     })}
 
-                    {showAppartChildren && (
+                    {showLocationsChildren && (
                       <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                        {appartements.map((apt) => (
-                          <React.Fragment key={apt.id ? `apt-${apt.id}` : apt.name}>
+                        {locations.map((loc) => (
+                          <React.Fragment key={loc.id}>
                             {renderNavButton({
-                              label: apt.name,
-                              active: activeDepenseTab === "appartements" && activeAppartement?.id === apt.id,
-                              onClick: () => handleAppartementClick(apt),
+                              label: loc.name,
+                              active: activeDepenseTab === "locations" && activeLocationId === loc.id,
+                              onClick: () => handleLocationClick(loc),
                               level: 2,
                               muted: true,
-                              total: calcAppartementTotal(apt),
+                              total: calcAppartementTotal(loc),
                               onDelete: () => {
-                                setAppartements((prev) => {
-                                  const next = prev.filter((a) => a.id !== apt.id);
-                                  if (activeAppartementId === apt.id) {
-                                    setActiveAppartementId(next[0]?.id ?? null);
+                                setLocations((prev) => {
+                                  if (prev.length <= 1) return prev;
+                                  const next = prev.filter((a) => a.id !== loc.id);
+                                  if (activeLocationId === loc.id) {
+                                    setActiveLocationId(next[0]?.id ?? null);
                                   }
                                   return next;
                                 });
                               },
+                              deleteDisabled: locations.length <= 1,
                             })}
                           </React.Fragment>
                         ))}
                         <button
                           type="button"
-                          onClick={handleAddAppartement}
+                          onClick={handleAddLocation}
                           className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
                           style={{
                             color: "var(--theme-textSecondary)",
                             backgroundColor: "transparent",
                           }}
                         >
-                          + Ajouter un appartement
+                          + Ajouter une location
                         </button>
                       </div>
                     )}
                   </div>
                 )}
               </div>
+
+              {renderNavButton({
+                label: "Patrimoine",
+                active: activeTab === "patrimoine",
+                onClick: () => handleMainTabClick("patrimoine"),
+                total: patrimoineTotal,
+                caret: showPatrimoineChildren ? "open" : "closed",
+              })}
+
+              {activeTab === "patrimoine" && showPatrimoineChildren && (
+                <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                  {patrimoine.map((prop) => (
+                    <React.Fragment key={prop.id}>
+                      {renderNavButton({
+                        label: prop.name,
+                        active: activePatrimoineId === prop.id,
+                        onClick: () => {
+                          setActivePatrimoineId(prop.id);
+                          setActiveTab("patrimoine");
+                          setShowPatrimoineChildren(true);
+                        },
+                        level: 1,
+                        muted: true,
+                        total: calcAppartementTotal(prop),
+                        onDelete: () => handleDeletePatrimoine(prop.id),
+                        deleteDisabled: patrimoine.length <= 1,
+                      })}
+                    </React.Fragment>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={handleAddPatrimoine}
+                    className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
+                    style={{
+                      color: "var(--theme-textSecondary)",
+                      backgroundColor: "transparent",
+                    }}
+                  >
+                    + Ajouter une propriete
+                  </button>
+                </div>
+              )}
 
               {renderNavButton({
                 label: "Bilan",

@@ -11,7 +11,7 @@ export type AppartementData = {
   name: string;
   type: AppartementType;
   data: {
-    loyer: number; // loyer payé ou perçu
+    loyer: number;
     credit: number;
     assuranceCredit: number;
     taxeFonciere: number;
@@ -28,7 +28,34 @@ export type AppartementData = {
 type Props = {
   appartements?: AppartementData[];
   onAppartementsChange?: (appartements: AppartementData[]) => void;
+  forceType?: AppartementType;
+  lockType?: boolean;
+  title?: string;
+  description?: string;
+  addLabel?: string;
+  disableBudgetUpdate?: boolean;
+  onTotalChange?: (total: number) => void;
+  activeOnlyId?: number | null;
+  carouselMode?: boolean;
+  cardsPerPage?: number;
 };
+
+const PlusIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M10 4V16M4 10H16"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
 
 const defaultAppartement = (id: number): AppartementData => ({
   id,
@@ -49,11 +76,31 @@ const defaultAppartement = (id: number): AppartementData => ({
   },
 });
 
-export function AppartementsTab({ appartements: externalAppartements, onAppartementsChange }: Props) {
-  const [internalAppartements, setInternalAppartements] = useState<AppartementData[]>([defaultAppartement(1)]);
+export function AppartementsTab({
+  appartements: externalAppartements,
+  onAppartementsChange,
+  forceType,
+  lockType,
+  title,
+  description,
+  addLabel,
+  disableBudgetUpdate = false,
+  onTotalChange,
+  activeOnlyId,
+  carouselMode = false,
+  cardsPerPage = 3,
+}: Props) {
+  const [internalAppartements, setInternalAppartements] = useState<AppartementData[]>([
+    defaultAppartement(1),
+  ]);
   const appartements = externalAppartements ?? internalAppartements;
-  const setAppartements = (updater: AppartementData[] | ((prev: AppartementData[]) => AppartementData[])) => {
-    const next = typeof updater === "function" ? (updater as (prev: AppartementData[]) => AppartementData[])(appartements) : updater;
+  const setAppartements = (
+    updater: AppartementData[] | ((prev: AppartementData[]) => AppartementData[])
+  ) => {
+    const next =
+      typeof updater === "function"
+        ? (updater as (prev: AppartementData[]) => AppartementData[])(appartements)
+        : updater;
     if (externalAppartements && onAppartementsChange) {
       onAppartementsChange(next);
     } else {
@@ -63,27 +110,29 @@ export function AppartementsTab({ appartements: externalAppartements, onAppartem
 
   const { updateTotal } = useBudget();
 
-  // Fonction appellee quand les donnees ou le type d'un appartement changent
   const handleAppartementDataChange = (id: number) => {
     return (data: AppartementData["data"], type: AppartementType) => {
       setAppartements((prev) =>
         prev.map((apt) => (apt.id === id ? { ...apt, data, type } : apt))
       );
-      console.log(`Appartement ${id} mis a jour:`, data, type);
     };
   };
 
-  // Fonction appellee quand le nom d'un appartement change
   const handleAppartementNameChange = (id: number) => {
     return (name: string) => {
       setAppartements((prev) =>
         prev.map((apt) => (apt.id === id ? { ...apt, name } : apt))
       );
-      console.log(`Nom de l'appartement ${id} mis a jour:`, name);
     };
   };
 
-  // Fonction pour supprimer un appartement
+  const handleAddAppartement = () => {
+    const nextId = Math.max(0, ...appartements.map((a) => a.id)) + 1;
+    const base = defaultAppartement(nextId);
+    const newApp = forceType ? { ...base, type: forceType } : base;
+    setAppartements((prev) => [...prev, newApp]);
+  };
+
   const handleDeleteAppartement = (id: number) => {
     return () => {
       if (
@@ -92,7 +141,6 @@ export function AppartementsTab({ appartements: externalAppartements, onAppartem
         )
       ) {
         setAppartements((prev) => prev.filter((apt) => apt.id !== id));
-        console.log(`Appartement ${id} supprime`);
       }
     };
   };
@@ -101,7 +149,6 @@ export function AppartementsTab({ appartements: externalAppartements, onAppartem
     const totalAppartements = appartements.reduce((sum, apt) => {
       const d = apt.data;
       if (apt.type === "propriete") {
-        // Loyer percu (revenu) - toutes les charges/credits
         return (
           sum +
           (d.loyer -
@@ -113,40 +160,143 @@ export function AppartementsTab({ appartements: externalAppartements, onAppartem
               d.assuranceCredit))
         );
       }
-      // Location : uniquement des depenses
       return sum - (d.loyer + d.assurance + d.internet + d.eau + d.electricite + d.gaz);
     }, 0);
 
-    updateTotal("appartements", totalAppartements);
-  }, [appartements, updateTotal]);
+    if (!disableBudgetUpdate) {
+      updateTotal("appartements", totalAppartements);
+    }
+    if (onTotalChange) {
+      onTotalChange(totalAppartements);
+    }
+  }, [appartements, updateTotal, disableBudgetUpdate, onTotalChange]);
+
+  const locationCardConfigs = (apt: AppartementData) => [
+    { key: "loyer", label: "Loyer", value: apt.data.loyer },
+    { key: "assurance", label: "Assurance habitation", value: apt.data.assurance },
+    { key: "internet", label: "Internet", value: apt.data.internet },
+    { key: "eau", label: "Eau", value: apt.data.eau },
+    { key: "electricite", label: "Electricite", value: apt.data.electricite },
+    { key: "gaz", label: "Gaz", value: apt.data.gaz },
+  ];
+
+  const handleSaveField =
+    (aptId: number, field: keyof AppartementData["data"]) => async (newValue: string) => {
+      const numValue = Number(newValue);
+      const safeValue = Number.isFinite(numValue) ? numValue : 0;
+      setAppartements((prev) =>
+        prev.map((apt) =>
+          apt.id === aptId ? { ...apt, data: { ...apt.data, [field]: safeValue } } : apt
+        )
+      );
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    };
+
+  const renderCarousel = () => {
+    const target =
+      (activeOnlyId ? appartements.find((a) => a.id === activeOnlyId) : appartements[0]) ??
+      null;
+    if (!target) return null;
+    const cards = locationCardConfigs(target);
+    if (!cards.length) return null;
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold">Charges de {target.name}</span>
+        </div>
+        <div className="space-y-3">
+          {cards.map((card) => {
+            const maxValue = Math.max(2000, Math.ceil((card.value || 0) * 1.5));
+            return (
+              <div
+                key={card.key}
+                className="flex items-center gap-3 rounded-lg border px-3 py-2"
+                style={{ borderColor: "var(--theme-border)" }}
+              >
+                <span
+                  className="w-44 text-sm font-semibold"
+                  style={{
+                    color: "var(--theme-text)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                  title={card.label}
+                >
+                  {card.label}
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxValue}
+                  step={10}
+                  value={card.value}
+                  onChange={(e) => handleSaveField(target.id, card.key)(e.target.value)}
+                  className="flex-1 accent-[var(--theme-tabActiveBg)]"
+                />
+                <span
+                  className="w-20 text-right text-sm font-semibold"
+                  style={{ color: "var(--theme-text)" }}
+                >
+                  {`${card.value.toLocaleString("fr-FR")} €`}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Appartements</h2>
-          <p
-            className="mt-2"
-            style={{ color: "var(--theme-textSecondary)" }}
-          >
-            Gere tes appartements achetes ou loues, et leurs informations.
+          <h2 className="text-xl font-semibold">{title ?? "Appartements"}</h2>
+          <p className="mt-2" style={{ color: "var(--theme-textSecondary)" }}>
+            {description ??
+              "Gere tes appartements achetes ou loues, et leurs informations."}
           </p>
         </div>
       </div>
 
       <div className="space-y-6">
-        {appartements.map((apt) => (
-          <AppartementBlock
-            key={apt.id}
-            appartementNumber={apt.id}
-            name={apt.name}
-            type={apt.type}
-            initialData={apt.data}
-            onDataChange={handleAppartementDataChange(apt.id)}
-            onNameChange={handleAppartementNameChange(apt.id)}
-            onDelete={handleDeleteAppartement(apt.id)}
-          />
-        ))}
+        {carouselMode ? (
+          renderCarousel()
+        ) : (
+          (activeOnlyId
+            ? appartements.filter((a) => a.id === activeOnlyId)
+            : appartements
+          ).map((apt) => (
+            <AppartementBlock
+              key={apt.id}
+              appartementNumber={apt.id}
+              name={apt.name}
+              type={forceType ?? apt.type}
+              initialData={apt.data}
+              forceType={forceType}
+              lockType={lockType}
+              onDataChange={handleAppartementDataChange(apt.id)}
+              onNameChange={handleAppartementNameChange(apt.id)}
+              onDelete={handleDeleteAppartement(apt.id)}
+            />
+          ))
+        )}
+        {!carouselMode && (
+          <button
+            onClick={handleAddAppartement}
+            className="w-full rounded-xl border-2 border-dashed p-6 text-sm font-semibold flex items-center justify-center gap-3 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+            style={{
+              borderColor: "var(--theme-border)",
+              color: "var(--theme-textSecondary)",
+              backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+            }}
+          >
+            <PlusIcon />
+            {addLabel ?? "Ajouter un appartement"}
+          </button>
+        )}
       </div>
     </div>
   );

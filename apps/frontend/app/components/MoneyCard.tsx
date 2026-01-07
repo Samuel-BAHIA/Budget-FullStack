@@ -131,7 +131,13 @@ export function MoneyCard({
             <>
               <span
                 className="flex-1 text-base font-semibold ml-2 self-center text-center"
-                style={{ color: titleColor }}
+                style={{
+                  color: titleColor,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+                title={name}
               >
                 {name}
               </span>
@@ -149,7 +155,13 @@ export function MoneyCard({
           ) : (
             <span
               className="flex-1 text-base font-semibold ml-2 self-center text-center"
-              style={{ color: titleColor }}
+              style={{
+                color: titleColor,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              title={name}
             >
               {name}
             </span>
