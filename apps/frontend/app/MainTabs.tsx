@@ -168,16 +168,20 @@ export function MainTabs() {
   }: NavButtonProps) => {
     const paddingLeft = 12 + level * 12;
     const isChild = level > 0;
-    const fontSize = level === 0 ? "15px" : level === 1 ? "14px" : "13px";
-    const textColor = active
-      ? "var(--theme-tabActiveText)"
-      : muted || isChild
-      ? "color-mix(in srgb, var(--theme-textSecondary) 80%, var(--theme-text) 20%)"
-      : "var(--theme-tabInactiveText)";
+    const fontSize = level === 0 ? "16px" : level === 1 ? "14px" : "12px";
+    const labelColor = (() => {
+      if (active) return "var(--theme-tabActiveText)";
+      if (level === 0) return "var(--theme-tabInactiveText)";
+      if (level === 1) return "color-mix(in srgb, var(--theme-borderLight) 25%, var(--theme-textSecondary) 75%)";
+      return "color-mix(in srgb, var(--theme-textSecondary) 85%, var(--theme-text) 15%)";
+    })();
+    const totalFontSize = level === 0 ? "15px" : level === 1 ? "13px" : "11px";
+    const totalFontWeight = level === 0 ? 800 : level === 1 ? 700 : 600;
     const totalColor = (value?: number) => {
       if (typeof value !== "number") return textColor;
       const base = amountColor(value);
-      return isChild ? `color-mix(in srgb, ${base} 70%, transparent)` : base;
+      if (!isChild) return base;
+      return `color-mix(in srgb, ${base} 55%, var(--theme-textSecondary))`;
     };
     return (
       <button
@@ -192,7 +196,7 @@ export function MainTabs() {
               ? "color-mix(in srgb, var(--theme-tabActiveBg) 35%, var(--theme-bg))"
               : "var(--theme-tabActiveBg)"
             : "transparent",
-          color: textColor,
+          color: labelColor,
           borderColor: active
             ? isChild
               ? "color-mix(in srgb, var(--theme-tabActiveBg) 65%, var(--theme-border))"
@@ -236,7 +240,10 @@ export function MainTabs() {
           </span>
         </div>
         {typeof total === "number" && (
-          <span className="text-sm font-semibold" style={{ color: totalColor(total) }}>
+          <span
+            className="text-sm font-semibold"
+            style={{ color: totalColor(total), fontSize: totalFontSize, fontWeight: totalFontWeight }}
+          >
             {formatMontant(total)}
           </span>
         )}
@@ -426,7 +433,6 @@ export function MainTabs() {
 
   const handleDeletePatrimoine = (id: number) => {
     setPatrimoine((prev) => {
-      if (prev.length <= 1) return prev;
       const next = prev.filter((p) => p.id !== id);
       if (activePatrimoineId === id) {
         setActivePatrimoineId(next[0]?.id ?? null);
@@ -730,9 +736,25 @@ export function MainTabs() {
                       })}
                     </React.Fragment>
                   ))}
+                  <button
+                    type="button"
+                    onClick={handleAddPatrimoine}
+                    className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
+                    style={{
+                      color: "var(--theme-textSecondary)",
+                      backgroundColor: "transparent",
+                    }}
+                  >
+                    + Ajouter une propriete
+                  </button>
                 </div>
               )}
 
+              <div
+                className="mb-2 h-px w-full"
+                style={{ backgroundColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)" }}
+                aria-hidden
+              />
               {renderNavButton({
                 label: "Bilan",
                 active: activeTab === "bilan",

@@ -288,9 +288,16 @@ export function AppartementsTab({
         {forceType === "propriete" && !carouselMode ? (
           (activeOnlyId ? appartements.filter((a) => a.id === activeOnlyId) : appartements).map((apt) => (
             <div key={apt.id} className="space-y-3">
-              <h3 className="text-lg font-semibold truncate" title={apt.name}>
-                {apt.name}
-              </h3>
+              <input
+                type="text"
+                value={apt.name}
+                onChange={(e) => handleAppartementNameChange(apt.id)(e.target.value)}
+                className="w-full rounded-md border px-3 py-2 text-lg font-semibold outline-none bg-transparent"
+                style={{
+                  borderColor: "var(--theme-border)",
+                  color: "var(--theme-text)",
+                }}
+              />
               <div className="space-y-3">
                 {proprieteCardConfigs(apt).map((card) => {
                   const maxValue = Math.max(2000, Math.ceil((card.value || 0) * 1.5));
