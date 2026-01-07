@@ -8,7 +8,11 @@ import { useBudget } from "../contexts/BudgetContext";
 type Expense = { id: number; name: string; montant: number };
 type SectionKey = "quotidien" | "voitures" | "autres";
 
-export function DepensesVariablesTab() {
+type Props = {
+  activeSection?: SectionKey;
+};
+
+export function DepensesVariablesTab({ activeSection }: Props) {
   const [quotidien, setQuotidien] = useState<Expense[]>([{ id: 1, name: "Courses", montant: 450 }]);
   const [voitures, setVoitures] = useState<Expense[]>([
     { id: 1, name: "Carburant", montant: 120 },
@@ -132,6 +136,12 @@ export function DepensesVariablesTab() {
     );
   };
 
+  const sectionsToRender: { title: string; key: SectionKey; items: Expense[]; hint: string }[] = [
+    { title: "Quotidien", key: "quotidien", items: quotidien, hint: "une depense quotidienne" },
+    { title: "Voitures", key: "voitures", items: voitures, hint: "une depense voiture" },
+    { title: "Autres", key: "autres", items: autres, hint: "une depense autre" },
+  ].filter((s) => !activeSection || s.key === activeSection);
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Depenses variables</h2>
@@ -143,9 +153,9 @@ export function DepensesVariablesTab() {
       </p>
 
       <div className="mt-6 space-y-8">
-        {renderSection("Quotidien", "quotidien", quotidien, "une depense quotidienne")}
-        {renderSection("Voitures", "voitures", voitures, "une depense voiture")}
-        {renderSection("Autres", "autres", autres, "une depense autre")}
+        {sectionsToRender.map((section) =>
+          renderSection(section.title, section.key, section.items, section.hint)
+        )}
       </div>
     </div>
   );

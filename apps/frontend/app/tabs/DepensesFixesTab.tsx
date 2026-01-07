@@ -8,7 +8,11 @@ import { useBudget } from "../contexts/BudgetContext";
 type Expense = { id: number; name: string; montant: number };
 type SectionKey = "abonnements" | "voiture" | "autres";
 
-export function DepensesFixesTab() {
+type Props = {
+  activeSection?: SectionKey;
+};
+
+export function DepensesFixesTab({ activeSection }: Props) {
   const [abonnements, setAbonnements] = useState<Expense[]>([
     { id: 1, name: "Telephone", montant: 80 },
     { id: 2, name: "Netflix", montant: 20 },
@@ -135,6 +139,12 @@ export function DepensesFixesTab() {
     );
   };
 
+  const sectionsToRender: { title: string; key: SectionKey; items: Expense[] }[] = [
+    { title: "Abonnements", key: "abonnements", items: abonnements },
+    { title: "Voiture", key: "voiture", items: voiture },
+    { title: "Autres", key: "autres", items: autres },
+  ].filter((s) => !activeSection || s.key === activeSection);
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Depenses fixes</h2>
@@ -146,9 +156,7 @@ export function DepensesFixesTab() {
       </p>
 
       <div className="mt-6 space-y-8">
-        {renderSection("Abonnements", "abonnements", abonnements)}
-        {renderSection("Voiture", "voiture", voiture)}
-        {renderSection("Autres", "autres", autres)}
+        {sectionsToRender.map((section) => renderSection(section.title, section.key, section.items))}
       </div>
     </div>
   );
