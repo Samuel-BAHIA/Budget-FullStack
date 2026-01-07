@@ -21,22 +21,26 @@ const BalanceIcon = ({ color = "#fbbf24" }: { color?: string }) => (
   </svg>
 );
 
-type TabId = "revenus" | "fixes" | "variables" | "bilan" | "appartements";
+type TabId = "revenus" | "depenses" | "bilan";
+type DepenseSubId = "variables" | "fixes" | "appartements";
 
 const tabs: { id: TabId; label: string }[] = [
   { id: "revenus", label: "Revenus" },
-  { id: "fixes", label: "Depenses fixes" },
-  { id: "variables", label: "Depenses variables" },
-  { id: "appartements", label: "Appartements" },
+  { id: "depenses", label: "Depenses" },
   { id: "bilan", label: "Bilan" },
 ];
 
-// Fonction pour formater le montant avec signe
+const depenseSubTabs: { id: DepenseSubId; label: string }[] = [
+  { id: "variables", label: "Depenses variables" },
+  { id: "fixes", label: "Depenses fixes" },
+  { id: "appartements", label: "Appartements" },
+];
+
 const formatMontant = (
   value: number,
   sign: "positive" | "negative" | "none" = "none"
 ) => {
-  const formatted = `${value.toLocaleString("fr-FR")} €`;
+  const formatted = `${value.toLocaleString("fr-FR")} \u20ac`;
   if (sign === "positive") return `+${formatted}`;
   if (sign === "negative") return `-${formatted}`;
   return formatted;
@@ -44,7 +48,11 @@ const formatMontant = (
 
 export function MainTabs() {
   const [active, setActive] = useState<TabId>("revenus");
+  const [activeDepense, setActiveDepense] = useState<DepenseSubId>("variables");
   const { totals } = useBudget();
+
+  const subTotal = (sub: DepenseSubId) =>
+    sub === "variables" ? totals.depensesVariables : sub === "fixes" ? totals.depensesFixes : totals.appartements;
 
   return (
     <main
@@ -54,15 +62,11 @@ export function MainTabs() {
         color: "var(--theme-text)",
       }}
     >
-      {/* Header */}
       <div className="mx-auto max-w-5xl px-6 pt-10">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">Budget</h1>
-            <p
-              className="mt-2"
-              style={{ color: "var(--theme-textSecondary)" }}
-            >
+            <p className="mt-2" style={{ color: "var(--theme-textSecondary)" }}>
               Gere tes revenus et depenses, et visualise ton bilan.
             </p>
           </div>
@@ -70,8 +74,7 @@ export function MainTabs() {
         </div>
       </div>
 
-      {/* Card */}
-      <div className="mx-auto mt-8 max-w-5xl px-6 pb-10">
+      <div className="mx-auto mt-8 max-w-6xl px-6 pb-10">
         <div
           className="rounded-2xl border shadow-sm backdrop-blur"
           style={{
@@ -79,148 +82,173 @@ export function MainTabs() {
             backgroundColor: "var(--theme-bgCard)",
           }}
         >
-          {/* Tabs bar */}
-          <div
-            className="border-b px-2"
-            style={{ borderColor: "var(--theme-border)" }}
-          >
+          <div className="flex flex-col md:flex-row">
+            {/* Sidebar principal */}
             <div
-              role="tablist"
-              aria-label="Sections budget"
-              className="flex gap-2 overflow-x-auto py-2"
+              className="md:w-60 border-b md:border-b-0 md:border-r"
+              style={{ borderColor: "var(--theme-border)", backgroundColor: "var(--theme-bg)" }}
             >
-              {tabs.map((t) => {
-                const isActive = active === t.id;
+              <div className="p-3 space-y-2" role="tablist" aria-label="Sections budget">
+                {tabs.map((t) => {
+                  const isActive = active === t.id;
 
-                // Determiner le total et la couleur selon l'onglet
-                let total = 0;
-                let totalColor = "var(--theme-tabInactiveText)";
-                let bgHover = "var(--theme-tabHoverBg)";
-                let activeBg = "var(--theme-tabActiveBg)";
-                let activeText = "var(--theme-tabActiveText)";
-                let inactiveText = "var(--theme-tabInactiveText)";
-                let icon: React.ReactNode = null;
-                let sign: "positive" | "negative" | "none" = "none";
+                  let total = 0;
+                  let totalColor = "var(--theme-tabInactiveText)";
+                  let bgHover = "var(--theme-tabHoverBg)";
+                  let activeBg = "var(--theme-tabActiveBg)";
+                  let activeText = "var(--theme-tabActiveText)";
+                  let inactiveText = "var(--theme-tabInactiveText)";
+                  let icon: React.ReactNode = null;
+                  let sign: "positive" | "negative" | "none" = "none";
 
-                if (t.id === "revenus") {
-                  total = totals.revenus;
-                  totalColor = "var(--theme-success, #22c55e)";
-                  bgHover = "rgba(34,197,94,0.12)";
-                  activeBg = "rgba(34,197,94,0.18)";
-                  activeText = "#ffffff";
-                  inactiveText = "var(--theme-tabInactiveText)";
-                  sign = "positive";
-                } else if (t.id === "fixes") {
-                  total = totals.depensesFixes;
-                  totalColor = "var(--theme-danger, #ef4444)";
-                  bgHover = "rgba(239,68,68,0.12)";
-                  activeBg = "rgba(239,68,68,0.18)";
-                  activeText = "#ffffff";
-                  inactiveText = "var(--theme-tabInactiveText)";
-                  sign = "negative";
-                } else if (t.id === "variables") {
-                  total = totals.depensesVariables;
-                  totalColor = "var(--theme-danger, #ef4444)";
-                  bgHover = "rgba(239,68,68,0.12)";
-                  activeBg = "rgba(239,68,68,0.18)";
-                  activeText = "#ffffff";
-                  inactiveText = "var(--theme-tabInactiveText)";
-                  sign = "negative";
-                } else if (t.id === "appartements") {
-                  total = totals.appartements;
-                  const isPositive = total >= 0;
-                  totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
-                  bgHover = isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)";
-                  activeBg = isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)";
-                  activeText = "#ffffff";
-                  sign = isPositive ? "positive" : "negative";
-                } else if (t.id === "bilan") {
-                  total =
-                    totals.revenus -
-                    totals.depensesFixes -
-                    totals.depensesVariables +
-                    totals.appartements;
-                  const isPositive = total >= 0;
-                  totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
-                  bgHover = isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)";
-                  activeBg = isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)";
-                  activeText = "#ffffff";
-                  inactiveText = "var(--theme-tabInactiveText)";
-                  sign = isPositive ? "positive" : "negative";
-                  icon = <BalanceIcon color="#fbbf24" />;
-                }
+                  if (t.id === "revenus") {
+                    total = totals.revenus;
+                    totalColor = "var(--theme-success, #22c55e)";
+                    bgHover = "rgba(34,197,94,0.12)";
+                    activeBg = "rgba(34,197,94,0.18)";
+                    activeText = "#ffffff";
+                    inactiveText = "var(--theme-tabInactiveText)";
+                    sign = "positive";
+                  } else if (t.id === "depenses") {
+                    total = totals.depensesFixes + totals.depensesVariables + totals.appartements;
+                    const isPositive = total >= 0;
+                    totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
+                    bgHover = isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)";
+                    activeBg = isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)";
+                    activeText = "#ffffff";
+                    sign = isPositive ? "positive" : "negative";
+                  } else if (t.id === "bilan") {
+                    total = totals.revenus - totals.depensesFixes - totals.depensesVariables + totals.appartements;
+                    const isPositive = total >= 0;
+                    totalColor = isPositive ? "var(--theme-success, #22c55e)" : "var(--theme-danger, #ef4444)";
+                    bgHover = isPositive ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)";
+                    activeBg = isPositive ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)";
+                    activeText = "#ffffff";
+                    inactiveText = "var(--theme-tabInactiveText)";
+                    sign = isPositive ? "positive" : "negative";
+                    icon = <BalanceIcon color="#fbbf24" />;
+                  }
 
-                return (
-                  <button
-                    key={t.id}
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => setActive(t.id)}
-                    className={[
-                      "whitespace-nowrap rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition border",
-                    ].join(" ")}
-                    style={
-                      isActive
-                        ? {
-                            borderColor: activeBg,
-                            backgroundColor: activeBg,
-                            color: activeText,
-                          }
-                        : {
-                            borderColor: "transparent",
-                            backgroundColor: "transparent",
-                            color: inactiveText,
-                          }
-                    }
-                    onMouseEnter={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = bgHover;
-                        e.currentTarget.style.color = "var(--theme-text)";
+                  return (
+                    <button
+                      key={t.id}
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setActive(t.id)}
+                      className="w-full text-left rounded-xl px-3 py-3 text-sm font-medium transition border"
+                      style={
+                        isActive
+                          ? {
+                              borderColor: activeBg,
+                              backgroundColor: activeBg,
+                              color: activeText,
+                            }
+                          : {
+                              borderColor: "transparent",
+                              backgroundColor: "transparent",
+                              color: inactiveText,
+                            }
                       }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.color = inactiveText;
-                      }
-                    }}
-                  >
-                    {icon && <span className="mr-1.5 inline-flex align-middle">{icon}</span>}
-                    {t.label}
-                    {(t.id === "revenus" ||
-                      t.id === "fixes" ||
-                      t.id === "variables" ||
-                      t.id === "appartements" ||
-                      t.id === "bilan") && (
-                      <span
-                        className="ml-2"
-                        style={{ color: totalColor }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = bgHover;
+                          e.currentTarget.style.color = "var(--theme-text)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = inactiveText;
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {icon && <span className="inline-flex align-middle">{icon}</span>}
+                          <span>{t.label}</span>
+                        </div>
+                        <span style={{ color: totalColor }}>{formatMontant(Math.abs(total), sign)}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Contenu principal */}
+            <div className="flex-1 p-6 space-y-4">
+              <div hidden={active !== "revenus"} aria-hidden={active !== "revenus"}>
+                <RevenusTab />
+              </div>
+
+              <div hidden={active !== "depenses"} aria-hidden={active !== "depenses"} className="space-y-4">
+                <div
+                  className="flex gap-3 flex-wrap md:flex-nowrap overflow-x-auto pb-1 px-2 py-2 rounded-xl"
+                  style={{ backgroundColor: "var(--theme-bgCard)" }}
+                >
+                  {depenseSubTabs.map((sub) => {
+                    const isSubActive = activeDepense === sub.id;
+                    const isAppart = sub.id === "appartements";
+                    const isPositive = sub.id === "appartements" ? totals.appartements >= 0 : false;
+                    const color =
+                      sub.id === "variables" || sub.id === "fixes"
+                        ? "var(--theme-danger, #ef4444)"
+                        : isPositive
+                        ? "var(--theme-success, #22c55e)"
+                        : "var(--theme-danger, #ef4444)";
+
+                    const amount = subTotal(sub.id);
+
+                    return (
+                      <button
+                        key={sub.id}
+                        onClick={() => setActiveDepense(sub.id)}
+                        className="relative rounded-2xl px-4 py-3 text-xs sm:text-sm whitespace-nowrap shadow-sm transition"
+                        style={{
+                          backgroundColor: isSubActive ? `${color}22` : "var(--theme-bgCard)",
+                          color: isSubActive ? color : "var(--theme-text)",
+                          minWidth: "180px",
+                        }}
                       >
-                        ({formatMontant(Math.abs(total), sign)})
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
+                            style={{ backgroundColor: `${color}22`, color }}
+                          >
+                            {sub.id === "variables" ? "V" : sub.id === "fixes" ? "F" : "A"}
+                          </span>
+                          <div className="flex flex-col items-start">
+                            <span className="text-sm font-semibold">{sub.label}</span>
+                            <span className="text-[11px]" style={{ color }}>
+                              {formatMontant(Math.abs(amount), sub.id === "appartements" ? (isPositive ? "positive" : "negative") : "negative")}
+                            </span>
+                          </div>
+                        </div>
+                        {isSubActive && (
+                          <span
+                            className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl"
+                            style={{ backgroundColor: color, opacity: 0.65 }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
 
-          {/* Content */}
-          <div className="p-6">
-            <div hidden={active !== "revenus"} aria-hidden={active !== "revenus"}>
-              <RevenusTab />
-            </div>
-            <div hidden={active !== "fixes"} aria-hidden={active !== "fixes"}>
-              <DepensesFixesTab />
-            </div>
-            <div hidden={active !== "variables"} aria-hidden={active !== "variables"}>
-              <DepensesVariablesTab />
-            </div>
-            <div hidden={active !== "appartements"} aria-hidden={active !== "appartements"}>
-              <AppartementsTab />
-            </div>
-            <div hidden={active !== "bilan"} aria-hidden={active !== "bilan"}>
-              <BilanTab />
+                <div hidden={activeDepense !== "variables"} aria-hidden={activeDepense !== "variables"}>
+                  <DepensesVariablesTab />
+                </div>
+                <div hidden={activeDepense !== "fixes"} aria-hidden={activeDepense !== "fixes"}>
+                  <DepensesFixesTab />
+                </div>
+                <div hidden={activeDepense !== "appartements"} aria-hidden={activeDepense !== "appartements"}>
+                  <AppartementsTab />
+                </div>
+              </div>
+
+              <div hidden={active !== "bilan"} aria-hidden={active !== "bilan"}>
+                <BilanTab />
+              </div>
             </div>
           </div>
         </div>
