@@ -25,71 +25,43 @@ export type AppartementData = {
   };
 };
 
-// Icone plus
-const PlusIcon = () => (
-  <svg
-    width="20"
-    height="20"
-    viewBox="0 0 20 20"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M10 4V16M4 10H16"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </svg>
-);
+type Props = {
+  appartements?: AppartementData[];
+  onAppartementsChange?: (appartements: AppartementData[]) => void;
+};
 
-export function AppartementsTab() {
-  const [appartements, setAppartements] = useState<AppartementData[]>([
-    {
-      id: 1,
-      name: "Appartement 1",
-      type: "location",
-      data: {
-        loyer: 800,
-        credit: 100,
-        assuranceCredit: 20,
-        taxeFonciere: 0,
-        impotsRevenu: 0,
-        chargesCopro: 0,
-        assurance: 40,
-        internet: 30,
-        eau: 50,
-        electricite: 60,
-        gaz: 45,
-      },
-    },
-  ]);
+const defaultAppartement = (id: number): AppartementData => ({
+  id,
+  name: `Appartement ${id}`,
+  type: "location",
+  data: {
+    loyer: 800,
+    credit: 100,
+    assuranceCredit: 20,
+    taxeFonciere: 0,
+    impotsRevenu: 0,
+    chargesCopro: 0,
+    assurance: 40,
+    internet: 30,
+    eau: 50,
+    electricite: 60,
+    gaz: 45,
+  },
+});
+
+export function AppartementsTab({ appartements: externalAppartements, onAppartementsChange }: Props) {
+  const [internalAppartements, setInternalAppartements] = useState<AppartementData[]>([defaultAppartement(1)]);
+  const appartements = externalAppartements ?? internalAppartements;
+  const setAppartements = (updater: AppartementData[] | ((prev: AppartementData[]) => AppartementData[])) => {
+    const next = typeof updater === "function" ? (updater as (prev: AppartementData[]) => AppartementData[])(appartements) : updater;
+    if (externalAppartements && onAppartementsChange) {
+      onAppartementsChange(next);
+    } else {
+      setInternalAppartements(next);
+    }
+  };
 
   const { updateTotal } = useBudget();
-
-  // Fonction pour ajouter un nouvel appartement
-  const handleAddAppartement = () => {
-    const newId = Math.max(...appartements.map((a) => a.id), 0) + 1;
-    const newAppartement: AppartementData = {
-      id: newId,
-      name: `Appartement ${newId}`,
-      type: "location",
-      data: {
-        loyer: 0,
-        credit: 0,
-        assuranceCredit: 0,
-        taxeFonciere: 0,
-        impotsRevenu: 0,
-        chargesCopro: 0,
-        eau: 0,
-        internet: 0,
-        assurance: 0,
-        electricite: 0,
-        gaz: 0,
-      },
-    };
-    setAppartements((prev) => [...prev, newAppartement]);
-  };
 
   // Fonction appellee quand les donnees ou le type d'un appartement changent
   const handleAppartementDataChange = (id: number) => {
@@ -175,18 +147,6 @@ export function AppartementsTab() {
             onDelete={handleDeleteAppartement(apt.id)}
           />
         ))}
-        <button
-          onClick={handleAddAppartement}
-          className="w-full rounded-xl border-2 border-dashed p-6 text-sm font-semibold flex items-center justify-center gap-3 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
-          style={{
-            borderColor: "var(--theme-border)",
-            color: "var(--theme-textSecondary)",
-            backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
-          }}
-        >
-          <PlusIcon />
-          Ajouter un appartement
-        </button>
       </div>
     </div>
   );

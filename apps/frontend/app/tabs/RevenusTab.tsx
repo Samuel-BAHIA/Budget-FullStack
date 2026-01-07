@@ -18,15 +18,38 @@ const ChevronRightIcon = () => (
   </svg>
 );
 
-type Revenue = { id: number; name: string; montant: number };
-type Person = { id: number; name: string; revenus: Revenue[] };
+export type Revenue = { id: number; name: string; montant: number };
+export type Person = { id: number; name: string; revenus: Revenue[] };
 
-export function RevenusTab() {
-  const [persons, setPersons] = useState<Person[]>([
+type Props = {
+  persons?: Person[];
+  onPersonsChange?: (persons: Person[]) => void;
+};
+
+export function RevenusTab({ persons: externalPersons, onPersonsChange }: Props) {
+  const [internalPersons, setInternalPersons] = useState<Person[]>([
     { id: 1, name: "Personne 1", revenus: [{ id: 1, name: "Salaire", montant: 0 }] },
   ]);
+  const persons = externalPersons ?? internalPersons;
+  const setPersons = (updater: Person[] | ((prev: Person[]) => Person[])) => {
+    const next = typeof updater === "function" ? (updater as (prev: Person[]) => Person[])(persons) : updater;
+    if (externalPersons && onPersonsChange) {
+      onPersonsChange(next);
+    } else {
+      setInternalPersons(next);
+    }
+  };
   const [expandedByPerson, setExpandedByPerson] = useState<Record<number, boolean>>({});
   const { updateTotal, updateRevenusParPersonnes } = useBudget();
+  useEffect(() => {
+    setExpandedByPerson((prev) => {
+      const next: Record<number, boolean> = {};
+      persons.forEach((p) => {
+        next[p.id] = prev[p.id] ?? true;
+      });
+      return next;
+    });
+  }, [persons]);
 
   const editableWrapperStyle: React.CSSProperties = useMemo(
     () => ({
@@ -271,24 +294,6 @@ export function RevenusTab() {
             })()}
           </div>
         ))}
-
-        <button
-          onClick={handleAddPerson}
-          className="w-full rounded-xl border-2 border-dashed p-4 text-sm font-semibold flex flex-col items-center justify-center gap-2 text-center transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
-          style={{
-            borderColor: "var(--theme-border)",
-            color: "var(--theme-textSecondary)",
-            backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
-          }}
-        >
-          <span
-            className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
-            style={{ backgroundColor: "var(--theme-bgCard)", color: "var(--theme-text)" }}
-          >
-            +
-          </span>
-          Ajouter une personne
-        </button>
       </div>
     </div>
   );
