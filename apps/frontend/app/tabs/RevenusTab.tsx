@@ -200,9 +200,9 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     padding: "14px 16px",
     borderRadius: 18,
-    background: "rgba(10, 25, 45, 0.85)",
-    border: "1px solid rgba(120, 170, 255, 0.25)",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+    background: "color-mix(in srgb, var(--theme-bgCard) 85%, transparent)",
+    border: "none",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
   },
   left: {
     flex: "0 1 clamp(100px, 12vw, 150px)",
@@ -219,7 +219,7 @@ const styles: Record<string, CSSProperties> = {
     padding: "10px 12px",
     borderRadius: 999,
     border: "none",
-    background: "rgba(5, 12, 22, 0.6)",
+    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
     color: "white",
     cursor: "text",
     width: "100%",
@@ -231,7 +231,7 @@ const styles: Record<string, CSSProperties> = {
     padding: "10px 12px",
     borderRadius: 999,
     border: "1px solid rgba(120, 170, 255, 0.45)",
-    background: "rgba(5, 12, 22, 0.6)",
+    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
     color: "white",
     outline: "none",
     width: "100%",
@@ -249,7 +249,7 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     borderRadius: 999,
     border: "none",
-    background: "rgba(5, 12, 22, 0.6)",
+    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
     overflow: "hidden",
     paddingRight: 8,
     boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
@@ -285,6 +285,15 @@ const styles: Record<string, CSSProperties> = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  },
+  revenusGroup: {
+    borderRadius: 20,
+    padding: "14px 16px",
+    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
+    boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--theme-border) 35%, transparent)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
   },
 };
 
@@ -414,27 +423,29 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
               />
             </div>
 
-            <div className="space-y-3">
-              {person.revenus.map((item) => {
-                const absValue = Math.max(0, Math.abs(item.montant));
-                const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
-                return (
-                  <EditableSliderRow
-                    key={item.id}
-                    initialLabel={item.name}
-                    initialValue={absValue}
-                    min={0}
-                    max={maxValue}
-                    step={10}
-                    unitLabel="€/mois"
-                    onChange={(next) => {
-                      handleSaveName(person.id, item.id)(next.label);
-                      handleSaveValue(person.id, item.id)(String(next.value));
-                    }}
-                    onRemove={() => handleDeleteRevenue(person.id, item.id)}
-                  />
-                );
-              })}
+            <div style={styles.revenusGroup}>
+              <div className="space-y-3">
+                {person.revenus.map((item) => {
+                  const absValue = Math.max(0, Math.abs(item.montant));
+                  const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
+                  return (
+                    <EditableSliderRow
+                      key={item.id}
+                      initialLabel={item.name}
+                      initialValue={absValue}
+                      min={0}
+                      max={maxValue}
+                      step={10}
+                      unitLabel="€/mois"
+                      onChange={(next) => {
+                        handleSaveName(person.id, item.id)(next.label);
+                        handleSaveValue(person.id, item.id)(String(next.value));
+                      }}
+                      onRemove={() => handleDeleteRevenue(person.id, item.id)}
+                    />
+                  );
+                })}
+              </div>
               <button
                 onClick={() => handleAddRevenue(person.id)}
                 className="flex items-center gap-3 rounded-lg border-2 border-dashed px-3 py-2 w-full justify-center text-sm font-semibold transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
