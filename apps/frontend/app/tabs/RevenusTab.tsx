@@ -115,6 +115,10 @@ function EditableSliderRow({
     onChange?.({ label: cleaned, value });
   };
 
+  const ratio = max > min ? (value - min) / (max - min) : 0;
+  const infoText = ratio < 0.25 ? "Niveau faible" : ratio < 0.6 ? "Niveau modere" : "Niveau eleve";
+  const infoColor = ratio < 0.25 ? "#93c5fd" : ratio < 0.6 ? "#a5b4fc" : "#fbbf24";
+
   return (
     <div style={styles.row}>
       <div style={styles.left}>
@@ -139,10 +143,13 @@ function EditableSliderRow({
             aria-label="Nom du champ"
           />
         )}
-        <div style={styles.hint}>Cliquer pour renommer</div>
       </div>
 
       <div style={styles.middle}>
+        <div style={styles.minMaxTop}>
+          <span>{min}</span>
+          <span>{max}</span>
+        </div>
         <input
           type="range"
           min={min}
@@ -153,35 +160,32 @@ function EditableSliderRow({
           style={styles.slider}
           aria-label={`${label} - curseur`}
         />
-        <div style={styles.minMax}>
-          <span>{min}</span>
-          <span>{max}</span>
-        </div>
+        <div style={{ ...styles.infoHint, color: infoColor }}>{infoText}</div>
       </div>
 
       <div style={styles.right}>
-        <div style={styles.valueGroup}>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={rawInput}
-            onChange={handleValueInputChange}
-            onBlur={handleValueInputBlur}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-              if (e.key === "Escape") setRawInput(String(value));
-            }}
-            style={styles.valueInput}
-            aria-label={`${label} - valeur`}
-          />
-          <span style={styles.unitBadge} aria-label="Unite">
-            {unitLabel}
-          </span>
+        <div style={styles.valueStack}>
+          <div style={styles.valueGroup}>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={rawInput}
+              onChange={handleValueInputChange}
+              onBlur={handleValueInputBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+                if (e.key === "Escape") setRawInput(String(value));
+              }}
+              style={styles.valueInput}
+              aria-label={`${label} - valeur`}
+            />
+            <span style={styles.hintTop}>{unitLabel}</span>
+          </div>
         </div>
 
         {onRemove && (
           <button type="button" onClick={onRemove} style={styles.closeBtn} aria-label="Supprimer">
-            x
+            <TrashIcon />
           </button>
         )}
       </div>
@@ -200,17 +204,25 @@ const styles: Record<string, CSSProperties> = {
     border: "1px solid rgba(120, 170, 255, 0.25)",
     boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
   },
-  left: { minWidth: 180, display: "flex", flexDirection: "column", gap: 6 },
+  left: {
+    flex: "0 1 clamp(100px, 12vw, 150px)",
+    minWidth: 100,
+    maxWidth: 150,
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+  },
   labelBtn: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "space-between",
     padding: "10px 12px",
     borderRadius: 999,
     border: "1px solid rgba(120, 170, 255, 0.25)",
     background: "rgba(0,0,0,0.15)",
     color: "white",
     cursor: "text",
+    width: "100%",
   },
   labelText: { fontWeight: 600 },
   pencil: { opacity: 0.7, fontSize: 14 },
@@ -221,12 +233,15 @@ const styles: Record<string, CSSProperties> = {
     background: "rgba(0,0,0,0.2)",
     color: "white",
     outline: "none",
+    width: "100%",
   },
-  hint: { fontSize: 12, opacity: 0.65 },
+  hintTop: { fontSize: 11, opacity: 0.6, textAlign: "center", width: "100%" },
+  infoHint: { fontSize: 11, opacity: 0.7, textAlign: "center", width: "100%" },
   middle: { flex: 1, display: "flex", flexDirection: "column", gap: 6 },
   slider: { width: "100%" },
-  minMax: { display: "flex", justifyContent: "space-between", fontSize: 12, opacity: 0.65 },
+  minMaxTop: { display: "flex", justifyContent: "space-between", fontSize: 11, opacity: 0.6 },
   right: { display: "flex", alignItems: "center", gap: 10 },
+  valueStack: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 },
   valueGroup: {
     display: "flex",
     alignItems: "center",
@@ -234,6 +249,7 @@ const styles: Record<string, CSSProperties> = {
     border: "1px solid rgba(120, 255, 170, 0.25)",
     background: "rgba(0,0,0,0.15)",
     overflow: "hidden",
+    paddingRight: 8,
   },
   valueInput: {
     width: 88,
@@ -257,12 +273,15 @@ const styles: Record<string, CSSProperties> = {
     width: 36,
     height: 36,
     borderRadius: 999,
-    border: "1px solid rgba(255,255,255,0.15)",
-    background: "rgba(255,255,255,0.06)",
     color: "rgba(255,255,255,0.85)",
     cursor: "pointer",
     fontSize: 20,
     lineHeight: "20px",
+    border: "none",
+    background: "transparent",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 };
 
