@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { TrashIcon } from "./icons/TrashIcon";
+import { SliderRow } from "./SliderRow";
 import type { AppartementData, AppartementType } from "../tabs/AppartementsTab";
 
 // Icones
@@ -149,57 +150,20 @@ export function AppartementBlock({
   const renderSliders = (cards: CardConfig[]) => (
     <div className="space-y-3">
       {cards.map((card) => {
-        const sign = card.positive ? "+" : "-";
-        const valueDisplay = `${sign}${Math.abs(card.value).toLocaleString("fr-FR")} €/mois`;
-        const maxValue = Math.max(2000, Math.ceil(Math.abs(card.value) * 1.5));
-        const isPositive = !!card.positive;
+        const absValue = Math.max(0, Math.abs(card.value));
+        const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
         return (
-          <div
+          <SliderRow
             key={card.key}
-            className="flex items-center gap-3 rounded-lg border px-3 py-2"
-            style={{ borderColor: "var(--theme-border)" }}
-          >
-            <span
-              className="w-48 text-sm font-semibold"
-              style={{
-                color: "var(--theme-text)",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              title={card.label}
-            >
-              {card.label}
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={maxValue}
-              step={10}
-              value={Math.max(0, Math.abs(card.value))}
-              onChange={(e) => handleSave(card.setter, card.key)(e.target.value)}
-              className="flex-1 accent-[var(--theme-tabActiveBg)]"
-              aria-label={`Ajuster ${card.label}`}
-            />
-            <div className="flex items-center gap-1">
-              <input
-                type="number"
-                min={0}
-                step={10}
-                value={Math.max(0, Math.abs(card.value))}
-                onChange={(e) => handleSave(card.setter, card.key)(e.target.value)}
-                className="w-28 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
-                style={{
-                  borderColor: "var(--theme-border)",
-                  backgroundColor: "var(--theme-bgCard)",
-                  color: isPositive ? "#16a34a" : "#ef4444",
-                }}
-              />
-              <span className="text-sm font-semibold" style={{ color: isPositive ? "#16a34a" : "#ef4444" }}>
-                €/mois
-              </span>
-            </div>
-          </div>
+            label={card.label}
+            value={absValue}
+            min={0}
+            max={maxValue}
+            step={10}
+            unit="€/mois"
+            tone={card.positive ? "positive" : "negative"}
+            onValueChange={(next) => handleSave(card.setter, card.key)(String(next))}
+          />
         );
       })}
     </div>

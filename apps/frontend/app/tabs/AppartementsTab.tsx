@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppartementBlock } from "../components/AppartementBlock";
+import { SliderRow } from "../components/SliderRow";
 import { useBudget } from "../contexts/BudgetContext";
 
 export type AppartementType = "location" | "propriete";
@@ -225,53 +226,20 @@ export function AppartementsTab({
         </div>
         <div className="space-y-3">
           {cards.map((card) => {
-            const maxValue = Math.max(2000, Math.ceil((card.value || 0) * 1.5));
+            const absValue = Math.max(0, Math.abs(card.value || 0));
+            const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
             return (
-              <div
+              <SliderRow
                 key={card.key}
-                className="flex items-center gap-3 rounded-lg border px-3 py-2"
-                style={{ borderColor: "var(--theme-border)" }}
-              >
-                <span
-                  className="w-44 text-sm font-semibold"
-                  style={{
-                    color: "var(--theme-text)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                  title={card.label}
-                >
-                  {card.label}
-                </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={maxValue}
-                  step={10}
-                  value={Math.max(0, card.value)}
-                  onChange={(e) => handleSaveField(target.id, card.key)(e.target.value)}
-                  className="flex-1 accent-[var(--theme-tabActiveBg)]"
-                />
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    min={0}
-                    step={10}
-                    value={Math.max(0, card.value)}
-                    onChange={(e) => handleSaveField(target.id, card.key)(e.target.value)}
-                    className="w-24 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
-                    style={{
-                      borderColor: "var(--theme-border)",
-                      backgroundColor: "var(--theme-bgCard)",
-                      color: "#ef4444",
-                    }}
-                  />
-                  <span className="text-sm font-semibold" style={{ color: "#ef4444" }}>
-                    €/mois
-                  </span>
-                </div>
-              </div>
+                label={card.label}
+                value={absValue}
+                min={0}
+                max={maxValue}
+                step={10}
+                unit="€/mois"
+                tone="negative"
+                onValueChange={(next) => handleSaveField(target.id, card.key)(String(next))}
+              />
             );
           })}
         </div>
@@ -307,52 +275,21 @@ export function AppartementsTab({
               />
               <div className="space-y-3">
                 {proprieteCardConfigs(apt).map((card) => {
-                  const maxValue = Math.max(2000, Math.ceil((card.value || 0) * 1.5));
+                  const absValue = Math.max(0, Math.abs(card.value || 0));
+                  const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
                   const isPositive = !!card.positive;
                   return (
-                    <div
+                    <SliderRow
                       key={card.key}
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2"
-                      style={{ borderColor: "var(--theme-border)" }}
-                    >
-                      <span
-                        className="w-48 text-sm font-semibold truncate"
-                        style={{ color: "var(--theme-text)" }}
-                        title={card.label}
-                      >
-                        {card.label}
-                      </span>
-                      <input
-                        type="range"
-                        min={0}
-                        max={maxValue}
-                        step={10}
-                        value={Math.max(0, card.value)}
-                        onChange={(e) => handleSaveField(apt.id, card.key)(e.target.value)}
-                        className="flex-1 accent-[var(--theme-tabActiveBg)]"
-                      />
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          min={0}
-                          step={10}
-                          value={Math.max(0, card.value)}
-                          onChange={(e) => handleSaveField(apt.id, card.key)(e.target.value)}
-                          className="w-24 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
-                          style={{
-                            borderColor: "var(--theme-border)",
-                            backgroundColor: "var(--theme-bgCard)",
-                            color: isPositive ? "#16a34a" : "#ef4444",
-                          }}
-                        />
-                        <span
-                          className="text-sm font-semibold"
-                          style={{ color: isPositive ? "#16a34a" : "#ef4444" }}
-                        >
-                          €/mois
-                        </span>
-                      </div>
-                    </div>
+                      label={card.label}
+                      value={absValue}
+                      min={0}
+                      max={maxValue}
+                      step={10}
+                      unit="€/mois"
+                      tone={isPositive ? "positive" : "negative"}
+                      onValueChange={(next) => handleSaveField(apt.id, card.key)(String(next))}
+                    />
                   );
                 })}
               </div>

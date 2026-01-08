@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
+import { SliderRow } from "../components/SliderRow";
 import { useBudget } from "../contexts/BudgetContext";
 
 type Expense = { id: number; name: string; montant: number };
@@ -79,62 +80,33 @@ export function DepensesVariablesTab({ activeSection, onSectionTotalsChange }: P
         </div>
         <div className="space-y-3">
           {items.map((item) => {
-            const maxValue = Math.max(2000, Math.ceil(Math.abs(item.montant) * 1.5));
+            const absValue = Math.max(0, Math.abs(item.montant));
+            const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
             return (
-              <div
+              <SliderRow
                 key={item.id}
-                className="flex items-center gap-3 rounded-lg border px-3 py-2"
-                style={{ borderColor: "var(--theme-border)" }}
-              >
-                <input
-                  type="text"
-                  value={item.name}
-                  onChange={(e) => handleSaveName(section, item.id)(e.target.value)}
-                  className="w-48 rounded-md border px-2 py-1 text-sm font-semibold outline-none"
-                  style={{
-                    borderColor: "var(--theme-border)",
-                    backgroundColor: "var(--theme-bgCard)",
-                    color: "var(--theme-text)",
-                  }}
-                />
-                <input
-                  type="range"
-                  min={0}
-                  max={maxValue}
-                  step={10}
-                  value={Math.max(0, item.montant)}
-                  onChange={(e) => handleSaveMontant(section, item.id)(e.target.value)}
-                  className="flex-1 accent-[var(--theme-tabActiveBg)]"
-                  aria-label={`Ajuster ${item.name}`}
-                />
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    min={0}
-                    step={10}
-                    value={Math.max(0, item.montant)}
-                    onChange={(e) => handleSaveMontant(section, item.id)(e.target.value)}
-                    className="w-24 rounded-md border px-2 py-1 text-sm font-semibold text-right outline-none"
-                    style={{
-                      borderColor: "var(--theme-border)",
-                      backgroundColor: "var(--theme-bgCard)",
-                      color: "#ef4444",
-                    }}
-                  />
-                  <span className="text-sm font-semibold" style={{ color: "#ef4444" }}>
-                    €/mois
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleDelete(section, item.id)}
-                  className="rounded-md px-2 py-1 text-sm transition hover:bg-[var(--theme-bgHover)]"
-                  style={{ color: "var(--theme-textSecondary)" }}
-                  aria-label="Supprimer"
-                  title="Supprimer"
-                >
-                  ×
-                </button>
-              </div>
+                label={item.name}
+                labelEditable
+                onLabelChange={handleSaveName(section, item.id)}
+                value={absValue}
+                min={0}
+                max={maxValue}
+                step={10}
+                tone="negative"
+                layout="withActions"
+                onValueChange={(next) => handleSaveMontant(section, item.id)(String(next))}
+                actions={
+                  <button
+                    onClick={() => handleDelete(section, item.id)}
+                    className="rounded-md px-2 py-1 text-sm transition hover:bg-[var(--theme-bgHover)]"
+                    style={{ color: "var(--theme-textSecondary)" }}
+                    aria-label="Supprimer"
+                    title="Supprimer"
+                  >
+                    +¥
+                  </button>
+                }
+              />
             );
           })}
           <button
@@ -184,4 +156,5 @@ export function DepensesVariablesTab({ activeSection, onSectionTotalsChange }: P
     </div>
   );
 }
+
 
