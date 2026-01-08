@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { SliderRow } from "../components/SliderRow";
+import { EditableSliderRow, sliderGroupStyle } from "../components/EditableSliderRow";
 import { useBudget } from "../contexts/BudgetContext";
 
 type Expense = { id: number; name: string; montant: number };
@@ -82,12 +82,12 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold">{title}</h3>
         </div>
-        <div className="space-y-3">
+        <div style={sliderGroupStyle}>
           {items.map((item) => {
             const absValue = Math.max(0, Math.abs(item.montant));
             const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
             return (
-              <SliderRow
+              <EditableSliderRow
                 key={item.id}
                 label={item.name}
                 labelEditable
@@ -96,20 +96,9 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
                 min={0}
                 max={maxValue}
                 step={10}
-                tone="negative"
-                layout="withActions"
+                unitLabel="€/mois"
                 onValueChange={(next) => handleSaveMontant(section, item.id)(String(next))}
-                actions={
-                  <button
-                    onClick={() => handleDelete(section, item.id)}
-                    className="rounded-md px-2 py-1 text-sm transition hover:bg-[var(--theme-bgHover)]"
-                    style={{ color: "var(--theme-textSecondary)" }}
-                    aria-label="Supprimer"
-                    title="Supprimer"
-                  >
-                    +¥
-                  </button>
-                }
+                onRemove={() => handleDelete(section, item.id)}
               />
             );
           })}

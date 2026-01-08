@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TrashIcon } from "./icons/TrashIcon";
-import { SliderRow } from "./SliderRow";
+import { EditableSliderRow, sliderGroupStyle } from "./EditableSliderRow";
 import type { AppartementData, AppartementType } from "../tabs/AppartementsTab";
 
 // Icones
@@ -148,20 +148,20 @@ export function AppartementBlock({
   };
 
   const renderSliders = (cards: CardConfig[]) => (
-    <div className="space-y-3">
+    <div style={sliderGroupStyle}>
       {cards.map((card) => {
         const absValue = Math.max(0, Math.abs(card.value));
         const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
         return (
-          <SliderRow
+          <EditableSliderRow
             key={card.key}
             label={card.label}
+            labelEditable={false}
             value={absValue}
             min={0}
             max={maxValue}
             step={10}
-            unit="€/mois"
-            tone={card.positive ? "positive" : "negative"}
+            unitLabel="€/mois"
             onValueChange={(next) => handleSave(card.setter, card.key)(String(next))}
           />
         );

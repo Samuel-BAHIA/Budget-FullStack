@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AppartementBlock } from "../components/AppartementBlock";
-import { SliderRow } from "../components/SliderRow";
+import { EditableSliderRow, sliderGroupStyle } from "../components/EditableSliderRow";
 import { useBudget } from "../contexts/BudgetContext";
 
 export type AppartementType = "location" | "propriete";
@@ -224,20 +224,20 @@ export function AppartementsTab({
         <div className="flex items-center justify-between">
           <span className="font-semibold">Charges de {target.name}</span>
         </div>
-        <div className="space-y-3">
+        <div style={sliderGroupStyle}>
           {cards.map((card) => {
             const absValue = Math.max(0, Math.abs(card.value || 0));
             const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
             return (
-              <SliderRow
+              <EditableSliderRow
                 key={card.key}
                 label={card.label}
+                labelEditable={false}
                 value={absValue}
                 min={0}
                 max={maxValue}
                 step={10}
-                unit="€/mois"
-                tone="negative"
+                unitLabel="€/mois"
                 onValueChange={(next) => handleSaveField(target.id, card.key)(String(next))}
               />
             );
@@ -273,21 +273,20 @@ export function AppartementsTab({
                   color: "var(--theme-text)",
                 }}
               />
-              <div className="space-y-3">
+              <div style={sliderGroupStyle}>
                 {proprieteCardConfigs(apt).map((card) => {
                   const absValue = Math.max(0, Math.abs(card.value || 0));
                   const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
-                  const isPositive = !!card.positive;
                   return (
-                    <SliderRow
+                    <EditableSliderRow
                       key={card.key}
                       label={card.label}
+                      labelEditable={false}
                       value={absValue}
                       min={0}
                       max={maxValue}
                       step={10}
-                      unit="€/mois"
-                      tone={isPositive ? "positive" : "negative"}
+                      unitLabel="€/mois"
                       onValueChange={(next) => handleSaveField(apt.id, card.key)(String(next))}
                     />
                   );
