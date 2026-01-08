@@ -218,11 +218,12 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "space-between",
     padding: "10px 12px",
     borderRadius: 999,
-    border: "1px solid rgba(120, 170, 255, 0.25)",
-    background: "rgba(0,0,0,0.15)",
+    border: "none",
+    background: "rgba(5, 12, 22, 0.6)",
     color: "white",
     cursor: "text",
     width: "100%",
+    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
   },
   labelText: { fontWeight: 600 },
   pencil: { opacity: 0.7, fontSize: 14 },
@@ -230,10 +231,11 @@ const styles: Record<string, CSSProperties> = {
     padding: "10px 12px",
     borderRadius: 999,
     border: "1px solid rgba(120, 170, 255, 0.45)",
-    background: "rgba(0,0,0,0.2)",
+    background: "rgba(5, 12, 22, 0.6)",
     color: "white",
     outline: "none",
     width: "100%",
+    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
   },
   hintTop: { fontSize: 11, opacity: 0.6, textAlign: "center", width: "100%" },
   infoHint: { fontSize: 11, opacity: 0.7, textAlign: "center", width: "100%" },
@@ -246,10 +248,11 @@ const styles: Record<string, CSSProperties> = {
     display: "flex",
     alignItems: "center",
     borderRadius: 999,
-    border: "1px solid rgba(120, 255, 170, 0.25)",
-    background: "rgba(0,0,0,0.15)",
+    border: "none",
+    background: "rgba(5, 12, 22, 0.6)",
     overflow: "hidden",
     paddingRight: 8,
+    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
   },
   valueInput: {
     width: 88,
@@ -299,13 +302,6 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
     }
   };
   const { updateTotal, updateRevenusParPersonnes } = useBudget();
-
-  const handleDeletePerson = (personId: number) => {
-    setPersons((prev) => {
-      if (prev.length <= 1) return prev;
-      return prev.filter((p) => p.id !== personId);
-    });
-  };
 
   const handlePersonNameChange = (personId: number, name: string) => {
     setPersons((prev) => prev.map((p) => (p.id === personId ? { ...p, name } : p)));
@@ -401,40 +397,21 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
                 type="text"
                 value={person.name}
                 onChange={(e) => handlePersonNameChange(person.id, e.target.value)}
-                className="min-w-[180px] flex-1 rounded-md border px-3 py-2 text-lg font-semibold outline-none transition bg-transparent"
+                className="border-b px-0 py-2 text-lg font-semibold outline-none transition bg-transparent"
                 style={{
                   borderColor: "var(--theme-border)",
                   color: "var(--theme-text)",
+                  width: "24ch",
                 }}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = "var(--theme-borderLight)";
-                  e.currentTarget.style.boxShadow = "0 0 0 2px var(--theme-borderLight)";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
                 onBlur={(e) => {
                   e.currentTarget.style.borderColor = "var(--theme-border)";
                   e.currentTarget.style.boxShadow = "none";
                 }}
               />
-              <button
-                onClick={() => handleDeletePerson(person.id)}
-                disabled={persons.length <= 1}
-                className="rounded-md px-2 py-2 text-sm transition flex items-center justify-center"
-                style={{
-                  border: "1px solid transparent",
-                  backgroundColor: "transparent",
-                  color: persons.length <= 1 ? "var(--theme-textSecondary)" : "var(--theme-textSecondary)",
-                  cursor: persons.length <= 1 ? "not-allowed" : "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (persons.length <= 1) return;
-                  e.currentTarget.style.color = "#ef4444";
-                }}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--theme-textSecondary)")}
-                title="Supprimer la personne"
-                aria-label="Supprimer la personne"
-              >
-                <TrashIcon />
-              </button>
             </div>
 
             <div className="space-y-3">
