@@ -55,7 +55,9 @@ export function EditableSliderRow({
   const [currentLabel, setCurrentLabel] = useState(label);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [isLabelFocused, setIsLabelFocused] = useState(false);
+  const [isLabelHovered, setIsLabelHovered] = useState(false);
   const [isValueFocused, setIsValueFocused] = useState(false);
+  const [isValueHovered, setIsValueHovered] = useState(false);
 
   const [currentValue, setCurrentValue] = useState(() => clamp(value, min, max));
   const [rawInput, setRawInput] = useState<string>(String(clamp(value, min, max)));
@@ -130,30 +132,49 @@ export function EditableSliderRow({
       <div style={styles.left}>
         {labelEditable ? (
           !isEditingLabel ? (
-            <button type="button" onClick={startEditLabel} style={styles.labelBtn} title={currentLabel} aria-label="Renommer">
-              <span style={styles.pencil} aria-hidden="true">
+            <button
+              type="button"
+              onClick={startEditLabel}
+              onMouseEnter={() => setIsLabelHovered(true)}
+              onMouseLeave={() => setIsLabelHovered(false)}
+              style={styles.labelBtn}
+              title={currentLabel}
+              aria-label="Renommer"
+            >
+              <span style={isLabelHovered ? styles.pencilActive : styles.pencil} aria-hidden="true">
                 <PencilIcon />
               </span>
-              <span style={styles.labelText}>{currentLabel}</span>
+              <div style={styles.labelField}>
+                <span style={styles.labelText}>{currentLabel}</span>
+              </div>
             </button>
           ) : (
-            <input
-              ref={labelInputRef}
-              value={currentLabel}
-              onChange={(e) => setCurrentLabel(e.target.value)}
-              onFocus={() => setIsLabelFocused(true)}
-              onBlur={() => commitLabel(currentLabel)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") commitLabel(currentLabel);
-                if (e.key === "Escape") setIsEditingLabel(false);
-              }}
-              style={
-                isLabelFocused
-                  ? { ...styles.labelInput, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
-                  : styles.labelInput
-              }
-              aria-label="Nom du champ"
-            />
+            <div style={styles.labelEditRow}>
+              <span style={isLabelFocused || isLabelHovered ? styles.labelEditPencilActive : styles.labelEditPencil} aria-hidden="true">
+                <PencilIcon />
+              </span>
+              <div
+                style={
+                  isLabelFocused
+                    ? { ...styles.labelField, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
+                    : styles.labelField
+                }
+              >
+                <input
+                  ref={labelInputRef}
+                  value={currentLabel}
+                  onChange={(e) => setCurrentLabel(e.target.value)}
+                  onFocus={() => setIsLabelFocused(true)}
+                  onBlur={() => commitLabel(currentLabel)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitLabel(currentLabel);
+                    if (e.key === "Escape") setIsEditingLabel(false);
+                  }}
+                  style={styles.labelInput}
+                  aria-label="Nom du champ"
+                />
+              </div>
+            </div>
           )
         ) : (
           <div style={styles.labelStatic} title={currentLabel}>
@@ -183,33 +204,39 @@ export function EditableSliderRow({
       <div style={styles.right}>
         <div style={styles.valueStack}>
           <div
-            style={
-              isValueFocused
-                ? { ...styles.valueGroup, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
-                : styles.valueGroup
-            }
+            style={styles.valueGroup}
+            onMouseEnter={() => setIsValueHovered(true)}
+            onMouseLeave={() => setIsValueHovered(false)}
           >
-            <span style={styles.pencil} aria-hidden="true">
+            <span style={isValueFocused || isValueHovered ? styles.pencilActive : styles.pencil} aria-hidden="true">
               <PencilIcon />
             </span>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={rawInput}
-              onChange={handleValueInputChange}
-              onFocus={() => setIsValueFocused(true)}
-              onBlur={(e) => {
-                setIsValueFocused(false);
-                handleValueInputBlur();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-                if (e.key === "Escape") setRawInput(String(currentValue));
-              }}
-              style={styles.valueInput}
-              aria-label={`${currentLabel} - valeur`}
-            />
-            <span style={styles.unitInline}>{unitLabel}</span>
+            <div
+              style={
+                isValueFocused
+                  ? { ...styles.valueField, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
+                  : styles.valueField
+              }
+            >
+              <input
+                type="number"
+                inputMode="numeric"
+                value={rawInput}
+                onChange={handleValueInputChange}
+                onFocus={() => setIsValueFocused(true)}
+                onBlur={(e) => {
+                  setIsValueFocused(false);
+                  handleValueInputBlur();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+                  if (e.key === "Escape") setRawInput(String(currentValue));
+                }}
+                style={styles.valueInput}
+                aria-label={`${currentLabel} - valeur`}
+              />
+              <span style={styles.unitInline}>{unitLabel}</span>
+            </div>
           </div>
         </div>
 
@@ -246,15 +273,16 @@ const styles: Record<string, CSSProperties> = {
   labelBtn: {
     display: "inline-flex",
     alignItems: "center",
-    justifyContent: "space-between",
-    padding: "10px 12px",
+    gap: 6,
+    padding: 0,
     borderRadius: 999,
-    border: "none",
+    border: "1px solid transparent",
     background: "transparent",
     color: "var(--theme-text)",
     cursor: "text",
     width: "100%",
     minWidth: 0,
+    boxSizing: "border-box",
     boxShadow: "none",
   },
   labelStatic: {
@@ -277,18 +305,77 @@ const styles: Record<string, CSSProperties> = {
     flex: 1,
     minWidth: 0,
   },
-  labelText: { fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 },
-  pencil: { opacity: 0.7, fontSize: 14, transform: "scaleX(-1)" },
+  labelText: {
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    flex: 1,
+    minWidth: 0,
+    padding: "10px 12px",
+    textAlign: "center",
+  },
+  pencil: {
+    opacity: 0.15,
+    fontSize: 14,
+    transform: "scaleX(-1)",
+    transition: "opacity 160ms ease",
+    width: 16,
+    height: 16,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pencilActive: {
+    opacity: 0.75,
+    fontSize: 14,
+    transform: "scaleX(-1)",
+    transition: "opacity 160ms ease",
+    width: 16,
+    height: 16,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  labelEditRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    width: "100%",
+  },
+  labelField: {
+    display: "flex",
+    alignItems: "center",
+    flex: 1,
+    borderRadius: 999,
+    border: "1px solid transparent",
+    background: "transparent",
+    boxShadow: "none",
+    minWidth: 0,
+    boxSizing: "border-box",
+  },
   labelInput: {
     padding: "10px 12px",
     borderRadius: 999,
-    border: "1px solid color-mix(in srgb, var(--theme-border) 70%, transparent)",
-    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
+    border: "none",
+    background: "transparent",
     color: "var(--theme-text)",
     outline: "none",
     width: "100%",
     textAlign: "center",
     boxShadow: "none",
+  },
+  labelEditPencil: {
+    opacity: 0.15,
+    fontSize: 14,
+    transform: "scaleX(-1)",
+    pointerEvents: "none",
+  },
+  labelEditPencilActive: {
+    opacity: 0.75,
+    fontSize: 14,
+    transform: "scaleX(-1)",
+    pointerEvents: "none",
   },
   infoHint: { fontSize: 11, opacity: 0.7, textAlign: "center", width: "100%" },
   middle: { flex: 1, display: "flex", flexDirection: "column", gap: 6 },
@@ -304,6 +391,16 @@ const styles: Record<string, CSSProperties> = {
     border: "none",
     background: "transparent",
     overflow: "hidden",
+    paddingRight: 8,
+    boxShadow: "none",
+  },
+  valueField: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    border: "none",
+    background: "transparent",
     paddingRight: 8,
     boxShadow: "none",
   },
