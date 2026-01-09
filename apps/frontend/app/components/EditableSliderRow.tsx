@@ -245,27 +245,29 @@ export function EditableSliderRow({
               aria-label={`${currentLabel} - valeur`}
             />
           </div>
-          <span style={styles.unitInline}>{unitLabel}</span>
         </div>
         </div>
       </div>
 
       <div style={styles.middle}>
-        <div style={styles.minMaxTop}>
-          <span>{min}</span>
+        <div style={styles.minMaxRow}>
+          <span>{min === 0 ? "" : min}</span>
+          <div style={{ ...styles.infoHint, color: infoColor }}>{infoText}</div>
           <span>{max}</span>
         </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={Number.isFinite(currentValue) ? currentValue : min}
-          onChange={handleSliderChange}
-          style={styles.slider}
-          aria-label={`${currentLabel} - curseur`}
-        />
-        <div style={{ ...styles.infoHint, color: infoColor }}>{infoText}</div>
+        <div style={styles.sliderRow}>
+          <span style={styles.unitInline}>{unitLabel}</span>
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={Number.isFinite(currentValue) ? currentValue : min}
+            onChange={handleSliderChange}
+            style={styles.slider}
+            aria-label={`${currentLabel} - curseur`}
+          />
+        </div>
       </div>
 
       <div style={styles.right}>
@@ -283,10 +285,10 @@ const styles: Record<string, CSSProperties> = {
   row: {
     display: "flex",
     gap: 14,
-    alignItems: "center",
-    padding: "14px 16px",
+    alignItems: "stretch",
+    padding: "0 16px",
     borderRadius: 18,
-    background: "transparent",
+    background: "rgba(255, 0, 0, 0.12)",
     border: "none",
     boxShadow: "none",
   },
@@ -298,6 +300,7 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: "column",
     gap: 6,
     overflow: "hidden",
+    alignSelf: "stretch",
   },
   titleRow: {
     display: "flex",
@@ -478,10 +481,11 @@ const styles: Record<string, CSSProperties> = {
     pointerEvents: "none",
   },
   infoHint: { fontSize: 11, opacity: 0.7, textAlign: "center", width: "100%" },
-  middle: { flex: 1, display: "flex", flexDirection: "column", gap: 6 },
+  middle: { flex: 1, display: "flex", flexDirection: "column", gap: 0, alignSelf: "stretch" },
   slider: { width: "100%" },
-  minMaxTop: { display: "flex", justifyContent: "space-between", fontSize: 11, opacity: 0.6 },
-  right: { display: "flex", alignItems: "center", gap: 10 },
+  minMaxRow: { display: "grid", gridTemplateColumns: "auto 1fr auto", alignItems: "center", fontSize: 11, opacity: 0.6 },
+  sliderRow: { display: "grid", gridTemplateColumns: "auto 1fr", alignItems: "center", columnGap: 8 },
+  right: { display: "flex", alignItems: "center", gap: 10, alignSelf: "stretch" },
   valueGroup: {
     display: "flex",
     alignItems: "center",

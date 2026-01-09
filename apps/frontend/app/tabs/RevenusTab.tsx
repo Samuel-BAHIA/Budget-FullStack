@@ -127,7 +127,7 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
             </div>
 
             <div style={sliderGroupStyle}>
-              <div className="space-y-3">
+              <div className="space-y-0">
                 {person.revenus.map((item) => {
                   const absValue = Math.max(0, Math.abs(item.montant));
                   const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
