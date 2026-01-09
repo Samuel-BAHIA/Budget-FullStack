@@ -267,10 +267,19 @@ export function AppartementsTab({
                 type="text"
                 value={apt.name}
                 onChange={(e) => handleAppartementNameChange(apt.id)(e.target.value)}
-                className="w-full rounded-md border px-3 py-2 text-lg font-semibold outline-none bg-transparent"
+                className="border-b px-0 py-2 text-lg font-semibold outline-none transition bg-transparent"
                 style={{
                   borderColor: "var(--theme-border)",
                   color: "var(--theme-text)",
+                  width: "24ch",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--theme-borderLight)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "var(--theme-border)";
+                  e.currentTarget.style.boxShadow = "none";
                 }}
               />
               <div style={sliderGroupStyle}>

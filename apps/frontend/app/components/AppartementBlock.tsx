@@ -205,9 +205,9 @@ export function AppartementBlock({
       <div
         className="flex flex-wrap items-start justify-between gap-3 -mx-6 -mt-6 px-6 py-4 mb-4"
         style={{
-          backgroundColor: "var(--theme-border)",
-          borderTopLeftRadius: "12px",
-          borderTopRightRadius: "12px",
+          backgroundColor: "transparent",
+          borderTopLeftRadius: "0",
+          borderTopRightRadius: "0",
         }}
       >
         <div className="flex flex-wrap items-center gap-2 min-w-0">
@@ -228,8 +228,20 @@ export function AppartementBlock({
               setAppartementName(newName);
               onNameChange?.(newName);
             }}
-            className="bg-transparent text-lg font-semibold outline-none min-w-[180px] flex-1"
-            style={{ color: "var(--theme-text)" }}
+            className="border-b px-0 py-2 text-lg font-semibold outline-none transition bg-transparent"
+            style={{
+              borderColor: "var(--theme-border)",
+              color: "var(--theme-text)",
+              width: "24ch",
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--theme-borderLight)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--theme-border)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
             placeholder={`Appartement ${appartementNumber}`}
           />
           {!lockType && (

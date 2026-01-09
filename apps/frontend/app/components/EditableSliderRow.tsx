@@ -37,7 +37,7 @@ export const sliderGroupStyle: CSSProperties = {
   boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--theme-border) 35%, transparent)",
   display: "flex",
   flexDirection: "column",
-  gap: 12,
+  gap: 0,
 };
 
 export function EditableSliderRow({
@@ -128,7 +128,7 @@ export function EditableSliderRow({
       <div style={styles.left}>
         {labelEditable ? (
           !isEditingLabel ? (
-            <button type="button" onClick={startEditLabel} style={styles.labelBtn} title="Renommer">
+            <button type="button" onClick={startEditLabel} style={styles.labelBtn} title={currentLabel} aria-label="Renommer">
               <span style={styles.labelText}>{currentLabel}</span>
               <span style={styles.pencil} aria-hidden="true">
                 <PencilIcon />
@@ -149,7 +149,9 @@ export function EditableSliderRow({
             />
           )
         ) : (
-          <div style={styles.labelStatic}>{currentLabel}</div>
+          <div style={styles.labelStatic} title={currentLabel}>
+            <span style={styles.labelStaticText}>{currentLabel}</span>
+          </div>
         )}
       </div>
 
@@ -208,9 +210,9 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     padding: "14px 16px",
     borderRadius: 18,
-    background: "color-mix(in srgb, var(--theme-bgCard) 85%, transparent)",
+    background: "transparent",
     border: "none",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
+    boxShadow: "none",
   },
   left: {
     flex: "0 1 clamp(100px, 12vw, 150px)",
@@ -219,6 +221,7 @@ const styles: Record<string, CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     gap: 6,
+    overflow: "hidden",
   },
   labelBtn: {
     display: "inline-flex",
@@ -227,10 +230,11 @@ const styles: Record<string, CSSProperties> = {
     padding: "10px 12px",
     borderRadius: 999,
     border: "none",
-    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
+    background: "transparent",
     color: "var(--theme-text)",
     cursor: "text",
     width: "100%",
+    minWidth: 0,
     boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
   },
   labelStatic: {
@@ -239,13 +243,21 @@ const styles: Record<string, CSSProperties> = {
     padding: "10px 12px",
     borderRadius: 999,
     border: "none",
-    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
+    background: "transparent",
     color: "var(--theme-text)",
     fontWeight: 600,
+    minWidth: 0,
     width: "100%",
-    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
+    boxShadow: "none",
   },
-  labelText: { fontWeight: 600 },
+  labelStaticText: {
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    flex: 1,
+    minWidth: 0,
+  },
+  labelText: { fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 },
   pencil: { opacity: 0.7, fontSize: 14 },
   labelInput: {
     padding: "10px 12px",
@@ -268,7 +280,7 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     borderRadius: 999,
     border: "none",
-    background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
+    background: "transparent",
     overflow: "hidden",
     paddingRight: 8,
     boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
@@ -305,3 +317,4 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "center",
   },
 };
+
