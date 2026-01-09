@@ -30,6 +30,12 @@ const PencilIcon = () => (
   </svg>
 );
 
+const CheckIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M5 10l3.5 3.5L15 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 export const sliderGroupStyle: CSSProperties = {
   borderRadius: 20,
   padding: "14px 16px",
@@ -145,13 +151,13 @@ export function EditableSliderRow({
                 <PencilIcon />
               </span>
               <div style={styles.labelField}>
-                <span style={styles.labelText}>{currentLabel}</span>
+                <span style={isLabelHovered ? styles.labelTextHover : styles.labelText}>{currentLabel}</span>
               </div>
             </button>
           ) : (
             <div style={styles.labelEditRow}>
               <span style={isLabelFocused || isLabelHovered ? styles.labelEditPencilActive : styles.labelEditPencil} aria-hidden="true">
-                <PencilIcon />
+                <CheckIcon />
               </span>
               <div
                 style={
@@ -170,7 +176,7 @@ export function EditableSliderRow({
                     if (e.key === "Enter") commitLabel(currentLabel);
                     if (e.key === "Escape") setIsEditingLabel(false);
                   }}
-                  style={styles.labelInput}
+                  style={isLabelFocused ? { ...styles.labelInput, color: "#B7FFD1" } : styles.labelInput}
                   aria-label="Nom du champ"
                 />
               </div>
@@ -314,12 +320,25 @@ const styles: Record<string, CSSProperties> = {
     minWidth: 0,
     padding: "10px 12px",
     textAlign: "center",
+    color: "var(--theme-text)",
+  },
+  labelTextHover: {
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    flex: 1,
+    minWidth: 0,
+    padding: "10px 12px",
+    textAlign: "center",
+    color: "#7CFFB0",
   },
   pencil: {
     opacity: 0.15,
     fontSize: 14,
     transform: "scaleX(-1)",
     transition: "opacity 160ms ease",
+    color: "var(--theme-text)",
     width: 16,
     height: 16,
     display: "inline-flex",
@@ -331,6 +350,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     transform: "scaleX(-1)",
     transition: "opacity 160ms ease",
+    color: "#7CFFB0",
     width: 16,
     height: 16,
     display: "inline-flex",
@@ -359,7 +379,7 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: 999,
     border: "none",
     background: "transparent",
-    color: "var(--theme-text)",
+    color: "#7CFFB0",
     outline: "none",
     width: "100%",
     textAlign: "center",
@@ -368,13 +388,15 @@ const styles: Record<string, CSSProperties> = {
   labelEditPencil: {
     opacity: 0.15,
     fontSize: 14,
-    transform: "scaleX(-1)",
+    transform: "none",
+    color: "#7CFFB0",
     pointerEvents: "none",
   },
   labelEditPencilActive: {
     opacity: 0.75,
     fontSize: 14,
-    transform: "scaleX(-1)",
+    transform: "none",
+    color: "#7CFFB0",
     pointerEvents: "none",
   },
   infoHint: { fontSize: 11, opacity: 0.7, textAlign: "center", width: "100%" },
@@ -420,6 +442,7 @@ const styles: Record<string, CSSProperties> = {
     textAlign: "right",
     paddingRight: 0,
     whiteSpace: "nowrap",
+    color: "#7CFFB0",
   },
   closeBtn: {
     width: 36,
