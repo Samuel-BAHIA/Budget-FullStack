@@ -54,6 +54,8 @@ export function EditableSliderRow({
 }: EditableSliderRowProps) {
   const [currentLabel, setCurrentLabel] = useState(label);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
+  const [isLabelFocused, setIsLabelFocused] = useState(false);
+  const [isValueFocused, setIsValueFocused] = useState(false);
 
   const [currentValue, setCurrentValue] = useState(() => clamp(value, min, max));
   const [rawInput, setRawInput] = useState<string>(String(clamp(value, min, max)));
@@ -129,22 +131,27 @@ export function EditableSliderRow({
         {labelEditable ? (
           !isEditingLabel ? (
             <button type="button" onClick={startEditLabel} style={styles.labelBtn} title={currentLabel} aria-label="Renommer">
-              <span style={styles.labelText}>{currentLabel}</span>
               <span style={styles.pencil} aria-hidden="true">
                 <PencilIcon />
               </span>
+              <span style={styles.labelText}>{currentLabel}</span>
             </button>
           ) : (
             <input
               ref={labelInputRef}
               value={currentLabel}
               onChange={(e) => setCurrentLabel(e.target.value)}
+              onFocus={() => setIsLabelFocused(true)}
               onBlur={() => commitLabel(currentLabel)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") commitLabel(currentLabel);
                 if (e.key === "Escape") setIsEditingLabel(false);
               }}
-              style={styles.labelInput}
+              style={
+                isLabelFocused
+                  ? { ...styles.labelInput, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
+                  : styles.labelInput
+              }
               aria-label="Nom du champ"
             />
           )
@@ -175,13 +182,26 @@ export function EditableSliderRow({
 
       <div style={styles.right}>
         <div style={styles.valueStack}>
-          <div style={styles.valueGroup}>
+          <div
+            style={
+              isValueFocused
+                ? { ...styles.valueGroup, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
+                : styles.valueGroup
+            }
+          >
+            <span style={styles.pencil} aria-hidden="true">
+              <PencilIcon />
+            </span>
             <input
               type="number"
               inputMode="numeric"
               value={rawInput}
               onChange={handleValueInputChange}
-              onBlur={handleValueInputBlur}
+              onFocus={() => setIsValueFocused(true)}
+              onBlur={(e) => {
+                setIsValueFocused(false);
+                handleValueInputBlur();
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
                 if (e.key === "Escape") setRawInput(String(currentValue));
@@ -235,7 +255,7 @@ const styles: Record<string, CSSProperties> = {
     cursor: "text",
     width: "100%",
     minWidth: 0,
-    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
+    boxShadow: "none",
   },
   labelStatic: {
     display: "inline-flex",
@@ -258,7 +278,7 @@ const styles: Record<string, CSSProperties> = {
     minWidth: 0,
   },
   labelText: { fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1, minWidth: 0 },
-  pencil: { opacity: 0.7, fontSize: 14 },
+  pencil: { opacity: 0.7, fontSize: 14, transform: "scaleX(-1)" },
   labelInput: {
     padding: "10px 12px",
     borderRadius: 999,
@@ -267,7 +287,8 @@ const styles: Record<string, CSSProperties> = {
     color: "var(--theme-text)",
     outline: "none",
     width: "100%",
-    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
+    textAlign: "center",
+    boxShadow: "none",
   },
   infoHint: { fontSize: 11, opacity: 0.7, textAlign: "center", width: "100%" },
   middle: { flex: 1, display: "flex", flexDirection: "column", gap: 6 },
@@ -278,12 +299,13 @@ const styles: Record<string, CSSProperties> = {
   valueGroup: {
     display: "flex",
     alignItems: "center",
+    gap: 6,
     borderRadius: 999,
     border: "none",
     background: "transparent",
     overflow: "hidden",
     paddingRight: 8,
-    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)",
+    boxShadow: "none",
   },
   valueInput: {
     width: 88,
@@ -293,13 +315,13 @@ const styles: Record<string, CSSProperties> = {
     background: "transparent",
     color: "#7CFFB0",
     fontWeight: 700,
-    textAlign: "right",
+    textAlign: "center",
   },
   unitInline: {
     fontSize: 11,
     opacity: 0.6,
-    textAlign: "center",
-    paddingRight: 6,
+    textAlign: "right",
+    paddingRight: 0,
     whiteSpace: "nowrap",
   },
   closeBtn: {
