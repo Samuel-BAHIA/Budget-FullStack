@@ -106,7 +106,9 @@ export function EditableSliderRow({
 
     const parsed = Number(nextRaw.replace(",", "."));
     if (Number.isFinite(parsed)) {
-      setCurrentValue(clamp(parsed, min, max));
+      const clamped = clamp(parsed, min, max);
+      setCurrentValue(clamped);
+      onValueChange?.(clamped);
     }
   };
 
@@ -115,7 +117,10 @@ export function EditableSliderRow({
       setRawInput(String(currentValue));
       return;
     }
-    commitValue(valueNumber);
+    const clamped = clamp(valueNumber, min, max);
+    setCurrentValue(clamped);
+    setRawInput(String(clamped));
+    onValueChange?.(clamped);
   };
 
   const startEditLabel = () => {
@@ -127,6 +132,8 @@ export function EditableSliderRow({
     const cleaned = next.trim() || "Sans titre";
     setCurrentLabel(cleaned);
     setIsEditingLabel(false);
+    setIsLabelFocused(false);
+    setIsLabelHovered(false);
     onLabelChange?.(cleaned);
   };
 
@@ -172,7 +179,11 @@ export function EditableSliderRow({
                   value={currentLabel}
                   onChange={(e) => setCurrentLabel(e.target.value)}
                   onFocus={() => setIsLabelFocused(true)}
-                  onBlur={() => commitLabel(currentLabel)}
+                  onBlur={() => {
+                    setIsLabelFocused(false);
+                    setIsLabelHovered(false);
+                    commitLabel(currentLabel);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") commitLabel(currentLabel);
                     if (e.key === "Escape") setIsEditingLabel(false);
@@ -344,7 +355,7 @@ const styles: Record<string, CSSProperties> = {
     minWidth: 0,
     padding: "10px 12px",
     textAlign: "center",
-    color: "#7CFFB0",
+    color: "#FDE047",
   },
   pencil: {
     opacity: 0.15,
@@ -363,7 +374,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     transform: "scaleX(-1)",
     transition: "opacity 160ms ease",
-    color: "#7CFFB0",
+    color: "#FDE047",
     width: 16,
     height: 16,
     display: "inline-flex",
@@ -391,7 +402,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: 14,
     transform: "scaleX(-1)",
     transition: "opacity 160ms ease",
-    color: "#7CFFB0",
+    color: "#FDE047",
     width: 16,
     height: 16,
     display: "inline-flex",
