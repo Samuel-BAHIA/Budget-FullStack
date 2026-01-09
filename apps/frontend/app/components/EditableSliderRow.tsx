@@ -214,8 +214,8 @@ export function EditableSliderRow({
             onMouseEnter={() => setIsValueHovered(true)}
             onMouseLeave={() => setIsValueHovered(false)}
           >
-            <span style={isValueFocused || isValueHovered ? styles.pencilActive : styles.pencil} aria-hidden="true">
-              <PencilIcon />
+            <span style={isValueFocused || isValueHovered ? styles.valueEditIconActive : styles.valueEditIcon} aria-hidden="true">
+              {isValueFocused ? <CheckIcon /> : <PencilIcon />}
             </span>
             <div
               style={
@@ -241,8 +241,8 @@ export function EditableSliderRow({
                 style={styles.valueInput}
                 aria-label={`${currentLabel} - valeur`}
               />
-              <span style={styles.unitInline}>{unitLabel}</span>
             </div>
+            <span style={styles.unitInline}>{unitLabel}</span>
           </div>
         </div>
 
@@ -346,6 +346,30 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "center",
   },
   pencilActive: {
+    opacity: 0.75,
+    fontSize: 14,
+    transform: "scaleX(-1)",
+    transition: "opacity 160ms ease",
+    color: "#7CFFB0",
+    width: 16,
+    height: 16,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  valueEditIcon: {
+    opacity: 0.15,
+    fontSize: 14,
+    transform: "scaleX(-1)",
+    transition: "opacity 160ms ease",
+    color: "#7CFFB0",
+    width: 16,
+    height: 16,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  valueEditIconActive: {
     opacity: 0.75,
     fontSize: 14,
     transform: "scaleX(-1)",
