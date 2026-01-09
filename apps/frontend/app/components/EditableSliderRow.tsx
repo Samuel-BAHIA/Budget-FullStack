@@ -144,6 +144,7 @@ export function EditableSliderRow({
   return (
     <div style={styles.row}>
       <div style={styles.left}>
+        <div style={styles.titleRow}>
         {labelEditable ? (
           !isEditingLabel ? (
             <button
@@ -199,6 +200,54 @@ export function EditableSliderRow({
             <span style={styles.labelStaticText}>{currentLabel}</span>
           </div>
         )}
+        <div
+          style={styles.valueGroup}
+          onMouseEnter={() => setIsValueHovered(true)}
+          onMouseLeave={() => setIsValueHovered(false)}
+        >
+          <button
+            type="button"
+            onClick={() => valueInputRef.current?.focus()}
+            style={
+              isValueFocused
+                ? styles.valueEditBtnConfirm
+                : isValueHovered
+                  ? styles.valueEditBtnActive
+                  : styles.valueEditBtn
+            }
+            aria-label="Modifier la valeur"
+          >
+            {isValueFocused ? <CheckIcon /> : <PencilIcon />}
+          </button>
+          <div
+            style={
+              isValueFocused
+                ? { ...styles.valueField, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
+                : styles.valueField
+            }
+          >
+            <input
+              ref={valueInputRef}
+              type="number"
+              inputMode="numeric"
+              value={rawInput}
+              onChange={handleValueInputChange}
+              onFocus={() => setIsValueFocused(true)}
+              onBlur={(e) => {
+                setIsValueFocused(false);
+                handleValueInputBlur();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+                if (e.key === "Escape") setRawInput(String(currentValue));
+              }}
+              style={styles.valueInput}
+              aria-label={`${currentLabel} - valeur`}
+            />
+          </div>
+          <span style={styles.unitInline}>{unitLabel}</span>
+        </div>
+        </div>
       </div>
 
       <div style={styles.middle}>
@@ -220,56 +269,6 @@ export function EditableSliderRow({
       </div>
 
       <div style={styles.right}>
-        <div style={styles.valueStack}>
-          <div
-            style={styles.valueGroup}
-            onMouseEnter={() => setIsValueHovered(true)}
-            onMouseLeave={() => setIsValueHovered(false)}
-          >
-            <button
-              type="button"
-              onClick={() => valueInputRef.current?.focus()}
-              style={
-                isValueFocused
-                  ? styles.valueEditBtnConfirm
-                  : isValueHovered
-                    ? styles.valueEditBtnActive
-                    : styles.valueEditBtn
-              }
-              aria-label="Modifier la valeur"
-            >
-              {isValueFocused ? <CheckIcon /> : <PencilIcon />}
-            </button>
-            <div
-              style={
-                isValueFocused
-                  ? { ...styles.valueField, boxShadow: "inset 0 2px 6px rgba(0,0,0,0.55), inset 0 -1px 2px rgba(255,255,255,0.08)" }
-                  : styles.valueField
-              }
-            >
-              <input
-                ref={valueInputRef}
-                type="number"
-                inputMode="numeric"
-                value={rawInput}
-                onChange={handleValueInputChange}
-                onFocus={() => setIsValueFocused(true)}
-                onBlur={(e) => {
-                  setIsValueFocused(false);
-                  handleValueInputBlur();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-                  if (e.key === "Escape") setRawInput(String(currentValue));
-                }}
-                style={styles.valueInput}
-                aria-label={`${currentLabel} - valeur`}
-              />
-            </div>
-            <span style={styles.unitInline}>{unitLabel}</span>
-          </div>
-        </div>
-
         {onRemove && (
           <button type="button" onClick={onRemove} style={styles.closeBtn} aria-label="Supprimer">
             <TrashIcon />
@@ -292,13 +291,19 @@ const styles: Record<string, CSSProperties> = {
     boxShadow: "none",
   },
   left: {
-    flex: "0 1 clamp(100px, 12vw, 150px)",
-    minWidth: 100,
-    maxWidth: 150,
+    flex: "0 1 clamp(240px, 26vw, 360px)",
+    minWidth: 220,
+    maxWidth: 360,
     display: "flex",
     flexDirection: "column",
     gap: 6,
     overflow: "hidden",
+  },
+  titleRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    width: "100%",
   },
   labelBtn: {
     display: "inline-flex",
@@ -310,7 +315,7 @@ const styles: Record<string, CSSProperties> = {
     background: "transparent",
     color: "var(--theme-text)",
     cursor: "text",
-    width: "100%",
+    flex: 1,
     minWidth: 0,
     boxSizing: "border-box",
     boxShadow: "none",
@@ -325,7 +330,7 @@ const styles: Record<string, CSSProperties> = {
     color: "var(--theme-text)",
     fontWeight: 600,
     minWidth: 0,
-    width: "100%",
+    flex: 1,
     boxShadow: "none",
   },
   labelStaticText: {
@@ -433,7 +438,8 @@ const styles: Record<string, CSSProperties> = {
     display: "flex",
     alignItems: "center",
     gap: 6,
-    width: "100%",
+    flex: 1,
+    minWidth: 0,
   },
   labelField: {
     display: "flex",
@@ -476,7 +482,6 @@ const styles: Record<string, CSSProperties> = {
   slider: { width: "100%" },
   minMaxTop: { display: "flex", justifyContent: "space-between", fontSize: 11, opacity: 0.6 },
   right: { display: "flex", alignItems: "center", gap: 10 },
-  valueStack: { display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 },
   valueGroup: {
     display: "flex",
     alignItems: "center",
@@ -487,6 +492,7 @@ const styles: Record<string, CSSProperties> = {
     overflow: "hidden",
     paddingRight: 8,
     boxShadow: "none",
+    flexShrink: 0,
   },
   valueField: {
     display: "flex",
@@ -504,7 +510,7 @@ const styles: Record<string, CSSProperties> = {
     border: "none",
     outline: "none",
     background: "transparent",
-    color: "#7CFFB0",
+    color: "#FDE047",
     fontWeight: 700,
     textAlign: "center",
   },
@@ -514,7 +520,7 @@ const styles: Record<string, CSSProperties> = {
     textAlign: "right",
     paddingRight: 0,
     whiteSpace: "nowrap",
-    color: "#7CFFB0",
+    color: "var(--theme-textSecondary)",
   },
   closeBtn: {
     width: 36,

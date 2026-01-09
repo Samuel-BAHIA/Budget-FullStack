@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AppartementBlock } from "../components/AppartementBlock";
 import { EditableSliderRow, sliderGroupStyle } from "../components/EditableSliderRow";
+import { EditableTitle } from "../components/EditableTitle";
 import { useBudget } from "../contexts/BudgetContext";
 
 export type AppartementType = "location" | "propriete";
@@ -263,24 +264,10 @@ export function AppartementsTab({
         {forceType === "propriete" && !carouselMode ? (
           (activeOnlyId ? appartements.filter((a) => a.id === activeOnlyId) : appartements).map((apt) => (
             <div key={apt.id} className="space-y-3">
-              <input
-                type="text"
+              <EditableTitle
                 value={apt.name}
-                onChange={(e) => handleAppartementNameChange(apt.id)(e.target.value)}
-                className="border-b px-0 py-2 text-lg font-semibold outline-none transition bg-transparent"
-                style={{
-                  borderColor: "var(--theme-border)",
-                  color: "var(--theme-text)",
-                  width: "24ch",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--theme-borderLight)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "var(--theme-border)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
+                onChange={(next) => handleAppartementNameChange(apt.id)(next)}
+                ariaLabel="Nom de la propriete"
               />
               <div style={sliderGroupStyle}>
                 {proprieteCardConfigs(apt).map((card) => {
@@ -326,9 +313,9 @@ export function AppartementsTab({
             onClick={handleAddAppartement}
             className="w-full rounded-xl border-2 border-dashed p-6 text-sm font-semibold flex items-center justify-center gap-3 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
             style={{
-              borderColor: "var(--theme-border)",
-              color: "var(--theme-textSecondary)",
-              backgroundColor: "color-mix(in srgb, var(--theme-bgCard) 85%, white)",
+              borderColor: "color-mix(in srgb, var(--theme-tabActiveBg) 45%, var(--theme-border))",
+              color: "var(--theme-text)",
+              backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 12%, transparent)",
             }}
           >
             <PlusIcon />

@@ -102,15 +102,18 @@ export function DepensesVariablesTab({ activeSection, onSectionTotalsChange }: P
             onClick={() => handleAdd(section)}
             className="flex items-center gap-3 rounded-lg border-2 border-dashed px-3 py-2 w-full justify-center text-sm font-semibold transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
             style={{
-              borderColor: "rgba(239,68,68,0.35)",
-              color: "var(--theme-danger, #ef4444)",
-              backgroundColor: "rgba(239,68,68,0.08)",
+              borderColor: "color-mix(in srgb, var(--theme-tabActiveBg) 45%, var(--theme-border))",
+              color: "var(--theme-text)",
+              backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 12%, transparent)",
             }}
             aria-label={`Ajouter ${setterLabel}`}
           >
             <span
               className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
-              style={{ backgroundColor: "rgba(239,68,68,0.12)", color: "var(--theme-danger, #ef4444)" }}
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 22%, transparent)",
+                color: "var(--theme-tabActiveBg)",
+              }}
             >
               +
             </span>

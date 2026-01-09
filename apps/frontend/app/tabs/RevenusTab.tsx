@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { EditableSliderRow, sliderGroupStyle } from "../components/EditableSliderRow";
+import { EditableTitle } from "../components/EditableTitle";
 import { useBudget } from "../contexts/BudgetContext";
 
 export type Revenue = { id: number; name: string; montant: number };
@@ -118,24 +119,10 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
         {(activePersonId ? persons.filter((p) => p.id === activePersonId) : persons).map((person) => (
           <div key={person.id} className="space-y-3">
             <div className="flex items-center gap-3">
-              <input
-                type="text"
+              <EditableTitle
                 value={person.name}
-                onChange={(e) => handlePersonNameChange(person.id, e.target.value)}
-                className="border-b px-0 py-2 text-lg font-semibold outline-none transition bg-transparent"
-                style={{
-                  borderColor: "var(--theme-border)",
-                  color: "var(--theme-text)",
-                  width: "24ch",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--theme-borderLight)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "var(--theme-border)";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
+                onChange={(next) => handlePersonNameChange(person.id, next)}
+                ariaLabel="Nom de la personne"
               />
             </div>
 
@@ -165,14 +152,17 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
                 onClick={() => handleAddRevenue(person.id)}
                 className="flex items-center gap-3 rounded-lg border-2 border-dashed px-3 py-2 w-full justify-center text-sm font-semibold transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
                 style={{
-                  borderColor: "rgba(34,197,94,0.35)",
-                  color: "var(--theme-success, #22c55e)",
-                  backgroundColor: "rgba(34,197,94,0.12)",
+                  borderColor: "color-mix(in srgb, var(--theme-tabActiveBg) 45%, var(--theme-border))",
+                  color: "var(--theme-text)",
+                  backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 12%, transparent)",
                 }}
               >
                 <span
                   className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
-                  style={{ backgroundColor: "rgba(34,197,94,0.16)", color: "var(--theme-success, #22c55e)" }}
+                  style={{
+                    backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 22%, transparent)",
+                    color: "var(--theme-tabActiveBg)",
+                  }}
                 >
                   +
                 </span>
