@@ -69,6 +69,7 @@ export function EditableSliderRow({
   const [rawInput, setRawInput] = useState<string>(String(clamp(value, min, max)));
 
   const labelInputRef = useRef<HTMLInputElement | null>(null);
+  const valueInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setCurrentLabel(label);
@@ -214,9 +215,20 @@ export function EditableSliderRow({
             onMouseEnter={() => setIsValueHovered(true)}
             onMouseLeave={() => setIsValueHovered(false)}
           >
-            <span style={isValueFocused || isValueHovered ? styles.valueEditIconActive : styles.valueEditIcon} aria-hidden="true">
+            <button
+              type="button"
+              onClick={() => valueInputRef.current?.focus()}
+              style={
+                isValueFocused
+                  ? styles.valueEditBtnConfirm
+                  : isValueHovered
+                    ? styles.valueEditBtnActive
+                    : styles.valueEditBtn
+              }
+              aria-label="Modifier la valeur"
+            >
               {isValueFocused ? <CheckIcon /> : <PencilIcon />}
-            </span>
+            </button>
             <div
               style={
                 isValueFocused
@@ -225,6 +237,7 @@ export function EditableSliderRow({
               }
             >
               <input
+                ref={valueInputRef}
                 type="number"
                 inputMode="numeric"
                 value={rawInput}
@@ -357,7 +370,7 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
   },
-  valueEditIcon: {
+  valueEditBtn: {
     opacity: 0.15,
     fontSize: 14,
     transform: "scaleX(-1)",
@@ -368,8 +381,12 @@ const styles: Record<string, CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
+    border: "none",
+    background: "transparent",
+    padding: 0,
+    cursor: "text",
   },
-  valueEditIconActive: {
+  valueEditBtnActive: {
     opacity: 0.75,
     fontSize: 14,
     transform: "scaleX(-1)",
@@ -380,6 +397,26 @@ const styles: Record<string, CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
+    border: "none",
+    background: "transparent",
+    padding: 0,
+    cursor: "text",
+  },
+  valueEditBtnConfirm: {
+    opacity: 0.9,
+    fontSize: 14,
+    transform: "none",
+    transition: "opacity 160ms ease",
+    color: "#7CFFB0",
+    width: 16,
+    height: 16,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "none",
+    background: "transparent",
+    padding: 0,
+    cursor: "text",
   },
   labelEditRow: {
     display: "flex",
