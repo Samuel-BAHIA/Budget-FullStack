@@ -107,26 +107,23 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">
-        {activePersonId
-          ? (() => {
-              const activePerson = persons.find((p) => p.id === activePersonId);
-              if (!activePerson) return "Revenus";
-              return (
-                <span className="flex items-center gap-2">
-                  <span>Revenus</span>
-                  <span style={{ opacity: 0.6 }}>{">"}</span>
-                  <EditableTitle
-                    value={activePerson.name}
-                    onChange={(next) => handlePersonNameChange(activePerson.id, next)}
-                    ariaLabel="Nom de la personne"
-                    width="18ch"
-                  />
-                </span>
-              );
-            })()
-          : "Revenus"}
-      </h2>
+      <h2 className="text-xl font-semibold">Revenus</h2>
+      {activePersonId && (
+        <div className="mt-2">
+          {(() => {
+            const activePerson = persons.find((p) => p.id === activePersonId);
+            if (!activePerson) return null;
+            return (
+              <EditableTitle
+                value={activePerson.name}
+                onChange={(next) => handlePersonNameChange(activePerson.id, next)}
+                ariaLabel="Nom de la personne"
+                width="18ch"
+              />
+            );
+          })()}
+        </div>
+      )}
       <p
         className="mt-1 text-sm"
         style={{ color: "var(--theme-textSecondary)" }}

@@ -168,24 +168,7 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">
-        {(() => {
-          const activeLabel = sectionsToRender.length === 1 ? sectionsToRender[0].title : null;
-          return (
-            <span className="flex items-center gap-2">
-              <span>Depenses</span>
-              <span style={{ opacity: 0.6 }}>{">"}</span>
-              <span>Fixes</span>
-              {activeLabel && (
-                <>
-                  <span style={{ opacity: 0.6 }}>{">"}</span>
-                  <span>{activeLabel}</span>
-                </>
-              )}
-            </span>
-          );
-        })()}
-      </h2>
+      <h2 className="text-xl font-semibold">Depenses fixes</h2>
       <p
         className="mt-2"
         style={{ color: "var(--theme-textSecondary)" }}

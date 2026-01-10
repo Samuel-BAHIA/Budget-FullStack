@@ -292,23 +292,7 @@ export function AppartementsTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">
-            {(() => {
-              const baseTitle = title ?? "Appartements";
-              const activeName = activeOnlyId ? appartements.find((a) => a.id === activeOnlyId)?.name : null;
-              return (
-                <span className="flex items-center gap-2">
-                  <span>{baseTitle}</span>
-                  {activeName && (
-                    <>
-                      <span style={{ opacity: 0.6 }}>{">"}</span>
-                      <span>{activeName}</span>
-                    </>
-                  )}
-                </span>
-              );
-            })()}
-          </h2>
+          <h2 className="text-xl font-semibold">{title ?? "Appartements"}</h2>
           <p className="mt-2" style={{ color: "var(--theme-textSecondary)" }}>
             {description ??
               "Gere tes appartements achetes ou loues, et leurs informations."}
