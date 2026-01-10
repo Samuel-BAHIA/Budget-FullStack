@@ -39,8 +39,8 @@ const CheckIcon = () => (
 export const sliderGroupStyle: CSSProperties = {
   borderRadius: 20,
   padding: "14px 16px",
-  background: "color-mix(in srgb, var(--theme-bgCard) 70%, transparent)",
-  boxShadow: "inset 0 0 0 1px color-mix(in srgb, var(--theme-border) 35%, transparent)",
+  background: "transparent",
+  boxShadow: "none",
   display: "flex",
   flexDirection: "column",
   gap: 0,
@@ -288,9 +288,9 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "stretch",
     padding: "0 16px",
     borderRadius: 18,
-    background: "rgba(255, 0, 0, 0.12)",
+    background: "var(--theme-bgCard)",
     border: "none",
-    boxShadow: "none",
+    boxShadow: "0 0 0 1px color-mix(in srgb, var(--theme-border) 70%, transparent), 0 10px 24px rgba(0,0,0,0.35)",
   },
   left: {
     flex: "0 1 clamp(240px, 26vw, 360px)",
@@ -342,6 +342,7 @@ const styles: Record<string, CSSProperties> = {
     textOverflow: "ellipsis",
     flex: 1,
     minWidth: 0,
+    textAlign: "left",
   },
   labelText: {
     fontWeight: 600,
@@ -351,7 +352,7 @@ const styles: Record<string, CSSProperties> = {
     flex: 1,
     minWidth: 0,
     padding: "10px 12px",
-    textAlign: "center",
+    textAlign: "left",
     color: "var(--theme-text)",
   },
   labelTextHover: {
@@ -362,7 +363,7 @@ const styles: Record<string, CSSProperties> = {
     flex: 1,
     minWidth: 0,
     padding: "10px 12px",
-    textAlign: "center",
+    textAlign: "left",
     color: "#FDE047",
   },
   pencil: {
@@ -463,7 +464,7 @@ const styles: Record<string, CSSProperties> = {
     color: "#7CFFB0",
     outline: "none",
     width: "100%",
-    textAlign: "center",
+    textAlign: "left",
     boxShadow: "none",
   },
   labelEditPencil: {

@@ -107,7 +107,26 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Revenus</h2>
+      <h2 className="text-xl font-semibold">
+        {activePersonId
+          ? (() => {
+              const activePerson = persons.find((p) => p.id === activePersonId);
+              if (!activePerson) return "Revenus";
+              return (
+                <span className="flex items-center gap-2">
+                  <span>Revenus</span>
+                  <span style={{ opacity: 0.6 }}>{">"}</span>
+                  <EditableTitle
+                    value={activePerson.name}
+                    onChange={(next) => handlePersonNameChange(activePerson.id, next)}
+                    ariaLabel="Nom de la personne"
+                    width="18ch"
+                  />
+                </span>
+              );
+            })()
+          : "Revenus"}
+      </h2>
       <p
         className="mt-1 text-sm"
         style={{ color: "var(--theme-textSecondary)" }}
@@ -118,15 +137,39 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
       <div className="space-y-6">
         {(activePersonId ? persons.filter((p) => p.id === activePersonId) : persons).map((person) => (
           <div key={person.id} className="space-y-3">
-            <div className="flex items-center gap-3">
-              <EditableTitle
-                value={person.name}
-                onChange={(next) => handlePersonNameChange(person.id, next)}
-                ariaLabel="Nom de la personne"
-              />
-            </div>
-
             <div style={sliderGroupStyle}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "clamp(240px, 26vw, 360px) 1fr auto",
+                  alignItems: "center",
+                  padding: "0 16px",
+                  fontSize: 14,
+                  color: "var(--theme-tabActiveBg)",
+                  columnGap: 14,
+                  marginBottom: 6,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontWeight: 700, flex: 1 }}>Total revenus {person.name.toUpperCase()}</span>
+                  <div
+                    style={{
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 104,
+                    }}
+                  >
+                    <span aria-hidden style={{ position: "absolute", left: 0, width: 16, height: 16 }} />
+                    <span style={{ textAlign: "center", fontWeight: 700 }}>
+                      {person.revenus.reduce((sum, r) => sum + r.montant, 0).toLocaleString("fr-FR")}€
+                    </span>
+                  </div>
+                </div>
+                <div />
+                <div />
+              </div>
               <div className="space-y-0">
                 {person.revenus.map((item) => {
                   const absValue = Math.max(0, Math.abs(item.montant));
@@ -150,11 +193,13 @@ export function RevenusTab({ persons: externalPersons, onPersonsChange, activePe
               </div>
               <button
                 onClick={() => handleAddRevenue(person.id)}
-                className="flex items-center gap-3 rounded-lg border-2 border-dashed px-3 py-2 w-full justify-center text-sm font-semibold transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+                className="flex items-center gap-3 w-full justify-center text-sm font-semibold transition hover:bg-[var(--theme-bgHover)]"
                 style={{
-                  borderColor: "color-mix(in srgb, var(--theme-tabActiveBg) 45%, var(--theme-border))",
+                  borderRadius: 18,
+                  padding: "14px 16px",
+                  border: "none",
                   color: "var(--theme-text)",
-                  backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 12%, transparent)",
+                  backgroundColor: "transparent",
                 }}
               >
                 <span

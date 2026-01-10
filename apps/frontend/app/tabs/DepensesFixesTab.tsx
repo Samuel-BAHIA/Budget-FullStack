@@ -77,12 +77,43 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
   }, [abonnements, voiture, autres, updateTotal, onSectionTotalsChange]);
 
   const renderSection = (title: string, section: SectionKey, items: Expense[]) => {
+    const totalSection = items.reduce((sum, item) => sum + item.montant, 0);
+    const totalLabel = section === "voiture" ? "TOTAL VOITURE :" : `TOTAL ${title.toUpperCase()} :`;
     return (
       <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold">{title}</h3>
-        </div>
         <div style={sliderGroupStyle}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "clamp(240px, 26vw, 360px) 1fr auto",
+              alignItems: "center",
+              padding: "0 16px",
+              fontSize: 14,
+              color: "var(--theme-tabActiveBg)",
+              columnGap: 14,
+              marginBottom: 6,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontWeight: 700, flex: 1 }}>{totalLabel}</span>
+              <div
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 104,
+                }}
+              >
+                <span aria-hidden style={{ position: "absolute", left: 0, width: 16, height: 16 }} />
+                <span style={{ textAlign: "center", fontWeight: 700 }}>
+                  {totalSection.toLocaleString("fr-FR")}€
+                </span>
+              </div>
+            </div>
+            <div />
+            <div />
+          </div>
           {items.map((item) => {
             const absValue = Math.max(0, Math.abs(item.montant));
             const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
@@ -104,11 +135,13 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
           })}
           <button
             onClick={() => handleAdd(section)}
-            className="flex items-center gap-3 rounded-lg border-2 border-dashed px-3 py-2 w-full justify-center text-sm font-semibold transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+            className="flex items-center gap-3 w-full justify-center text-sm font-semibold transition hover:bg-[var(--theme-bgHover)]"
             style={{
-              borderColor: "color-mix(in srgb, var(--theme-tabActiveBg) 45%, var(--theme-border))",
+              borderRadius: 18,
+              padding: "14px 16px",
+              border: "none",
               color: "var(--theme-text)",
-              backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 12%, transparent)",
+              backgroundColor: "transparent",
             }}
           >
             <span
@@ -135,7 +168,24 @@ export function DepensesFixesTab({ activeSection, onSectionTotalsChange }: Props
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Depenses fixes</h2>
+      <h2 className="text-xl font-semibold">
+        {(() => {
+          const activeLabel = sectionsToRender.length === 1 ? sectionsToRender[0].title : null;
+          return (
+            <span className="flex items-center gap-2">
+              <span>Depenses</span>
+              <span style={{ opacity: 0.6 }}>{">"}</span>
+              <span>Fixes</span>
+              {activeLabel && (
+                <>
+                  <span style={{ opacity: 0.6 }}>{">"}</span>
+                  <span>{activeLabel}</span>
+                </>
+              )}
+            </span>
+          );
+        })()}
+      </h2>
       <p
         className="mt-2"
         style={{ color: "var(--theme-textSecondary)" }}

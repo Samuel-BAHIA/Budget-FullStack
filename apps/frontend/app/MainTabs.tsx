@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, type ReactNode } from "react";
 import { RevenusTab, type Person } from "./tabs/RevenusTab";
 import { DepensesVariablesTab } from "./tabs/DepensesVariablesTab";
 import { DepensesFixesTab } from "./tabs/DepensesFixesTab";
@@ -59,6 +59,19 @@ const defaultProperty = (id: number): AppartementData => ({
 });
 
 export function MainTabs() {
+  const Collapsible = ({ open, children }: { open: boolean; children: ReactNode }) => (
+    <div
+      style={{
+        maxHeight: open ? 1200 : 0,
+        opacity: open ? 1 : 0,
+        overflow: "hidden",
+        transition: "max-height 420ms ease, opacity 260ms ease",
+        pointerEvents: open ? "auto" : "none",
+      }}
+    >
+      <div style={{ paddingTop: open ? 6 : 0 }}>{children}</div>
+    </div>
+  );
   const { totals } = useBudget();
   const { theme, setTheme, themes } = useTheme();
   const [activeTab, setActiveTab] = useState<MainTabId>("revenus");
@@ -179,14 +192,21 @@ export function MainTabs() {
     const totalFontWeight = level === 0 ? 800 : level === 1 ? 700 : 600;
     const totalColor = (value?: number) => {
       if (typeof value !== "number") return labelColor;
-      const base = amountColor(value);
-      if (!isChild) return base;
-      return `color-mix(in srgb, ${base} 55%, var(--theme-textSecondary))`;
+      if (!isChild) return amountColor(value);
+      return "color-mix(in srgb, var(--theme-tabActiveBg) 35%, var(--theme-textSecondary))";
     };
     return (
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
+        aria-pressed={active}
         onClick={onClick}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick();
+          }
+        }}
         className="w-full rounded-xl border text-left transition flex items-center justify-between gap-3"
         style={{
           padding: "10px 12px",
@@ -247,7 +267,7 @@ export function MainTabs() {
             {formatMontant(total)}
           </span>
         )}
-      </button>
+      </div>
     );
   };
 
@@ -536,7 +556,7 @@ export function MainTabs() {
                 caret: showRevenusChildren ? "open" : "closed",
               })}
 
-              {activeTab === "revenus" && showRevenusChildren && (
+              <Collapsible open={activeTab === "revenus" && showRevenusChildren}>
                 <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
                   {revenusPersons.map((person) => (
                     <React.Fragment key={person.id}>
@@ -568,7 +588,7 @@ export function MainTabs() {
                     + Ajouter
                   </button>
                 </div>
-              )}
+              </Collapsible>
 
               <div className="flex flex-col gap-1">
                 {renderNavButton({
@@ -579,7 +599,7 @@ export function MainTabs() {
                   caret: showDepensesChildren ? "open" : "closed",
                 })}
 
-                {activeTab === "depenses" && showDepensesChildren && (
+                <Collapsible open={activeTab === "depenses" && showDepensesChildren}>
                   <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
                     {renderNavButton({
                       label: "Variables",
@@ -590,7 +610,7 @@ export function MainTabs() {
                       level: 1,
                     })}
 
-                    {showVariablesChildren && (
+                    <Collapsible open={showVariablesChildren}>
                       <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
                         {renderNavButton({
                           label: "Quotidien",
@@ -617,7 +637,7 @@ export function MainTabs() {
                           total: -variablesSectionTotals.autres,
                         })}
                       </div>
-                    )}
+                    </Collapsible>
 
                     {renderNavButton({
                       label: "Fixes",
@@ -628,7 +648,7 @@ export function MainTabs() {
                       level: 1,
                     })}
 
-                    {showFixesChildren && (
+                    <Collapsible open={showFixesChildren}>
                       <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
                         {renderNavButton({
                           label: "Abonnements",
@@ -655,7 +675,7 @@ export function MainTabs() {
                           total: -fixesSectionTotals.autres,
                         })}
                       </div>
-                    )}
+                    </Collapsible>
 
                     {renderNavButton({
                       label: "Locations",
@@ -666,7 +686,7 @@ export function MainTabs() {
                       level: 1,
                     })}
 
-                    {showLocationsChildren && (
+                    <Collapsible open={showLocationsChildren}>
                       <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
                         {locations.map((loc) => (
                           <React.Fragment key={loc.id}>
@@ -703,9 +723,9 @@ export function MainTabs() {
                           + Ajouter une location
                         </button>
                       </div>
-                    )}
+                    </Collapsible>
                   </div>
-                )}
+                </Collapsible>
               </div>
 
               {renderNavButton({
@@ -716,7 +736,7 @@ export function MainTabs() {
                 caret: showPatrimoineChildren ? "open" : "closed",
               })}
 
-              {activeTab === "patrimoine" && showPatrimoineChildren && (
+              <Collapsible open={activeTab === "patrimoine" && showPatrimoineChildren}>
                 <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
                   {patrimoine.map((prop) => (
                     <React.Fragment key={prop.id}>
@@ -748,7 +768,7 @@ export function MainTabs() {
                     + Ajouter une propriete
                   </button>
                 </div>
-              )}
+              </Collapsible>
 
               <div
                 className="mb-2 h-px w-full"

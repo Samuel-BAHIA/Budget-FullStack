@@ -212,6 +212,14 @@ export function AppartementsTab({
       await new Promise((resolve) => setTimeout(resolve, 200));
     };
 
+  const calcAppartementTotal = (apt: AppartementData) => {
+    const d = apt.data;
+    if (apt.type === "propriete") {
+      return d.loyer - (d.impotsRevenu + d.taxeFonciere + d.chargesCopro + d.assurance + d.credit + d.assuranceCredit);
+    }
+    return -(d.loyer + d.assurance + d.internet + d.eau + d.electricite + d.gaz);
+  };
+
   const renderCarousel = () => {
     const target =
       (activeOnlyId ? appartements.find((a) => a.id === activeOnlyId) : appartements[0]) ??
@@ -226,6 +234,38 @@ export function AppartementsTab({
           <span className="font-semibold">Charges de {target.name}</span>
         </div>
         <div style={sliderGroupStyle}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "clamp(240px, 26vw, 360px) 1fr auto",
+              alignItems: "center",
+              padding: "0 16px",
+              fontSize: 14,
+              color: "var(--theme-tabActiveBg)",
+              columnGap: 14,
+              marginBottom: 6,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontWeight: 700, flex: 1 }}>TOTAL LOCATION :</span>
+              <div
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 104,
+                }}
+              >
+                <span aria-hidden style={{ position: "absolute", left: 0, width: 16, height: 16 }} />
+                <span style={{ textAlign: "center", fontWeight: 700 }}>
+                  {calcAppartementTotal(target).toLocaleString("fr-FR")}€
+                </span>
+              </div>
+            </div>
+            <div />
+            <div />
+          </div>
           {cards.map((card) => {
             const absValue = Math.max(0, Math.abs(card.value || 0));
             const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
@@ -252,7 +292,23 @@ export function AppartementsTab({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">{title ?? "Appartements"}</h2>
+          <h2 className="text-xl font-semibold">
+            {(() => {
+              const baseTitle = title ?? "Appartements";
+              const activeName = activeOnlyId ? appartements.find((a) => a.id === activeOnlyId)?.name : null;
+              return (
+                <span className="flex items-center gap-2">
+                  <span>{baseTitle}</span>
+                  {activeName && (
+                    <>
+                      <span style={{ opacity: 0.6 }}>{">"}</span>
+                      <span>{activeName}</span>
+                    </>
+                  )}
+                </span>
+              );
+            })()}
+          </h2>
           <p className="mt-2" style={{ color: "var(--theme-textSecondary)" }}>
             {description ??
               "Gere tes appartements achetes ou loues, et leurs informations."}
@@ -270,6 +326,38 @@ export function AppartementsTab({
                 ariaLabel="Nom de la propriete"
               />
               <div style={sliderGroupStyle}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "clamp(240px, 26vw, 360px) 1fr auto",
+                    alignItems: "center",
+                    padding: "0 16px",
+                    fontSize: 14,
+                    color: "var(--theme-tabActiveBg)",
+                    columnGap: 14,
+                    marginBottom: 6,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontWeight: 700, flex: 1 }}>TOTAL PROPRIETE :</span>
+                    <div
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 104,
+                      }}
+                    >
+                      <span aria-hidden style={{ position: "absolute", left: 0, width: 16, height: 16 }} />
+                      <span style={{ textAlign: "center", fontWeight: 700 }}>
+                        {calcAppartementTotal(apt).toLocaleString("fr-FR")}€
+                      </span>
+                    </div>
+                  </div>
+                  <div />
+                  <div />
+                </div>
                 {proprieteCardConfigs(apt).map((card) => {
                   const absValue = Math.max(0, Math.abs(card.value || 0));
                   const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
@@ -311,11 +399,13 @@ export function AppartementsTab({
         {!carouselMode && !(forceType === "propriete") && (
           <button
             onClick={handleAddAppartement}
-            className="w-full rounded-xl border-2 border-dashed p-6 text-sm font-semibold flex items-center justify-center gap-3 transition hover:border-[var(--theme-borderLight)] hover:bg-[var(--theme-bgHover)]"
+            className="w-full text-sm font-semibold flex items-center justify-center gap-3 transition hover:bg-[var(--theme-bgHover)]"
             style={{
-              borderColor: "color-mix(in srgb, var(--theme-tabActiveBg) 45%, var(--theme-border))",
+              borderRadius: 18,
+              padding: "14px 16px",
+              border: "none",
               color: "var(--theme-text)",
-              backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 12%, transparent)",
+              backgroundColor: "transparent",
             }}
           >
             <PlusIcon />
