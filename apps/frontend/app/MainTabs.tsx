@@ -101,42 +101,101 @@ export function MainTabs() {
   const [activeVariableSection, setActiveVariableSection] = useState<VariableSection | null>(null);
   const [activeFixeSection, setActiveFixeSection] = useState<FixeSection | null>(null);
   const [persons, setPersons] = useState<Person[]>([
-    { id: 1, name: "Personne 1", revenus: [{ id: 1, name: "Salaire", montant: 0 }] },
+    {
+      id: 1,
+      name: "Personne 1",
+      revenus: [
+        { id: 1, name: "Salaire 1", montant: 1800 },
+        { id: 2, name: "Salaire 2", montant: 1200 },
+      ],
+    },
+    {
+      id: 2,
+      name: "Personne 2",
+      revenus: [{ id: 1, name: "Revenu principal", montant: 1200 }],
+    },
   ]);
   const [activePersonId, setActivePersonId] = useState<number | null>(1);
   const [selectedEntity, setSelectedEntity] = useState<EntitySelection>({ type: "person", id: 1 });
-  const [locations, setLocations] = useState<AppartementData[]>([{
-    id: 1,
-    name: "Location 1",
-    type: "location",
-    data: {
-      loyer: 800,
-      credit: 0,
-      assuranceCredit: 0,
-      taxeFonciere: 0,
-      impotsRevenu: 0,
-      chargesCopro: 0,
-      assurance: 40,
-      internet: 30,
-      eau: 50,
-      electricite: 60,
-      gaz: 45,
-    },
-  }]);
-  const [activeLocationId, setActiveLocationId] = useState<number | null>(1);
+  const initialEntityKey = "person-1";
+  const initialEntityLocations: Record<string, AppartementData[]> = {
+    "person-1": [
+      {
+        id: 1,
+        name: "Location Personne 1",
+        type: "location",
+        data: {
+          loyer: 760,
+          credit: 0,
+          assuranceCredit: 0,
+          taxeFonciere: 0,
+          impotsRevenu: 0,
+          chargesCopro: 0,
+          assurance: 20,
+          internet: 30,
+          eau: 20,
+          electricite: 35,
+          gaz: 0,
+        },
+      },
+    ],
+    "person-2": [],
+    household: [
+      {
+        id: 1,
+        name: "Location Foyer",
+        type: "location",
+        data: {
+          loyer: 980,
+          credit: 0,
+          assuranceCredit: 0,
+          taxeFonciere: 0,
+          impotsRevenu: 0,
+          chargesCopro: 0,
+          assurance: 30,
+          internet: 40,
+          eau: 35,
+          electricite: 110,
+          gaz: 0,
+        },
+      },
+    ],
+  };
+  const [entityLocations, setEntityLocations] = useState(initialEntityLocations);
+  const initialEntityVariables: Record<string, { quotidien: number; voitures: number; autres: number }> = {
+    "person-1": { quotidien: 0, voitures: 0, autres: 0 },
+    "person-2": { quotidien: 0, voitures: 0, autres: 0 },
+    household: { quotidien: 450, voitures: 190, autres: 250 },
+  };
+  const initialEntityFixes: Record<string, { abonnements: number; voiture: number; autres: number }> = {
+    "person-1": { abonnements: 0, voiture: 300, autres: 0 },
+    "person-2": { abonnements: 0, voiture: 0, autres: 0 },
+    household: { abonnements: 100, voiture: 470, autres: 0 },
+  };
+  const [entityVariablesTotals, setEntityVariablesTotals] = useState(initialEntityVariables);
+  const [entityFixesTotals, setEntityFixesTotals] = useState(initialEntityFixes);
+  const [variablesSectionTotals, setVariablesSectionTotals] = useState(initialEntityVariables[initialEntityKey]);
+  const [fixesSectionTotals, setFixesSectionTotals] = useState(initialEntityFixes[initialEntityKey]);
+  const [activeLocationId, setActiveLocationId] = useState<number | null>(
+    initialEntityLocations[initialEntityKey][0]?.id ?? null
+  );
   const [patrimoine, setPatrimoine] = useState<AppartementData[]>([defaultProperty(1)]);
   const [activePatrimoineId, setActivePatrimoineId] = useState<number | null>(1);
   const [showPatrimoineChildren, setShowPatrimoineChildren] = useState(false);
-  const [variablesSectionTotals, setVariablesSectionTotals] = useState<{ quotidien: number; voitures: number; autres: number }>({
-    quotidien: 450,
-    voitures: 190,
-    autres: 250,
-  });
-  const [fixesSectionTotals, setFixesSectionTotals] = useState<{ abonnements: number; voiture: number; autres: number }>({
-    abonnements: 100,
-    voiture: 470,
-    autres: 120,
-  });
+  const entityKey = selectedEntity.type === "household" ? "household" : `person-${selectedEntity.id}`;
+  const activeLocations = entityLocations[entityKey] ?? [];
+  useEffect(() => {
+    const nextVariables = entityVariablesTotals[entityKey] ?? initialEntityVariables[initialEntityKey];
+    const nextFixes = entityFixesTotals[entityKey] ?? initialEntityFixes[initialEntityKey];
+    setVariablesSectionTotals(nextVariables);
+    setFixesSectionTotals(nextFixes);
+  }, [entityKey, entityFixesTotals, entityVariablesTotals]);
+  useEffect(() => {
+    setActiveLocationId((prev) => {
+      if (activeLocations.some((loc) => loc.id === prev)) return prev;
+      return activeLocations[0]?.id ?? null;
+    });
+  }, [activeLocations]);
 
   useEffect(() => {
     const total = persons.reduce(
@@ -199,8 +258,8 @@ export function MainTabs() {
   };
 
   const locationsTotal = useMemo(
-    () => locations.reduce((sum, loc) => sum + calcAppartementTotal(loc), 0),
-    [locations]
+    () => activeLocations.reduce((sum, loc) => sum + calcAppartementTotal(loc), 0),
+    [activeLocations]
   );
 
   const patrimoineTotal = useMemo(
@@ -445,6 +504,24 @@ export function MainTabs() {
     setShowPatrimoineChildren(false);
   };
 
+  const updateEntityLocations = (updater: (current: AppartementData[]) => AppartementData[]) => {
+    setEntityLocations((prev) => {
+      const current = prev[entityKey] ?? [];
+      const next = updater(current);
+      return { ...prev, [entityKey]: next };
+    });
+  };
+
+  const persistVariablesTotals = (next: typeof variablesSectionTotals) => {
+    setEntityVariablesTotals((prev) => ({ ...prev, [entityKey]: next }));
+    setVariablesSectionTotals(next);
+  };
+
+  const persistFixesTotals = (next: typeof fixesSectionTotals) => {
+    setEntityFixesTotals((prev) => ({ ...prev, [entityKey]: next }));
+    setFixesSectionTotals(next);
+  };
+
   const handleMainTabClick = (tab: MainTabId) => {
     if (tab === "depenses") {
       if (sidebarStyle === "app" && activeTab === "depenses") {
@@ -520,8 +597,9 @@ export function MainTabs() {
   };
 
   const handleAddLocation = () => {
-    setLocations((prev) => {
-      const nextId = Math.max(0, ...prev.map((a) => a.id)) + 1;
+    let nextId = 0;
+    updateEntityLocations((prev) => {
+      nextId = Math.max(0, ...prev.map((a) => a.id)) + 1;
       const next: AppartementData = {
         id: nextId,
         name: `Location ${nextId}`,
@@ -540,9 +618,9 @@ export function MainTabs() {
           gaz: 0,
         },
       };
-      setActiveLocationId(nextId);
       return [...prev, next];
     });
+    if (nextId) setActiveLocationId(nextId);
     setActiveTab("depenses");
     setActiveDepenseTab("locations");
     setShowDepensesChildren(true);
@@ -552,7 +630,7 @@ export function MainTabs() {
   };
 
   const handleLocationsChange = (next: AppartementData[]) => {
-    setLocations(next);
+    setEntityLocations((prev) => ({ ...prev, [entityKey]: next }));
     if (activeLocationId !== null && !next.find((a) => a.id === activeLocationId)) {
       setActiveLocationId(next[0]?.id ?? null);
     }
@@ -628,8 +706,6 @@ export function MainTabs() {
           activePersonId={activePersonId}
           onPersonsChange={updatePersons}
           onDeletePerson={handleDeletePersonSide}
-          patrimoineTotal={patrimoineTotal}
-          onManagePatrimoine={goToPatrimoineOverview}
         />
       );
     if (activeTab === "revenus")
@@ -715,29 +791,29 @@ export function MainTabs() {
       return (
         <DepensesVariablesTab
           activeSection={activeVariableSection ?? undefined}
-          onSectionTotalsChange={setVariablesSectionTotals}
+          onSectionTotalsChange={persistVariablesTotals}
         />
       );
     if (activeDepenseTab === "fixes")
       return (
         <DepensesFixesTab
           activeSection={activeFixeSection ?? undefined}
-          onSectionTotalsChange={setFixesSectionTotals}
+          onSectionTotalsChange={persistFixesTotals}
         />
       );
     return (
-      <AppartementsTab
-        appartements={locations}
-        onAppartementsChange={handleLocationsChange}
-        forceType="location"
-        lockType
-        title="Locations"
-        description="Gere tes locations et leurs charges."
-        addLabel="Ajouter une location"
-        activeOnlyId={activeLocationId ?? undefined}
-        carouselMode
-        cardsPerPage={3}
-      />
+        <AppartementsTab
+          appartements={activeLocations}
+          onAppartementsChange={handleLocationsChange}
+          forceType="location"
+          lockType
+          title="Locations"
+          description="Gere tes locations et leurs charges."
+          addLabel="Ajouter une location"
+          activeOnlyId={activeLocationId ?? undefined}
+          carouselMode
+          cardsPerPage={3}
+        />
     );
   };
 
@@ -778,7 +854,7 @@ export function MainTabs() {
       } else if (activeDepenseTab === "locations") {
         items.push({ label: "Locations", onClick: goToLocationsOverview });
         if (activeLocationId !== null) {
-          const location = locations.find((l) => l.id === activeLocationId);
+          const location = activeLocations.find((l) => l.id === activeLocationId);
           if (location) items.push({ label: location.name });
         }
       }
@@ -801,120 +877,116 @@ export function MainTabs() {
   
   const renderSidebarApp = () => (
     <div className="p-3 lg:p-4 flex flex-col gap-2">
-      <div
-        className="rounded-2xl border"
-        style={{ backgroundColor: "var(--theme-bgCard)", borderColor: "var(--theme-border)" }}
-      >
-        <div className="p-3 lg:p-4 flex flex-col gap-2">
+      <div className="p-3 lg:p-4 flex flex-col gap-2">
+        {renderNavButton({
+          label: "Revenus",
+          active: activeTab === "revenus",
+          onClick: () => handleMainTabClick("revenus"),
+          total: revenusTotal,
+        })}
+        <div className="flex flex-col gap-1">
           {renderNavButton({
-            label: "Revenus",
-            active: activeTab === "revenus",
-            onClick: () => handleMainTabClick("revenus"),
-            total: revenusTotal,
+            label: "Depenses",
+            active: activeTab === "depenses",
+            onClick: () => handleMainTabClick("depenses"),
+            total: -depensesTotal,
+            caret: showDepensesChildren ? "open" : "closed",
           })}
-          <div className="flex flex-col gap-1">
-            {renderNavButton({
-              label: "Depenses",
-              active: activeTab === "depenses",
-              onClick: () => handleMainTabClick("depenses"),
-              total: -depensesTotal,
-              caret: showDepensesChildren ? "open" : "closed",
-            })}
-            <Collapsible open={activeTab === "depenses" && showDepensesChildren}>
-              <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                {renderNavButton({
-                  label: "Variables",
-                  active: activeDepenseTab === "variables",
-                  onClick: () => handleDepenseTabClick("variables"),
-                  total: -depensesVariablesTotal,
-                  caret: showVariablesChildren ? "open" : "closed",
-                  level: 1,
-                })}
-                <Collapsible open={showVariablesChildren}>
-                  <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                    {renderNavButton({
-                      label: "Quotidien",
-                      active: activeDepenseTab === "variables" && activeVariableSection === "quotidien",
-                      onClick: () => handleVariableChildClick("quotidien"),
-                      level: 2,
-                      muted: true,
-                      total: -variablesSectionTotals.quotidien,
-                    })}
-                    {renderNavButton({
-                      label: "Voiture",
-                      active: activeDepenseTab === "variables" && activeVariableSection === "voitures",
-                      onClick: () => handleVariableChildClick("voitures"),
-                      level: 2,
-                      muted: true,
-                      total: -variablesSectionTotals.voitures,
-                    })}
-                    {renderNavButton({
-                      label: "Autres",
-                      active: activeDepenseTab === "variables" && activeVariableSection === "autres",
-                      onClick: () => handleVariableChildClick("autres"),
-                      level: 2,
-                      muted: true,
-                      total: -variablesSectionTotals.autres,
-                    })}
-                  </div>
-                </Collapsible>
-                {renderNavButton({
-                  label: "Fixes",
-                  active: activeDepenseTab === "fixes",
-                  onClick: () => handleDepenseTabClick("fixes"),
-                  total: -depensesFixesTotal,
-                  caret: showFixesChildren ? "open" : "closed",
-                  level: 1,
-                })}
-                <Collapsible open={showFixesChildren}>
-                  <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                    {renderNavButton({
-                      label: "Abonnements",
-                      active: activeDepenseTab === "fixes" && activeFixeSection === "abonnements",
-                      onClick: () => handleFixeChildClick("abonnements"),
-                      level: 2,
-                      muted: true,
-                      total: -fixesSectionTotals.abonnements,
-                    })}
-                    {renderNavButton({
-                      label: "Voiture",
-                      active: activeDepenseTab === "fixes" && activeFixeSection === "voiture",
-                      onClick: () => handleFixeChildClick("voiture"),
-                      level: 2,
-                      muted: true,
-                      total: -fixesSectionTotals.voiture,
-                    })}
-                    {renderNavButton({
-                      label: "Autres",
-                      active: activeDepenseTab === "fixes" && activeFixeSection === "autres",
-                      onClick: () => handleFixeChildClick("autres"),
-                      level: 2,
-                      muted: true,
-                      total: -fixesSectionTotals.autres,
-                    })}
-                  </div>
-                </Collapsible>
-                {renderNavButton({
-                  label: "Locations",
-                  active: activeDepenseTab === "locations",
-                  onClick: () => handleDepenseTabClick("locations"),
-                  total: -Math.abs(locationsTotal),
-                  caret: showLocationsChildren ? "open" : "closed",
-                  level: 1,
-                })}
-                <Collapsible open={showLocationsChildren}>
-                  <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                    {locations.map((loc) => (
-                      <React.Fragment key={loc.id}>
-                        {renderNavButton({
-                          label: loc.name,
-                          active: activeDepenseTab === "locations" && activeLocationId === loc.id,
-                          onClick: () => handleLocationClick(loc),
-                          level: 2,
-                          muted: true,
-                          total: calcAppartementTotal(loc),
+          <Collapsible open={activeTab === "depenses" && showDepensesChildren}>
+            <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+              {renderNavButton({
+                label: "Variables",
+                active: activeDepenseTab === "variables",
+                onClick: () => handleDepenseTabClick("variables"),
+                total: -depensesVariablesTotal,
+                caret: showVariablesChildren ? "open" : "closed",
+                level: 1,
+              })}
+              <Collapsible open={showVariablesChildren}>
+                <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                  {renderNavButton({
+                    label: "Quotidien",
+                    active: activeDepenseTab === "variables" && activeVariableSection === "quotidien",
+                    onClick: () => handleVariableChildClick("quotidien"),
+                    level: 2,
+                    muted: true,
+                    total: -variablesSectionTotals.quotidien,
+                  })}
+                  {renderNavButton({
+                    label: "Voiture",
+                    active: activeDepenseTab === "variables" && activeVariableSection === "voitures",
+                    onClick: () => handleVariableChildClick("voitures"),
+                    level: 2,
+                    muted: true,
+                    total: -variablesSectionTotals.voitures,
+                  })}
+                  {renderNavButton({
+                    label: "Autres",
+                    active: activeDepenseTab === "variables" && activeVariableSection === "autres",
+                    onClick: () => handleVariableChildClick("autres"),
+                    level: 2,
+                    muted: true,
+                    total: -variablesSectionTotals.autres,
+                  })}
+                </div>
+              </Collapsible>
+              {renderNavButton({
+                label: "Fixes",
+                active: activeDepenseTab === "fixes",
+                onClick: () => handleDepenseTabClick("fixes"),
+                total: -depensesFixesTotal,
+                caret: showFixesChildren ? "open" : "closed",
+                level: 1,
+              })}
+              <Collapsible open={showFixesChildren}>
+                <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                  {renderNavButton({
+                    label: "Abonnements",
+                    active: activeDepenseTab === "fixes" && activeFixeSection === "abonnements",
+                    onClick: () => handleFixeChildClick("abonnements"),
+                    level: 2,
+                    muted: true,
+                    total: -fixesSectionTotals.abonnements,
+                  })}
+                  {renderNavButton({
+                    label: "Voiture",
+                    active: activeDepenseTab === "fixes" && activeFixeSection === "voiture",
+                    onClick: () => handleFixeChildClick("voiture"),
+                    level: 2,
+                    muted: true,
+                    total: -fixesSectionTotals.voiture,
+                  })}
+                  {renderNavButton({
+                    label: "Autres",
+                    active: activeDepenseTab === "fixes" && activeFixeSection === "autres",
+                    onClick: () => handleFixeChildClick("autres"),
+                    level: 2,
+                    muted: true,
+                    total: -fixesSectionTotals.autres,
+                  })}
+                </div>
+              </Collapsible>
+              {renderNavButton({
+                label: "Locations",
+                active: activeDepenseTab === "locations",
+                onClick: () => handleDepenseTabClick("locations"),
+                total: -Math.abs(locationsTotal),
+                caret: showLocationsChildren ? "open" : "closed",
+                level: 1,
+              })}
+              <Collapsible open={showLocationsChildren}>
+                <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                  {activeLocations.map((loc) => (
+                    <React.Fragment key={loc.id}>
+                      {renderNavButton({
+                        label: loc.name,
+                        active: activeDepenseTab === "locations" && activeLocationId === loc.id,
+                        onClick: () => handleLocationClick(loc),
+                        level: 2,
+                        muted: true,
+                        total: calcAppartementTotal(loc),
                           onDelete: () => {
-                            setLocations((prev) => {
+                            updateEntityLocations((prev) => {
                               if (prev.length <= 1) return prev;
                               const next = prev.filter((a) => a.id !== loc.id);
                               if (activeLocationId === loc.id) {
@@ -923,78 +995,77 @@ export function MainTabs() {
                               return next;
                             });
                           },
-                          deleteDisabled: locations.length <= 1,
-                        })}
-                      </React.Fragment>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={handleAddLocation}
-                      className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
-                      style={{
-                        color: "var(--theme-textSecondary)",
-                        backgroundColor: "transparent",
-                      }}
-                    >
-                      + Ajouter une location
-                    </button>
-                  </div>
-                </Collapsible>
-              </div>
-            </Collapsible>
-          </div>
-          {renderNavButton({
-            label: "Patrimoine",
-            active: activeTab === "patrimoine",
-            onClick: () => handleMainTabClick("patrimoine"),
-            total: patrimoineTotal,
-            caret: showPatrimoineChildren ? "open" : "closed",
-          })}
-          <Collapsible open={activeTab === "patrimoine" && showPatrimoineChildren}>
-            <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-              {patrimoine.map((prop) => (
-                <React.Fragment key={prop.id}>
-                  {renderNavButton({
-                    label: prop.name,
-                    active: activePatrimoineId === prop.id,
-                    onClick: () => {
-                      setActivePatrimoineId(prop.id);
-                      setActiveTab("patrimoine");
-                      setShowPatrimoineChildren(true);
-                    },
-                    level: 1,
-                    muted: true,
-                    total: calcAppartementTotal(prop),
-                    onDelete: () => handleDeletePatrimoine(prop.id),
-                    deleteDisabled: patrimoine.length <= 1,
-                  })}
-                </React.Fragment>
-              ))}
-              <button
-                type="button"
-                onClick={handleAddPatrimoine}
-                className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
-                style={{
-                  color: "var(--theme-textSecondary)",
-                  backgroundColor: "transparent",
-                }}
-              >
-                + Ajouter une propriete
-              </button>
+                        deleteDisabled: activeLocations.length <= 1,
+                      })}
+                    </React.Fragment>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={handleAddLocation}
+                    className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
+                    style={{
+                      color: "var(--theme-textSecondary)",
+                      backgroundColor: "transparent",
+                    }}
+                  >
+                    + Ajouter une location
+                  </button>
+                </div>
+              </Collapsible>
             </div>
           </Collapsible>
-          <div
-            className="mb-2 h-px w-full"
-            style={{ backgroundColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)" }}
-            aria-hidden
-          />
-          {renderNavButton({
-            label: "Bilan",
-            active: activeTab === "bilan",
-            onClick: () => handleMainTabClick("bilan"),
-            total: bilanTotal,
-          })}
         </div>
+        {renderNavButton({
+          label: "Patrimoine",
+          active: activeTab === "patrimoine",
+          onClick: () => handleMainTabClick("patrimoine"),
+          total: patrimoineTotal,
+          caret: showPatrimoineChildren ? "open" : "closed",
+        })}
+        <Collapsible open={activeTab === "patrimoine" && showPatrimoineChildren}>
+          <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+            {patrimoine.map((prop) => (
+              <React.Fragment key={prop.id}>
+                {renderNavButton({
+                  label: prop.name,
+                  active: activePatrimoineId === prop.id,
+                  onClick: () => {
+                    setActivePatrimoineId(prop.id);
+                    setActiveTab("patrimoine");
+                    setShowPatrimoineChildren(true);
+                  },
+                  level: 1,
+                  muted: true,
+                  total: calcAppartementTotal(prop),
+                  onDelete: () => handleDeletePatrimoine(prop.id),
+                  deleteDisabled: patrimoine.length <= 1,
+                })}
+              </React.Fragment>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddPatrimoine}
+              className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
+              style={{
+                color: "var(--theme-textSecondary)",
+                backgroundColor: "transparent",
+              }}
+            >
+              + Ajouter une propriete
+            </button>
+          </div>
+        </Collapsible>
+        <div
+          className="mb-2 h-px w-full"
+          style={{ backgroundColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)" }}
+          aria-hidden
+        />
+        {renderNavButton({
+          label: "Bilan",
+          active: activeTab === "bilan",
+          onClick: () => handleMainTabClick("bilan"),
+          total: bilanTotal,
+        })}
       </div>
     </div>
   );
@@ -1150,7 +1221,7 @@ export function MainTabs() {
             </span>
           </div>
           <div className="ml-2 space-y-1">
-            {locations.map((loc) => (
+            {activeLocations.map((loc) => (
               <React.Fragment key={loc.id}>
                 {renderNavButton({
                   label: loc.name,
@@ -1159,17 +1230,17 @@ export function MainTabs() {
                   level: 2,
                   muted: true,
                   total: calcAppartementTotal(loc),
-                  onDelete: () => {
-                    setLocations((prev) => {
-                      if (prev.length <= 1) return prev;
-                      const next = prev.filter((a) => a.id !== loc.id);
-                      if (activeLocationId === loc.id) {
-                        setActiveLocationId(next[0]?.id ?? null);
-                      }
-                      return next;
-                    });
-                  },
-                  deleteDisabled: locations.length <= 1,
+                        onDelete: () => {
+                          updateEntityLocations((prev) => {
+                            if (prev.length <= 1) return prev;
+                            const next = prev.filter((a) => a.id !== loc.id);
+                            if (activeLocationId === loc.id) {
+                              setActiveLocationId(next[0]?.id ?? null);
+                            }
+                            return next;
+                          });
+                        },
+                  deleteDisabled: activeLocations.length <= 1,
                 })}
               </React.Fragment>
             ))}

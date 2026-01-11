@@ -3,14 +3,13 @@
 import { EditableSliderRow, sliderGroupStyle } from "../components/EditableSliderRow";
 import { EditableTitle } from "../components/EditableTitle";
 import type { Person } from "../types/budget";
+import type { CSSProperties } from "react";
 
 type Props = {
   persons: Person[];
   activePersonId: number | null;
   onPersonsChange: (updater: (prev: Person[]) => Person[]) => void;
   onDeletePerson: (personId: number) => void;
-  patrimoineTotal: number;
-  onManagePatrimoine: () => void;
 };
 
 const formatMontant = (value: number) => {
@@ -32,13 +31,28 @@ export function PersonTab({
   activePersonId,
   onPersonsChange,
   onDeletePerson,
-  patrimoineTotal,
-  onManagePatrimoine,
 }: Props) {
   const activePerson = activePersonId ? persons.find((p) => p.id === activePersonId) : null;
   const activeTotal = activePerson
     ? activePerson.revenus.reduce((sum, r) => sum + r.montant, 0)
     : 0;
+  const revenueHeaderStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "clamp(240px, 26vw, 360px) 1fr auto",
+    alignItems: "center",
+    padding: "0 16px",
+    fontSize: 14,
+    color: "var(--theme-tabActiveBg)",
+    columnGap: 14,
+    marginBottom: 6,
+  };
+  const revenueTotalBadgeStyle: CSSProperties = {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 104,
+  };
 
   const handlePersonNameChange = (name: string) => {
     if (!activePerson) return;
@@ -127,90 +141,77 @@ export function PersonTab({
           width="18ch"
         />
         <p className="mt-1 text-sm" style={{ color: "var(--theme-textSecondary)" }}>
-          Reviens et patrimoine associes a cette personne.
+          Revenus associés à cette personne.
         </p>
       </div>
 
       <div className="space-y-1">
         <div className="text-sm font-semibold text-[var(--theme-tabActiveBg)]">Revenus</div>
-        <div
-          className="rounded-2xl border bg-[var(--theme-bgCard)] p-4"
-          style={{ borderColor: "var(--theme-border)" }}
-        >
-          <div style={sliderGroupStyle}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-xs" style={{ color: "var(--theme-textSecondary)" }}>
-                  Total per person
-                </div>
-                <div className="text-lg font-semibold" style={{ color: amountColor(activeTotal) }}>
-                  {formatMontant(activeTotal)}
-                </div>
-              </div>
+        <div style={sliderGroupStyle}>
+        <div style={revenueHeaderStyle}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontWeight: 700, flex: 1 }}>{`Total des revenus ${getPersonLabel(activePerson)}`}</span>
+            <div style={revenueTotalBadgeStyle}>
+              <span aria-hidden style={{ position: "absolute", left: 0, width: 16, height: 16 }} />
+              <span style={{ textAlign: "center", fontWeight: 700 }}>{formatMontant(activeTotal)}</span>
             </div>
-            <div className="space-y-0">
-              {activePerson.revenus.map((item) => {
-                const absValue = Math.max(0, Math.abs(item.montant));
-                const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
-                return (
-                  <EditableSliderRow
-                    key={item.id}
-                    label={item.name}
-                    labelEditable
-                    onLabelChange={(next) => handleSaveRevenueLabel(item.id, next)}
-                    value={absValue}
-                    min={0}
-                    max={maxValue}
-                    step={10}
-                    unitLabel="€/mois"
-                    onValueChange={(next) => handleSaveRevenueValue(item.id, next)}
-                    onRemove={() => handleDeleteRevenue(item.id)}
-                  />
-                );
-              })}
-            </div>
-            <button
-              onClick={handleAddRevenue}
-              className="flex items-center gap-3 w-full justify-center text-sm font-semibold transition hover:bg-[var(--theme-bgHover)]"
-              style={{
-                borderRadius: 18,
-                padding: "14px 16px",
-                border: "none",
-                color: "var(--theme-text)",
-                backgroundColor: "transparent",
-              }}
-            >
-              + Ajouter un revenu
-            </button>
           </div>
+          <div
+            style={{
+              fontSize: 12,
+              color: "var(--theme-textSecondary)",
+              textAlign: "right",
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            {activePerson.revenus.length === 1 ? "Salaire" : "Revenus multiples"}
+          </div>
+          <div />
         </div>
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-semibold text-[var(--theme-tabActiveBg)]">Patrimoine</div>
-            <div className="text-xs" style={{ color: "var(--theme-textSecondary)" }}>
-              Gestion des biens li?s a la personne.
-            </div>
+          <div className="space-y-0">
+            {activePerson.revenus.map((item) => {
+              const absValue = Math.max(0, Math.abs(item.montant));
+              const maxValue = Math.max(2000, Math.ceil(absValue * 1.5));
+              return (
+                <EditableSliderRow
+                  key={item.id}
+                  label={item.name}
+                  labelEditable
+                  onLabelChange={(next) => handleSaveRevenueLabel(item.id, next)}
+                  value={absValue}
+                  min={0}
+                  max={maxValue}
+                  step={10}
+                  unitLabel="€/mois"
+                  onValueChange={(next) => handleSaveRevenueValue(item.id, next)}
+                  onRemove={() => handleDeleteRevenue(item.id)}
+                />
+              );
+            })}
           </div>
           <button
-            type="button"
-            onClick={onManagePatrimoine}
-            className="text-xs font-semibold transition hover:text-[var(--theme-text)]"
-            style={{ color: "var(--theme-textSecondary)" }}
+            onClick={handleAddRevenue}
+            className="flex items-center gap-3 w-full justify-center text-sm font-semibold transition hover:bg-[var(--theme-bgHover)]"
+            style={{
+              borderRadius: 18,
+              padding: "14px 16px",
+              border: "none",
+              color: "var(--theme-text)",
+              backgroundColor: "transparent",
+            }}
           >
-            Ouvrir
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--theme-tabActiveBg) 22%, transparent)",
+                color: "var(--theme-tabActiveBg)",
+              }}
+            >
+              +
+            </span>
+            Ajouter un revenu
           </button>
-        </div>
-        <div className="flex items-center justify-between rounded-2xl border px-4 py-3"
-            style={{ borderColor: "var(--theme-border)" }}>
-          <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
-            Total patrimoine
-          </span>
-          <span className="text-lg font-semibold" style={{ color: amountColor(patrimoineTotal) }}>
-            {formatMontant(patrimoineTotal)}
-          </span>
         </div>
       </div>
 
