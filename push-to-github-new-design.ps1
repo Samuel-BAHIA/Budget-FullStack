@@ -1,13 +1,12 @@
 # push-to-github-new-design.ps1
 # Commit + push automatiquement tous les changements locaux vers GitHub (branche new-design)
 
+param(
+  [string]$repoUrl = "https://github.com/Samuel-BAHIA/Budget-FullStack.git",
+  [string]$targetBranch = "new-design"
+)
+
 $ErrorActionPreference = "Stop"
-
-# ⚠️ Mets l'URL exacte de ton repo (avec .git)
-$repoUrl = "https://github.com/Samuel-BAHIA/Budget-FullStack.git"
-
-# Nom de branche cible
-$targetBranch = "new-design"
 
 function Write-Step($msg) {
   Write-Host "`n==> $msg" -ForegroundColor Cyan
@@ -59,9 +58,9 @@ try {
   Write-Step "Push vers origin/$targetBranch"
   git push -u origin $targetBranch
 
-  Write-Host "`n✅ Changements envoyés sur GitHub (branche $targetBranch) !" -ForegroundColor Green
+  Write-Host "`n: Changements envoyés sur GitHub (branche $targetBranch) !" -ForegroundColor Green
 }
 catch {
-  Write-Host "`n❌ Erreur: $($_.Exception.Message)" -ForegroundColor Red
+  Write-Host "`nErreur: $($_.Exception.Message)" -ForegroundColor Red
   exit 1
 }

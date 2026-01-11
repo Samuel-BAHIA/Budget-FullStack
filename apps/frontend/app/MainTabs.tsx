@@ -1,21 +1,25 @@
 "use client";
 
-import React, { useMemo, useState, type ReactNode } from "react";
-import { RevenusTab, type Person } from "./tabs/RevenusTab";
+import React, { useEffect, useMemo, useState, type ReactNode } from "react";
+import { RevenusTab } from "./tabs/RevenusTab";
+import { PersonTab } from "./tabs/PersonTab";
+import type { Person } from "./types/budget";
 import { DepensesVariablesTab } from "./tabs/DepensesVariablesTab";
 import { DepensesFixesTab } from "./tabs/DepensesFixesTab";
 import { AppartementsTab, type AppartementData } from "./tabs/AppartementsTab";
 import { BilanTab } from "./tabs/BilanTab";
 import { useBudget } from "./contexts/BudgetContext";
 import { TrashIcon } from "./components/icons/TrashIcon";
-import { PersonPlusIcon } from "./components/icons/PersonIcon";
+import { PersonIcon, PersonPlusIcon } from "./components/icons/PersonIcon";
+import { HomeIcon } from "./components/icons/HomeIcon";
 import { useTheme } from "./contexts/ThemeContext";
 
-type MainTabId = "revenus" | "depenses" | "patrimoine" | "bilan";
+type MainTabId = "revenus" | "personne" | "depenses" | "patrimoine" | "bilan";
 type DepenseTab = "overview" | "variables" | "fixes" | "locations";
 type VariableSection = "quotidien" | "voitures" | "autres";
 type FixeSection = "abonnements" | "voiture" | "autres";
 type SidebarStyle = "app" | "dashboard";
+type EntitySelection = { type: "person"; id: number } | { type: "household" };
 
 type NavButtonProps = {
   label: string;
@@ -85,11 +89,10 @@ export function MainTabs() {
       <div style={{ paddingTop: open ? 6 : 0 }}>{children}</div>
     </div>
   );
-  const { totals } = useBudget();
+  const { totals, updateTotal, updateRevenusParPersonnes } = useBudget();
   const { theme, setTheme, themes } = useTheme();
   const [sidebarStyle, setSidebarStyle] = useState<SidebarStyle>("app");
   const [activeTab, setActiveTab] = useState<MainTabId>("revenus");
-  const [showRevenusChildren, setShowRevenusChildren] = useState(false);
   const [activeDepenseTab, setActiveDepenseTab] = useState<DepenseTab>("overview");
   const [showDepensesChildren, setShowDepensesChildren] = useState(false);
   const [showVariablesChildren, setShowVariablesChildren] = useState(false);
@@ -101,6 +104,7 @@ export function MainTabs() {
     { id: 1, name: "Personne 1", revenus: [{ id: 1, name: "Salaire", montant: 0 }] },
   ]);
   const [activePersonId, setActivePersonId] = useState<number | null>(1);
+  const [selectedEntity, setSelectedEntity] = useState<EntitySelection>({ type: "person", id: 1 });
   const [locations, setLocations] = useState<AppartementData[]>([{
     id: 1,
     name: "Location 1",
@@ -134,10 +138,47 @@ export function MainTabs() {
     autres: 120,
   });
 
+  useEffect(() => {
+    const total = persons.reduce(
+      (sum, person) => sum + person.revenus.reduce((s, r) => s + r.montant, 0),
+      0
+    );
+    const breakdown = persons.map((person) => ({
+      name: person.name || `Personne ${person.id}`,
+      montant: person.revenus.reduce((s, r) => s + r.montant, 0),
+    }));
+    updateTotal("revenus", total);
+    updateRevenusParPersonnes(breakdown);
+  }, [persons, updateRevenusParPersonnes, updateTotal]);
+
+  useEffect(() => {
+    if (persons.length === 0) return;
+    if (persons.length === 1) {
+      const only = persons[0];
+      if (selectedEntity.type !== "person" || selectedEntity.id !== only.id) {
+        setSelectedEntity({ type: "person", id: only.id });
+      }
+      if (activePersonId !== only.id) setActivePersonId(only.id);
+      return;
+    }
+
+    if (selectedEntity.type === "person") {
+      const exists = persons.some((p) => p.id === selectedEntity.id);
+      if (!exists) {
+        const fallback = persons[0];
+        setSelectedEntity({ type: "person", id: fallback.id });
+        setActivePersonId(fallback.id);
+        setActiveTab("personne");
+      }
+    }
+  }, [persons, selectedEntity, activePersonId]);
+
   const revenusTotal = useMemo(
     () => persons.reduce((sum, p) => sum + p.revenus.reduce((s, r) => s + r.montant, 0), 0),
     [persons]
   );
+  const hasMultiplePersons = persons.length > 1;
+  const isHouseholdActive = selectedEntity.type === "household";
 
   const depensesVariablesTotal = useMemo(
     () => variablesSectionTotals.quotidien + variablesSectionTotals.voitures + variablesSectionTotals.autres,
@@ -287,8 +328,30 @@ export function MainTabs() {
 
   const goToRevenusOverview = () => {
     setActiveTab("revenus");
-    setShowRevenusChildren(true);
     setActivePersonId(null);
+    setShowDepensesChildren(false);
+    setShowVariablesChildren(false);
+    setShowFixesChildren(false);
+    setShowLocationsChildren(false);
+    setShowPatrimoineChildren(false);
+  };
+
+  const selectPersonEntity = (personId: number) => {
+    setSelectedEntity({ type: "person", id: personId });
+    setActivePersonId(personId);
+    setActiveTab("personne");
+  };
+
+  const selectHouseholdEntity = () => {
+    if (persons.length < 2) return;
+    setSelectedEntity({ type: "household" });
+    setActivePersonId(null);
+    setActiveTab("revenus");
+  };
+
+  const goToPersonOverview = (personId: number) => {
+    setActiveTab("personne");
+    setActivePersonId(personId);
     setShowDepensesChildren(false);
     setShowVariablesChildren(false);
     setShowFixesChildren(false);
@@ -303,7 +366,6 @@ export function MainTabs() {
     setShowVariablesChildren(false);
     setShowFixesChildren(false);
     setShowLocationsChildren(false);
-    setShowRevenusChildren(false);
     setShowPatrimoineChildren(false);
     setActiveVariableSection(null);
     setActiveFixeSection(null);
@@ -316,7 +378,6 @@ export function MainTabs() {
     setShowVariablesChildren(true);
     setShowFixesChildren(false);
     setShowLocationsChildren(false);
-    setShowRevenusChildren(false);
     setShowPatrimoineChildren(false);
     setActiveVariableSection(null);
   };
@@ -328,7 +389,6 @@ export function MainTabs() {
     setShowVariablesChildren(true);
     setShowFixesChildren(false);
     setShowLocationsChildren(false);
-    setShowRevenusChildren(false);
     setShowPatrimoineChildren(false);
     setActiveVariableSection(section);
   };
@@ -340,7 +400,6 @@ export function MainTabs() {
     setShowFixesChildren(true);
     setShowVariablesChildren(false);
     setShowLocationsChildren(false);
-    setShowRevenusChildren(false);
     setShowPatrimoineChildren(false);
     setActiveFixeSection(null);
   };
@@ -352,7 +411,6 @@ export function MainTabs() {
     setShowFixesChildren(true);
     setShowVariablesChildren(false);
     setShowLocationsChildren(false);
-    setShowRevenusChildren(false);
     setShowPatrimoineChildren(false);
     setActiveFixeSection(section);
   };
@@ -364,7 +422,6 @@ export function MainTabs() {
     setShowLocationsChildren(true);
     setShowVariablesChildren(false);
     setShowFixesChildren(false);
-    setShowRevenusChildren(false);
     setShowPatrimoineChildren(false);
     setActiveLocationId(null);
   };
@@ -377,7 +434,6 @@ export function MainTabs() {
     setShowVariablesChildren(false);
     setShowFixesChildren(false);
     setShowLocationsChildren(false);
-    setShowRevenusChildren(false);
   };
 
   const goToBilan = () => {
@@ -386,7 +442,6 @@ export function MainTabs() {
     setShowVariablesChildren(false);
     setShowFixesChildren(false);
     setShowLocationsChildren(false);
-    setShowRevenusChildren(false);
     setShowPatrimoineChildren(false);
   };
 
@@ -404,10 +459,6 @@ export function MainTabs() {
       }
       goToDepensesOverview();
     } else if (tab === "revenus") {
-      if (sidebarStyle === "app" && activeTab === "revenus") {
-        setShowRevenusChildren((prev) => !prev);
-        return;
-      }
       goToRevenusOverview();
     } else if (tab === "patrimoine") {
       if (sidebarStyle === "app" && activeTab === "patrimoine") {
@@ -507,32 +558,44 @@ export function MainTabs() {
     }
   };
 
-  const handlePersonsChange = (next: Person[]) => {
-    setPersons(next);
-    if (activePersonId !== null && !next.find((p) => p.id === activePersonId)) {
-      setActivePersonId(next[0]?.id ?? null);
-    }
-  };
-
-  const handleAddPerson = () => {
+  const updatePersons = (updater: (prev: Person[]) => Person[]) => {
     setPersons((prev) => {
-      const nextId = Math.max(0, ...prev.map((p) => p.id)) + 1;
-      const next = [...prev, { id: nextId, name: `Personne ${nextId}`, revenus: [{ id: 1, name: "Revenu 1", montant: 0 }] }];
-      setActivePersonId(nextId);
-      return next;
-    });
-    setActiveTab("revenus");
-    setShowRevenusChildren(true);
-  };
-
-  const handleDeletePersonSide = (personId: number) => {
-    setPersons((prev) => {
-      if (prev.length <= 1) return prev;
-      const next = prev.filter((p) => p.id !== personId);
-      if (activePersonId === personId) {
+      const next = updater(prev);
+      if (selectedEntity.type === "person") {
+        const exists = next.some((p) => p.id === selectedEntity.id);
+        if (!exists && next.length > 0) {
+          const fallback = next[0];
+          setSelectedEntity({ type: "person", id: fallback.id });
+          setActivePersonId(fallback.id);
+          setActiveTab("personne");
+        }
+      }
+      if (selectedEntity.type === "household" && next.length < 2 && next.length > 0) {
+        const fallback = next[0];
+        setSelectedEntity({ type: "person", id: fallback.id });
+        setActivePersonId(fallback.id);
+        setActiveTab("personne");
+      }
+      if (activePersonId !== null && !next.find((p) => p.id === activePersonId)) {
         setActivePersonId(next[0]?.id ?? null);
       }
       return next;
+    });
+  };
+
+  const handleAddPerson = () => {
+    let nextId = 0;
+    updatePersons((prev) => {
+      nextId = Math.max(0, ...prev.map((p) => p.id)) + 1;
+      return [...prev, { id: nextId, name: `Personne ${nextId}`, revenus: [{ id: 1, name: "Revenu 1", montant: 0 }] }];
+    });
+    if (nextId) selectPersonEntity(nextId);
+  };
+
+  const handleDeletePersonSide = (personId: number) => {
+    updatePersons((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((p) => p.id !== personId);
     });
   };
 
@@ -558,8 +621,19 @@ export function MainTabs() {
   };
 
   const renderContent = () => {
+    if (activeTab === "personne")
+      return (
+        <PersonTab
+          persons={persons}
+          activePersonId={activePersonId}
+          onPersonsChange={updatePersons}
+          onDeletePerson={handleDeletePersonSide}
+          patrimoineTotal={patrimoineTotal}
+          onManagePatrimoine={goToPatrimoineOverview}
+        />
+      );
     if (activeTab === "revenus")
-      return <RevenusTab persons={persons} onPersonsChange={handlePersonsChange} activePersonId={activePersonId} />;
+      return <RevenusTab persons={persons} activePersonId={activePersonId} />;
     if (activeTab === "bilan") return <BilanTab />;
     if (activeTab === "patrimoine")
       return (
@@ -667,13 +741,6 @@ export function MainTabs() {
     );
   };
 
-  const personTotal = (p: Person) => p.revenus.reduce((s, r) => s + r.montant, 0);
-  const revenusPersons = persons.map((p) => ({
-    id: p.id,
-    name: p.name || `Personne ${p.id}`,
-    montant: personTotal(p),
-  }));
-
   const breadcrumbs = (() => {
     const items: { label: string; onClick?: () => void }[] = [];
     if (activeTab === "revenus") {
@@ -732,346 +799,205 @@ export function MainTabs() {
   const clickableBreadcrumbs = breadcrumbs.filter((crumb) => Boolean(crumb.onClick));
 
   
-  const renderSidebarApp = () => {
-    const removableId = persons[persons.length - 1]?.id ?? null;
-    const removeDisabled = persons.length <= 1;
-    const visiblePersons = persons.slice(0, 4);
-    const extraPersons = Math.max(0, persons.length - visiblePersons.length);
-    return (
-      <div className="p-3 lg:p-4 flex flex-col gap-2">
-        <div
-          className="rounded-2xl border p-3 space-y-3"
-          style={{ backgroundColor: "var(--theme-bg)", borderColor: "var(--theme-border)" }}
-        >
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold">Personnes</p>
-            <button
-              type="button"
-              onClick={() => {
-                if (removeDisabled || removableId === null) return;
-                handleDeletePersonSide(removableId);
-              }}
-              disabled={removeDisabled}
-              className="flex h-9 w-9 items-center justify-center rounded-full border transition"
-              style={{
-                borderColor: removeDisabled ? "var(--theme-border)" : "var(--theme-tabActiveBg)",
-                color: removeDisabled ? "var(--theme-textSecondary)" : "var(--theme-tabActiveBg)",
-                backgroundColor: "transparent",
-                cursor: removeDisabled ? "not-allowed" : "pointer",
-              }}
-              aria-label="Supprimer une personne"
-            >
-              −
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            {visiblePersons.map((person) => {
-              const index = persons.findIndex((p) => p.id === person.id);
-              const color = getPersonColor(index === -1 ? 0 : index);
-              return (
-                <button
-                  type="button"
-                  key={person.id}
-                  onClick={() => {
-                    setActivePersonId(person.id);
-                    setActiveTab("revenus");
-                    setShowRevenusChildren(true);
-                  }}
-                  className="flex flex-col items-center gap-1 rounded-full transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color-mix(in srgb, var(--theme-tabActiveBg) 80%, var(--theme-bg))]"
-                  style={{ width: 54 }}
-                >
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold"
-                    style={{
-                      borderColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)",
-                      backgroundColor: color,
-                      color: "var(--theme-bg)",
-                    }}
-                  >
-                    {getPersonInitial(person.name)}
-                  </div>
-                  <span
-                    className="text-[10px] font-semibold tracking-tight text-center"
-                    style={{ color: "var(--theme-textSecondary)", width: 52 }}
-                  >
-                    {truncateName(person.name)}
-                  </span>
-                </button>
-              );
+  const renderSidebarApp = () => (
+    <div className="p-3 lg:p-4 flex flex-col gap-2">
+      <div
+        className="rounded-2xl border"
+        style={{ backgroundColor: "var(--theme-bgCard)", borderColor: "var(--theme-border)" }}
+      >
+        <div className="p-3 lg:p-4 flex flex-col gap-2">
+          {renderNavButton({
+            label: "Revenus",
+            active: activeTab === "revenus",
+            onClick: () => handleMainTabClick("revenus"),
+            total: revenusTotal,
+          })}
+          <div className="flex flex-col gap-1">
+            {renderNavButton({
+              label: "Depenses",
+              active: activeTab === "depenses",
+              onClick: () => handleMainTabClick("depenses"),
+              total: -depensesTotal,
+              caret: showDepensesChildren ? "open" : "closed",
             })}
-            {extraPersons > 0 && (
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full border text-xs font-semibold"
+            <Collapsible open={activeTab === "depenses" && showDepensesChildren}>
+              <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                {renderNavButton({
+                  label: "Variables",
+                  active: activeDepenseTab === "variables",
+                  onClick: () => handleDepenseTabClick("variables"),
+                  total: -depensesVariablesTotal,
+                  caret: showVariablesChildren ? "open" : "closed",
+                  level: 1,
+                })}
+                <Collapsible open={showVariablesChildren}>
+                  <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                    {renderNavButton({
+                      label: "Quotidien",
+                      active: activeDepenseTab === "variables" && activeVariableSection === "quotidien",
+                      onClick: () => handleVariableChildClick("quotidien"),
+                      level: 2,
+                      muted: true,
+                      total: -variablesSectionTotals.quotidien,
+                    })}
+                    {renderNavButton({
+                      label: "Voiture",
+                      active: activeDepenseTab === "variables" && activeVariableSection === "voitures",
+                      onClick: () => handleVariableChildClick("voitures"),
+                      level: 2,
+                      muted: true,
+                      total: -variablesSectionTotals.voitures,
+                    })}
+                    {renderNavButton({
+                      label: "Autres",
+                      active: activeDepenseTab === "variables" && activeVariableSection === "autres",
+                      onClick: () => handleVariableChildClick("autres"),
+                      level: 2,
+                      muted: true,
+                      total: -variablesSectionTotals.autres,
+                    })}
+                  </div>
+                </Collapsible>
+                {renderNavButton({
+                  label: "Fixes",
+                  active: activeDepenseTab === "fixes",
+                  onClick: () => handleDepenseTabClick("fixes"),
+                  total: -depensesFixesTotal,
+                  caret: showFixesChildren ? "open" : "closed",
+                  level: 1,
+                })}
+                <Collapsible open={showFixesChildren}>
+                  <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                    {renderNavButton({
+                      label: "Abonnements",
+                      active: activeDepenseTab === "fixes" && activeFixeSection === "abonnements",
+                      onClick: () => handleFixeChildClick("abonnements"),
+                      level: 2,
+                      muted: true,
+                      total: -fixesSectionTotals.abonnements,
+                    })}
+                    {renderNavButton({
+                      label: "Voiture",
+                      active: activeDepenseTab === "fixes" && activeFixeSection === "voiture",
+                      onClick: () => handleFixeChildClick("voiture"),
+                      level: 2,
+                      muted: true,
+                      total: -fixesSectionTotals.voiture,
+                    })}
+                    {renderNavButton({
+                      label: "Autres",
+                      active: activeDepenseTab === "fixes" && activeFixeSection === "autres",
+                      onClick: () => handleFixeChildClick("autres"),
+                      level: 2,
+                      muted: true,
+                      total: -fixesSectionTotals.autres,
+                    })}
+                  </div>
+                </Collapsible>
+                {renderNavButton({
+                  label: "Locations",
+                  active: activeDepenseTab === "locations",
+                  onClick: () => handleDepenseTabClick("locations"),
+                  total: -Math.abs(locationsTotal),
+                  caret: showLocationsChildren ? "open" : "closed",
+                  level: 1,
+                })}
+                <Collapsible open={showLocationsChildren}>
+                  <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+                    {locations.map((loc) => (
+                      <React.Fragment key={loc.id}>
+                        {renderNavButton({
+                          label: loc.name,
+                          active: activeDepenseTab === "locations" && activeLocationId === loc.id,
+                          onClick: () => handleLocationClick(loc),
+                          level: 2,
+                          muted: true,
+                          total: calcAppartementTotal(loc),
+                          onDelete: () => {
+                            setLocations((prev) => {
+                              if (prev.length <= 1) return prev;
+                              const next = prev.filter((a) => a.id !== loc.id);
+                              if (activeLocationId === loc.id) {
+                                setActiveLocationId(next[0]?.id ?? null);
+                              }
+                              return next;
+                            });
+                          },
+                          deleteDisabled: locations.length <= 1,
+                        })}
+                      </React.Fragment>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleAddLocation}
+                      className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
+                      style={{
+                        color: "var(--theme-textSecondary)",
+                        backgroundColor: "transparent",
+                      }}
+                    >
+                      + Ajouter une location
+                    </button>
+                  </div>
+                </Collapsible>
+              </div>
+            </Collapsible>
+          </div>
+          {renderNavButton({
+            label: "Patrimoine",
+            active: activeTab === "patrimoine",
+            onClick: () => handleMainTabClick("patrimoine"),
+            total: patrimoineTotal,
+            caret: showPatrimoineChildren ? "open" : "closed",
+          })}
+          <Collapsible open={activeTab === "patrimoine" && showPatrimoineChildren}>
+            <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
+              {patrimoine.map((prop) => (
+                <React.Fragment key={prop.id}>
+                  {renderNavButton({
+                    label: prop.name,
+                    active: activePatrimoineId === prop.id,
+                    onClick: () => {
+                      setActivePatrimoineId(prop.id);
+                      setActiveTab("patrimoine");
+                      setShowPatrimoineChildren(true);
+                    },
+                    level: 1,
+                    muted: true,
+                    total: calcAppartementTotal(prop),
+                    onDelete: () => handleDeletePatrimoine(prop.id),
+                    deleteDisabled: patrimoine.length <= 1,
+                  })}
+                </React.Fragment>
+              ))}
+              <button
+                type="button"
+                onClick={handleAddPatrimoine}
+                className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
                 style={{
-                  borderColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)",
                   color: "var(--theme-textSecondary)",
+                  backgroundColor: "transparent",
                 }}
               >
-                +{extraPersons}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={handleAddPerson}
-              className="flex h-10 w-10 items-center justify-center rounded-full border transition"
-              style={{
-                borderColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)",
-                color: "var(--theme-tabActiveBg)",
-                backgroundColor: "var(--theme-bgCard)",
-              }}
-              aria-label="Ajouter une personne"
-            >
-              <PersonPlusIcon size={18} stroke="var(--theme-tabActiveBg)" />
-            </button>
-          </div>
-          <p className="text-xs" style={{ color: "var(--theme-textSecondary)" }}>
-            Revenus = ajout de personne, Patrimoine = ajout de propriété.
-          </p>
-        </div>
-        <div
-          className="rounded-2xl border"
-          style={{ backgroundColor: "var(--theme-bgCard)", borderColor: "var(--theme-border)" }}
-        >
-          <div className="p-3 lg:p-4 flex flex-col gap-2">
-            {renderNavButton({
-              label: "Revenus",
-              active: activeTab === "revenus",
-              onClick: () => handleMainTabClick("revenus"),
-              total: revenusTotal,
-              caret: showRevenusChildren ? "open" : "closed",
-            })}
-
-            <Collapsible open={activeTab === "revenus" && showRevenusChildren}>
-              <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                {revenusPersons.map((person) => (
-                  <React.Fragment key={person.id}>
-                    {renderNavButton({
-                      label: person.name,
-                      active: activePersonId === person.id,
-                      onClick: () => {
-                        setActivePersonId(person.id);
-                        setActiveTab("revenus");
-                        setShowRevenusChildren(true);
-                      },
-                      level: 1,
-                      muted: true,
-                      total: person.montant,
-                      onDelete: () => handleDeletePersonSide(person.id),
-                      deleteDisabled: persons.length <= 1,
-                    })}
-                  </React.Fragment>
-                ))}
-                <button
-                  type="button"
-                  className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
-                  style={{
-                    color: "var(--theme-textSecondary)",
-                    backgroundColor: "transparent",
-                  }}
-                  onClick={handleAddPerson}
-                >
-                  + Ajouter
-                </button>
-              </div>
-            </Collapsible>
-
-            <div className="flex flex-col gap-1">
-              {renderNavButton({
-                label: "Depenses",
-                active: activeTab === "depenses",
-                onClick: () => handleMainTabClick("depenses"),
-                total: -depensesTotal,
-                caret: showDepensesChildren ? "open" : "closed",
-              })}
-
-              <Collapsible open={activeTab === "depenses" && showDepensesChildren}>
-                <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                  {renderNavButton({
-                    label: "Variables",
-                    active: activeDepenseTab === "variables",
-                    onClick: () => handleDepenseTabClick("variables"),
-                    total: -depensesVariablesTotal,
-                    caret: showVariablesChildren ? "open" : "closed",
-                    level: 1,
-                  })}
-
-                  <Collapsible open={showVariablesChildren}>
-                    <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                      {renderNavButton({
-                        label: "Quotidien",
-                        active: activeDepenseTab === "variables" && activeVariableSection === "quotidien",
-                        onClick: () => handleVariableChildClick("quotidien"),
-                        level: 2,
-                        muted: true,
-                        total: -variablesSectionTotals.quotidien,
-                      })}
-                      {renderNavButton({
-                        label: "Voiture",
-                        active: activeDepenseTab === "variables" && activeVariableSection === "voitures",
-                        onClick: () => handleVariableChildClick("voitures"),
-                        level: 2,
-                        muted: true,
-                        total: -variablesSectionTotals.voitures,
-                      })}
-                      {renderNavButton({
-                        label: "Autres",
-                        active: activeDepenseTab === "variables" && activeVariableSection === "autres",
-                        onClick: () => handleVariableChildClick("autres"),
-                        level: 2,
-                        muted: true,
-                        total: -variablesSectionTotals.autres,
-                      })}
-                    </div>
-                  </Collapsible>
-
-                  {renderNavButton({
-                    label: "Fixes",
-                    active: activeDepenseTab === "fixes",
-                    onClick: () => handleDepenseTabClick("fixes"),
-                    total: -depensesFixesTotal,
-                    caret: showFixesChildren ? "open" : "closed",
-                    level: 1,
-                  })}
-
-                  <Collapsible open={showFixesChildren}>
-                    <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                      {renderNavButton({
-                        label: "Abonnements",
-                        active: activeDepenseTab === "fixes" && activeFixeSection === "abonnements",
-                        onClick: () => handleFixeChildClick("abonnements"),
-                        level: 2,
-                        muted: true,
-                        total: -fixesSectionTotals.abonnements,
-                      })}
-                      {renderNavButton({
-                        label: "Voiture",
-                        active: activeDepenseTab === "fixes" && activeFixeSection === "voiture",
-                        onClick: () => handleFixeChildClick("voiture"),
-                        level: 2,
-                        muted: true,
-                        total: -fixesSectionTotals.voiture,
-                      })}
-                      {renderNavButton({
-                        label: "Autres",
-                        active: activeDepenseTab === "fixes" && activeFixeSection === "autres",
-                        onClick: () => handleFixeChildClick("autres"),
-                        level: 2,
-                        muted: true,
-                        total: -fixesSectionTotals.autres,
-                      })}
-                    </div>
-                  </Collapsible>
-
-                  {renderNavButton({
-                    label: "Locations",
-                    active: activeDepenseTab === "locations",
-                    onClick: () => handleDepenseTabClick("locations"),
-                    total: -Math.abs(locationsTotal),
-                    caret: showLocationsChildren ? "open" : "closed",
-                    level: 1,
-                  })}
-
-                  <Collapsible open={showLocationsChildren}>
-                    <div className="ml-3 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                      {locations.map((loc) => (
-                        <React.Fragment key={loc.id}>
-                          {renderNavButton({
-                            label: loc.name,
-                            active: activeDepenseTab === "locations" && activeLocationId === loc.id,
-                            onClick: () => handleLocationClick(loc),
-                            level: 2,
-                            muted: true,
-                            total: calcAppartementTotal(loc),
-                            onDelete: () => {
-                              setLocations((prev) => {
-                                if (prev.length <= 1) return prev;
-                                const next = prev.filter((a) => a.id !== loc.id);
-                                if (activeLocationId === loc.id) {
-                                  setActiveLocationId(next[0]?.id ?? null);
-                                }
-                                return next;
-                              });
-                            },
-                            deleteDisabled: locations.length <= 1,
-                          })}
-                        </React.Fragment>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={handleAddLocation}
-                        className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
-                        style={{
-                          color: "var(--theme-textSecondary)",
-                          backgroundColor: "transparent",
-                        }}
-                      >
-                        + Ajouter une location
-                      </button>
-                    </div>
-                  </Collapsible>
-                </div>
-              </Collapsible>
+                + Ajouter une propriete
+              </button>
             </div>
-
-            {renderNavButton({
-              label: "Patrimoine",
-              active: activeTab === "patrimoine",
-              onClick: () => handleMainTabClick("patrimoine"),
-              total: patrimoineTotal,
-              caret: showPatrimoineChildren ? "open" : "closed",
-            })}
-
-            <Collapsible open={activeTab === "patrimoine" && showPatrimoineChildren}>
-              <div className="ml-1 border-l pl-3 space-y-1" style={{ borderColor: "var(--theme-border)" }}>
-                {patrimoine.map((prop) => (
-                  <React.Fragment key={prop.id}>
-                    {renderNavButton({
-                      label: prop.name,
-                      active: activePatrimoineId === prop.id,
-                      onClick: () => {
-                        setActivePatrimoineId(prop.id);
-                        setActiveTab("patrimoine");
-                        setShowPatrimoineChildren(true);
-                      },
-                      level: 1,
-                      muted: true,
-                      total: calcAppartementTotal(prop),
-                      onDelete: () => handleDeletePatrimoine(prop.id),
-                      deleteDisabled: patrimoine.length <= 1,
-                    })}
-                  </React.Fragment>
-                ))}
-                <button
-                  type="button"
-                  onClick={handleAddPatrimoine}
-                  className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
-                  style={{
-                    color: "var(--theme-textSecondary)",
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  + Ajouter une propriete
-                </button>
-              </div>
-            </Collapsible>
-
-            <div
-              className="mb-2 h-px w-full"
-              style={{ backgroundColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)" }}
-              aria-hidden
-            />
-            {renderNavButton({
-              label: "Bilan",
-              active: activeTab === "bilan",
-              onClick: () => handleMainTabClick("bilan"),
-              total: bilanTotal,
-            })}
-          </div>
+          </Collapsible>
+          <div
+            className="mb-2 h-px w-full"
+            style={{ backgroundColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)" }}
+            aria-hidden
+          />
+          {renderNavButton({
+            label: "Bilan",
+            active: activeTab === "bilan",
+            onClick: () => handleMainTabClick("bilan"),
+            total: bilanTotal,
+          })}
         </div>
       </div>
-    );
-  };
-
+    </div>
+  );
   const renderSidebarDashboard = () => (
     <div className="p-3 lg:p-4 space-y-4">
       <div
@@ -1082,7 +1008,7 @@ export function MainTabs() {
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.22em]">Revenus</div>
             <div className="text-xs" style={{ color: "var(--theme-textSecondary)" }}>
-              Personnes et revenus
+              Synthèse des revenus par personne
             </div>
           </div>
           <button
@@ -1097,37 +1023,6 @@ export function MainTabs() {
         <div className="flex items-center justify-between text-sm">
           <span style={{ color: "var(--theme-textSecondary)" }}>Total</span>
           <span style={{ color: amountColor(revenusTotal), fontWeight: 700 }}>{formatMontant(revenusTotal)}</span>
-        </div>
-        <div className="space-y-1">
-          {revenusPersons.map((person) => (
-            <React.Fragment key={person.id}>
-              {renderNavButton({
-                label: person.name,
-                active: activePersonId === person.id,
-                onClick: () => {
-                  setActivePersonId(person.id);
-                  setActiveTab("revenus");
-                  setShowRevenusChildren(true);
-                },
-                level: 1,
-                muted: true,
-                total: person.montant,
-                onDelete: () => handleDeletePersonSide(person.id),
-                deleteDisabled: persons.length <= 1,
-              })}
-            </React.Fragment>
-          ))}
-          <button
-            type="button"
-            className="w-full text-left rounded-lg px-3 py-2 text-sm font-semibold transition"
-            style={{
-              color: "var(--theme-textSecondary)",
-              backgroundColor: "transparent",
-            }}
-            onClick={handleAddPerson}
-          >
-            + Ajouter
-          </button>
         </div>
       </div>
 
@@ -1377,53 +1272,138 @@ export function MainTabs() {
       </div>
     </div>
   );
+  const renderEntitySelector = () => {
+    const selectedPerson =
+      selectedEntity.type === "person" ? persons.find((p) => p.id === selectedEntity.id) : null;
+    const label =
+      selectedEntity.type === "household"
+        ? "Vue foyer"
+        : selectedPerson
+        ? selectedPerson.name || `Personne ${selectedPerson.id}`
+        : "Personne";
+    const entityButtonClass = "flex h-10 w-10 items-center justify-center rounded-full border transition";
+    const entityButtonStyle = (isActive: boolean) => ({
+      borderColor: isActive
+        ? "var(--theme-tabActiveBg)"
+        : "color-mix(in srgb, var(--theme-border) 70%, transparent)",
+      color: isActive ? "var(--theme-tabActiveBg)" : "var(--theme-textSecondary)",
+      backgroundColor: isActive
+        ? "color-mix(in srgb, var(--theme-tabActiveBg) 20%, transparent)"
+        : "transparent",
+    });
+
+    return (
+      <div
+        className="rounded-2xl border bg-[var(--theme-bgCard)] p-4"
+        style={{ borderColor: "var(--theme-border)" }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.22em]" style={{ color: "var(--theme-textSecondary)" }}>
+              Entités
+            </div>
+            <div className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+              {label}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddPerson}
+            className={entityButtonClass}
+            style={{
+              borderColor: "color-mix(in srgb, var(--theme-border) 70%, transparent)",
+              color: "var(--theme-tabActiveBg)",
+              backgroundColor: "var(--theme-bgCard)",
+            }}
+            aria-label="Ajouter une personne"
+          >
+            <PersonPlusIcon size={18} stroke="var(--theme-tabActiveBg)" />
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {hasMultiplePersons && (
+            <button
+              type="button"
+              onClick={selectHouseholdEntity}
+              className={entityButtonClass}
+              style={entityButtonStyle(isHouseholdActive)}
+              aria-label="Sélectionner la vue foyer"
+            >
+              <HomeIcon size={18} stroke="currentColor" />
+            </button>
+          )}
+          {persons.map((person) => {
+            const isActive = selectedEntity.type === "person" && selectedEntity.id === person.id;
+            return (
+              <button
+                key={person.id}
+                type="button"
+                onClick={() => selectPersonEntity(person.id)}
+                className={entityButtonClass}
+                style={entityButtonStyle(isActive)}
+                aria-label={`Sélectionner ${person.name || `Personne ${person.id}`}`}
+              >
+                <PersonIcon size={18} stroke="currentColor" fill={isActive ? "currentColor" : "none"} />
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-xs" style={{ color: "var(--theme-textSecondary)" }}>
+          Clique sur une icône pour changer la vue affichée.
+        </p>
+      </div>
+    );
+  };
 
 return (
     <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)]">
       <div className="mx-auto max-w-7xl px-4 py-6 lg:py-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold">Budget AI</h1>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
-                ThŠme
-              </span>
-              <select
-                value={theme.id}
-                onChange={(e) => setTheme(e.target.value as any)}
-                className="rounded-md border px-2 py-1 text-sm"
-                style={{
-                  borderColor: "var(--theme-border)",
-                  backgroundColor: "var(--theme-bgCard)",
-                  color: "var(--theme-text)",
-                }}
-              >
-                {themes.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
-                Menu
-              </span>
-              <select
-                value={sidebarStyle}
-                onChange={(e) => setSidebarStyle(e.target.value as SidebarStyle)}
-                className="rounded-md border px-2 py-1 text-sm"
-                style={{
-                  borderColor: "var(--theme-border)",
-                  backgroundColor: "var(--theme-bgCard)",
-                  color: "var(--theme-text)",
-                }}
-              >
-                <option value="app">Menu app</option>
-                <option value="dashboard">Menu dashboard</option>
-              </select>
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-lg font-semibold">Budget AI</h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+                  ThSme
+                </span>
+                <select
+                  value={theme.id}
+                  onChange={(e) => setTheme(e.target.value as any)}
+                  className="rounded-md border px-2 py-1 text-sm"
+                  style={{
+                    borderColor: "var(--theme-border)",
+                    backgroundColor: "var(--theme-bgCard)",
+                    color: "var(--theme-text)",
+                  }}
+                >
+                  {themes.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: "var(--theme-textSecondary)" }}>
+                  Menu
+                </span>
+                <select
+                  value={sidebarStyle}
+                  onChange={(e) => setSidebarStyle(e.target.value as SidebarStyle)}
+                  className="rounded-md border px-2 py-1 text-sm"
+                  style={{
+                    borderColor: "var(--theme-border)",
+                    backgroundColor: "var(--theme-bgCard)",
+                    color: "var(--theme-text)",
+                  }}
+                >
+                  <option value="app">Menu app</option>
+                  <option value="dashboard">Menu dashboard</option>
+                </select>
+              </div>
             </div>
           </div>
+          {renderEntitySelector()}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[280px,1fr] lg:gap-8">
